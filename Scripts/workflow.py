@@ -1,89 +1,88 @@
 import re
+import glob
 
-from process import *
+#from process import *
+from file import *
+from typeMain import *
+from typeMainDSL1 import *
+from typeMainDSL2 import *
 
-#Right now we're supposing that the workflow parameter is a string of the workflow and not the adress of the worklfow => this needs to be changed later on
+
 class Workflow:
-  def __init__(self, workflow):
-    self.name = None
-    #So here for example you would need to extract the worklow from the file
-    self.workflow_string = workflow
-    self.nextflow_initia = None
-    #List of processes -> we initialise it as an empty list
-    self.processes = []
-    self.channels = []
-    
-  #Method that prints the worflow string
-  def printWorkflow(self):
-    print(self.workflow_string)
+    def __init__(self, root):
+        #Name of the Project
+        self.name = None
+        #Root address
+        self.root = root
+        #Bool if the workflow is using the syntax extension or not
+        self.is_DSL2 = None
+        #Address of the main
+        self.address_main = None
+        #The main of the Project
+        self.main = None
 
-  #Method that checks if the initialisation :"#!/usr/bin/env nextflow" is present
-  def checkInitia(self):
-    word= "#!/usr/bin/env nextflow"
-    if(self.workflow_string.find(word) >= 0):
-      self.nextflow_initia = True
-    else:
-      self.nextflow_initia = False
-      #Maybe trow Error
-      print("The nextflow Initia is not present")
-
-  #Method that removes "#!/usr/bin/env nextflow" from the string_workflow if present
-  def removeInitia(self):
-    word= "#!/usr/bin/env nextflow"
-    if(self.nextflow_initia):
-      self.workflow_string= self.workflow_string.replace(word, "")
-
-  #Method that removes all the comments from the workflow
-  def removeComments(self):
     #TODO
-    None
+    #Get the last word the path
+    #Sets the name of the project
+    def set_name(self):
+        self.name= 'Temporary_Name'
 
-  #Method that extracts the different processes from the workflow and sets them in the list of processes
-  #We're gonna do it in a very rudamental way, cause to at least to my knowledge right now it works and it's not to complexe
-  #We're just gonna look at it linearly and count the number of open and close '{}'
-  #We're going to exploit the fact that a process is definied as process ... { .... } and right now we're just get the begin and end. Not looking at what's inside
-  def extractProcesses(self):
-    work = self.workflow_string
-    list_process_start=[]
-    #Getting the begining of the processes in the string
-    for m in re.finditer("process", self.workflow_string):
-      list_process_start.append(m.start())
-    #For each process: we find it and add it to the list of processes
-    for i, start in enumerate(list_process_start):
-      start= list_process_start[i]
-      #{} curly brackets
-      count_curly = -1
-      end = start
-      while(count_curly != 0):
-          if(work[end] == "{" and count_curly == -1):
-              count_curly = 1
-          elif(work[end] == "{"):
-              count_curly += 1
-          elif(work[end] == "}"):
-              count_curly -= 1
-          end += 1
-      #This bit of code looks complicated but it's just adding the process already extarcted to the list of processes
-      process = Process(self.workflow_string[start:end])
-      process.extractProcess()
-      self.processes.append(process)
+    #Returns the name of the project
+    def get_name(self):
+        return self.name
 
-  #Method that prints all the processes in the worflow
-  def printProcesses(self):
-    for p in self.processes:
-      p.printProcess()
+    #TODO
+    #Sets the address of the main
+    #We assume that the main is set at the root
+    def set_address_main(self):
+        self.address_main = self.root + '/main.nf'
 
-  #Method that prints all the names of the processe in the workflow
-  def printProcessesName(self):
-    for p in self.processes:
-      p.printName()
+    #Returns address of main
+    def get_address_main(self):
+        return self.address_main
 
-  #Like the equivalent of the main => sets everything
-  def extractWorflow(self):
-    self.checkInitia()
-    self.removeInitia()
-    self.extractProcesses()
-    #Do stuff
+    #Checks if the workflow is using DSL2
+    def check_DSL2(self):
+        #Pattern found in the source code of nextflow
+        pattern= r'(nextflow\.(preview|enable)\.dsl\s*=\s*2)'
+        #Checks if the pattern is found in the main file
+        #So we create a temporary main type
+        temp_main= TypeMain(self.address_main)
+        temp_main.initialise_basic_main()
+        code= temp_main.get_string()
+        self.is_DSL2 = bool(re.compile(pattern).search(code))
+
+    #Returns the bool corresponding to DSL2?
+    def get_DSL2(self):
+        return self.is_DSL2
     
-if __name__ == "__main__":
-    print("I shoudn't be executed as a main")
+    #Initialises the main => creates the right DSL type
+    def initialise_main(self):
+        #Case DSL=1
+        if(not self.get_DSL2()):
+            self.main= TypeMainDSL1(self.address_main)
+        #Case DSL=2
+        elif(self.get_DSL2()):
+            self.main= TypeMainDSL2(self.address_main)
+        self.main.initialise()
 
+    
+  
+    #TODO
+    #Initialise the workflow
+    def initialise(self):
+        self.set_name()
+        self.set_address_main()
+        self.check_DSL2()
+        self.initialise_main()
+        print(self.main)
+
+
+if __name__ == "__main__":
+    #print("I shoudn't be executed as a main")
+    w= Workflow("/home/george/Bureau/TER/Workflow_Database/samba-master")
+    w.initialise()
+    print(w.get_DSL2())
+    
+#TODO list 
+#   - Finish the rest of the TODOs
