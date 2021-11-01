@@ -59,26 +59,80 @@ class File:
         self.string= new_string
 
     #Using REGEX
+    #Doesn't seem to work to well, i think it's a problem with '/* */'
     def remove_comments_2(self):
-        pattern_one_line= r'(\/\/[^ \n]*)'
+        #We ignore the '//' used in an internet address
+        pattern_one_line= r'([^https:]\/\/[^\n]*)'
         pattern_big= r'(\/\*(\w|\W)*\*\/)'
         temp=self.string
 
-        for match in re.finditer(pattern_big, temp):
-            temp = temp.replace(temp[match.span()[0]:match.span()[1]], '')
+        def create_empty(start, end):
+            empty=''
+            for i in range(start, end):
+                if(temp[i]=='\n'):
+                    empty+='\n'
+                else:
+                    empty+=' '
+            return empty
 
-        for match in re.finditer(pattern_one_line, temp):
-            temp = temp.replace(temp[match.span()[0]:match.span()[1]], '')
-        
+        for match in re.finditer(pattern_one_line, temp): 
+            temp = temp.replace(temp[match.span()[0]:match.span()[1]], create_empty(match.span()[0], match.span()[1]))
+
+        def change_letter(string, letter, index):  # note string is actually a bad name for a variable
+            return string[:index] + letter + string[index+1:]
+
+        in_big_comment= False
+        i=0
+        while(i < len(temp)-1):
+            #In case we see '/*' to open the 'big' comment
+            if(temp[i:i+2]=="/*" and not in_big_comment):
+                in_big_comment= True
+                temp= change_letter(temp, ' ', i)
+                temp= change_letter(temp, ' ', i+1)
+                i+=1
+            #In case we see '*/' to close the 'big' comment
+            elif(temp[i:i+2]=="*/" and in_big_comment):
+                in_big_comment= False
+                temp= change_letter(temp, ' ', i)
+                temp= change_letter(temp, ' ', i+1)
+                i+=1
+            #In case we're in a big comment
+            elif(in_big_comment):
+                temp= change_letter(temp, ' ', i)     
+            i+=1        
         self.string=temp
+    
+    def remove_comments_one_line(self):
+        #We ignore the '//' used in an internet address
+        pattern_one_line= r'([^https:]\/\/[^\n]*)'
+        temp=self.string
 
+        def create_empty(start, end):
+            empty=''
+            for i in range(start, end):
+                if(temp[i]=='\n'):
+                    empty+='\n'
+                else:
+                    empty+=' '
+            return empty
+
+        for match in re.finditer(pattern_one_line, temp): 
+            temp = temp.replace(temp[match.span()[0]:match.span()[1]], create_empty(match.span()[0], match.span()[1]))
+
+        self.string = temp
+
+
+    #Initialise the basic stuff for a file type
     def initialise_basic_file(self):
         #Do Stuff
         self.set_string()
+
         #Right now we're not removing comments, it creates a problem with eager for example
         #when extracting the processes
         #Don't know why right now
-        #self.remove_comments()
+        #self.remove_comments_2()
+        self.remove_comments_one_line()
+
 
 if __name__ == "__main__":
     """f= File('/home/george/Bureau/TER/test.txt')
@@ -89,8 +143,5 @@ if __name__ == "__main__":
 
 
 #OLD TODO List:
-#   - re-work the extract processes method since it doesn't work very well (small task)
-#   - write the method that determines which 'type' of file we are dealing with (medium task)
-#   - for each type write the specifities that makes it them (big task)
 #
 #   - think about how to deal with channels and functions if we have to deal with them (big task)
