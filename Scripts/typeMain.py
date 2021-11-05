@@ -10,6 +10,9 @@ class TypeMain(File):
     def initialise_basic_main(self):
         self.initialise_basic_file()
 
+#=================
+#IF USED AS A MAIN
+#=================
 if __name__ == "__main__":
     print("I shoudn't be executed as a main")
     

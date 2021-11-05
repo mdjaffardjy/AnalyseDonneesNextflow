@@ -32,6 +32,9 @@ class Process:
   def printName(self):
     print(self.name)
 
+  def get_string(self):
+    return self.process_string
+
 
   #Like the main => does everything to extract the informations
   def extractProcess(self):

@@ -10,5 +10,9 @@ class TypeMainDSL2(TypeMain):
         self.initialise_basic_main()
         None
 
+
+#=================
+#IF USED AS A MAIN
+#=================
 if __name__ == "__main__":
     print("I shoudn't be executed as a main")

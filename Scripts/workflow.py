@@ -77,7 +77,9 @@ class Workflow:
         self.initialise_main()
         print(self.main)
 
-
+#=================
+#IF USED AS A MAIN
+#=================
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
     w= Workflow("/home/george/Bureau/TER/Workflow_Database/samba-master")

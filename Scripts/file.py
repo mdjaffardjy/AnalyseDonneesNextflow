@@ -120,6 +120,122 @@ class File:
             temp = temp.replace(temp[match.span()[0]:match.span()[1]], create_empty(match.span()[0], match.span()[1]))
 
         self.string = temp
+    
+
+    #Removes the majority of the comments still a bit buggy but it works well enough
+    #TODO maybe do a mix of the regex one and this one => best of both worlds
+    #You can't use replace!! for example imagine we want to remove '/////' form the string but before that there is '/////////' well it will remove '/////' in '/////////'
+    #So you definitely need to use the indexes 
+    def remove_comments_3(self):
+        in_comment_one_line, in_big_comment, in_string_single, in_string_double= False, False, False, False
+        comments=[]
+        i=0
+        start, end= 0, 0
+        while(i < len(self.string)-1):
+
+            #If we're defining a string
+            if(self.string[i]=="'" and not in_string_single and not in_string_double and not in_big_comment):
+                in_string_single = True
+            #If we're defining a string
+            elif(self.string[i]=='"' and not in_string_double and not in_string_single and not in_big_comment):
+                in_string_double = True
+            #If we're getting out of the string
+            elif(self.string[i]=="'" and in_string_single and not in_string_double):
+                in_string_single = False
+            #If we're getting out of the string
+            elif(self.string[i]=='"' and in_string_double and not in_string_single):
+                in_string_double = False
+
+            #In case we see the one ligne comment marker '//'
+            elif(self.string[i:i+2]=="//" and not in_comment_one_line and not in_big_comment):
+                in_comment_one_line= True
+                start = i
+                i+=1
+            #In case we're in comment one line and we change line
+            elif(self.string[i:i+1]=="\n" and in_comment_one_line):
+                end= i+1
+                in_comment_one_line= False
+                comments.append(self.string[start:end])
+
+            #In case we see '/*' to open the 'big' comment
+            elif(self.string[i:i+2]=="/*" and not in_big_comment and not in_comment_one_line and not in_string_double and not in_string_single):
+                in_big_comment= True
+                start = i
+                i+=1
+            #In case we see '*/' to close the 'big' comment
+            elif(self.string[i:i+2]=="*/" and in_big_comment and not in_comment_one_line and not in_string_double and not in_string_single):
+                in_big_comment= False
+                i+=1
+                end= i
+                comments.append(self.string[start:end+1])
+            
+            i+=1
+
+        for i in range(len(comments)):
+            self.string= self.string.replace(comments[i], '')
+
+    
+    #STILL ONE BUG
+    def remove_comments_4(self):
+        def create_empty(start, end, temp):
+            empty=''
+            for i in range(start, end):
+                if(temp[i]=='\n'):
+                    empty+='\n'
+                else:
+                    empty+=' '
+            return empty
+        
+        in_comment_one_line, in_big_comment, in_string_single, in_string_double= False, False, False, False
+        comments=[]
+        i=0
+        start, end= 0, 0
+        while(i < len(self.string)-1):
+
+            #If we're defining a string
+            if(self.string[i]=="'" and not in_string_single and not in_string_double and not in_big_comment):
+                in_string_single = True
+            #If we're defining a string
+            elif(self.string[i]=='"' and not in_string_double and not in_string_single and not in_big_comment):
+                in_string_double = True
+            #If we're getting out of the string
+            elif(self.string[i]=="'" and in_string_single and not in_string_double):
+                in_string_single = False
+            #If we're getting out of the string
+            elif(self.string[i]=='"' and in_string_double and not in_string_single):
+                in_string_double = False
+
+            #In case we see the one ligne comment marker '//'
+            elif(self.string[i:i+2]=="//" and not in_comment_one_line and not in_big_comment):
+                in_comment_one_line= True
+                start = i
+                i+=1
+            #In case we're in comment one line and we change line
+            elif(self.string[i:i+1]=="\n" and in_comment_one_line):
+                end= i+1
+                in_comment_one_line= False
+                comments.append([start, end])
+
+            #In case we see '/*' to open the 'big' comment
+            elif(self.string[i:i+2]=="/*" and not in_big_comment and not in_comment_one_line and not in_string_double and not in_string_single):
+                in_big_comment= True
+                start = i
+                i+=1
+            #In case we see '*/' to close the 'big' comment
+            elif(self.string[i:i+2]=="*/" and in_big_comment and not in_comment_one_line and not in_string_double and not in_string_single):
+                in_big_comment= False
+                i+=1
+                end= i
+                comments.append([start, end+1])
+            
+            i+=1
+
+        for i in range(len(comments)):
+
+            temp= list(self.string)
+            start, end= comments[i][0], comments[i][1]
+            temp[start:end]= create_empty(start, end, self.string)
+            self.string= ''.join(temp)
 
 
     #Initialise the basic stuff for a file type
@@ -131,9 +247,12 @@ class File:
         #when extracting the processes
         #Don't know why right now
         #self.remove_comments_2()
-        self.remove_comments_one_line()
+        #self.remove_comments_one_line()
+        self.remove_comments_4()
 
-
+#=================
+#IF USED AS A MAIN
+#=================
 if __name__ == "__main__":
     """f= File('/home/george/Bureau/TER/test.txt')
     f.initialise_basic_file()
@@ -142,6 +261,6 @@ if __name__ == "__main__":
 
 
 
-#OLD TODO List:
-#
-#   - think about how to deal with channels and functions if we have to deal with them (big task)
+#TODO List:
+#   - Fix remove comments
+#   - Remove the old version of the method and clean up the final working version
