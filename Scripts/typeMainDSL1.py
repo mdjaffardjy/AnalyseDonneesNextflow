@@ -52,10 +52,15 @@ class TypeMainDSL1(TypeMain):
     def get_nb_processes(self):
         return len(self.processes)
 
-    #Removes the proesses from the workflow string: this isn't really usefull outside the prototyping/developpement stage
-    def remove_processes(self):
+    #Print the different processes
+    def print_processes(self):
         for i in range(len(self.processes)):
-            self.string= self.string.replace(self.processes[i].get_string(), '')
+            print(self.processes[i].get_string())
+
+    #Removes the proesses from the workflow string: this isn't really usefull outside the prototyping/developpement stage
+    def format_processes(self):
+        for i in range(len(self.processes)):
+            self.string= self.string.replace(self.processes[i].get_string(), 'PROCESS DEF '+self.processes[i].get_name())
 
 
     #===========================================
@@ -101,9 +106,9 @@ class TypeMainDSL1(TypeMain):
             f.print_function()
 
     #Removes the functions from the workflow string: this isn't really usefull outside the prototyping/developpement stage
-    def remove_functions(self):
+    def format_functions(self):
         for i in range(len(self.functions)):
-            self.string= self.string.replace(self.functions[i].get_string(), '')
+            self.string= self.string.replace(self.functions[i].get_string(), 'FUNCTION DEF '+self.functions[i].get_name())
 
 
 
@@ -123,6 +128,11 @@ class TypeMainDSL1(TypeMain):
         self.initialise_basic_main()
         self.find_processes()
         self.find_functions()
+        self.format_processes()
+        self.format_functions()
+        #This is not a mistake, some comments don't get removed because bash sometime has weird things like: "sdfsd'"
+        #So there's no harm in redoing it which actually removes in remaining comments since the processes are no longer there
+        self.remove_comments_4()
         
 
 
@@ -132,12 +142,13 @@ class TypeMainDSL1(TypeMain):
 #=================
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
-    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf")
+    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf")
     m.initialise()
     m.print_name_processes()
-    #m.remove_processes()
-    #m.remove_functions()
+
     m.save_file()
+    #m.print_processes()
+
     #m.print_name_functions()
     #print(m.get_nb_functions())
     #m.print_file()

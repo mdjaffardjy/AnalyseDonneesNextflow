@@ -262,5 +262,4 @@ if __name__ == "__main__":
 
 
 #TODO List:
-#   - Fix remove comments
 #   - Remove the old version of the method and clean up the final working version

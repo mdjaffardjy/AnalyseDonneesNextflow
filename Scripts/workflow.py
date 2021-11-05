@@ -1,5 +1,6 @@
 import re
 import glob
+import os
 
 #from process import *
 from file import *
@@ -21,21 +22,34 @@ class Workflow:
         #The main of the Project
         self.main = None
 
-    #TODO
+    
     #Get the last word the path
     #Sets the name of the project
     def set_name(self):
-        self.name= 'Temporary_Name'
+        indice=-1
+        if(self.root[indice]=='/'):
+            indice -= 1
+        start= indice+len(self.root)+1
+        while(self.root[indice]!='/'):
+            indice-=1
+        end= indice+len(self.root)+1
+        print(start, end)
+        self.name = self.root[end:start]
+        
 
     #Returns the name of the project
     def get_name(self):
         return self.name
 
-    #TODO
+    
     #Sets the address of the main
     #We assume that the main is set at the root
     def set_address_main(self):
+        elements_in_directory= os.listdir(self.root)
+        if(not 'main.nf' in elements_in_directory):
+            raise Exception("No 'main.nf' found in directory!")
         self.address_main = self.root + '/main.nf'
+           
 
     #Returns address of main
     def get_address_main(self):
@@ -67,8 +81,6 @@ class Workflow:
         self.main.initialise()
 
     
-  
-    #TODO
     #Initialise the workflow
     def initialise(self):
         self.set_name()
@@ -87,4 +99,4 @@ if __name__ == "__main__":
     print(w.get_DSL2())
     
 #TODO list 
-#   - Finish the rest of the TODOs
+

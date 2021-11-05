@@ -25,12 +25,15 @@ class Process:
     end= start
     while(self.process_string[end]!='{'):
         end+=1
-    word= self.process_string[start:(end-1)].strip()
+    word= self.process_string[start:(end)].strip()
     self.name = word
 
   #Prints the name of the process
   def printName(self):
     print(self.name)
+
+  def get_name(self):
+    return self.name
 
   def get_string(self):
     return self.process_string
