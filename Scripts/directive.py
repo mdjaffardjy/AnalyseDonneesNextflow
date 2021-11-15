@@ -24,7 +24,6 @@ class Directives:
         self.list_directive = []
         self.qualifier = {}
 
-
     def printDirectives(self):
         print(self.directive_string)
     
@@ -34,12 +33,12 @@ class Directives:
     
     def numberDirectives(self):
         return len(self.list_directive)
-
-    def printQualifier(self):
-        print(self.qualifier)
     
     def getQualifier(self):
         return self.qualifier
+    
+    def getDirectives(self):
+        return self.list_directive
 
     def splitDirectives(self):
         work = "a \n" + self.directive_string

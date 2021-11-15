@@ -19,6 +19,7 @@ class Outputs:
         self.output_string = strOutput
         self.list_output = []
         self.qualifier = {}
+        self.list_words_workflow = []
 
     def printOutput(self):
         print(self.output_string)
@@ -30,12 +31,15 @@ class Outputs:
     def numberOutputs(self):
         return len(self.list_output)
 
-    def printQualifier(self):
-        print(self.qualifier)
-    
     def getQualifier(self):
         return self.qualifier
-
+    
+    def getOutputs(self):
+        return self.list_output
+    
+    def getNameInWorkflow(self):
+        return self.list_words_workflow
+        
     def splitOutput(self):
         work = "a \n" + self.output_string #for the first one
         index = []
@@ -49,6 +53,17 @@ class Outputs:
             else:   
                 output = work[index[i]:index[i+1]].lstrip().rstrip()
             self.list_output.append(output)
+    
+    def extractName(self):
+        pattern = r'(\sinto\s*((\'|")+.*(\'|")*|\w*))'
+        for l in self.list_output:
+            start = -1
+            for match in re.finditer(pattern, l):
+                start = match.span()[0] + len("into")+1
+                end = match.span()[1]
+            if start >= 0:
+                str = l[start:end].lstrip().rstrip()
+                self.list_words_workflow.append(str)
 
     def analyseQualifier(self):
         for str in self.list_output:
@@ -62,6 +77,7 @@ class Outputs:
     def extractO(self):
         self.splitOutput()
         self.analyseQualifier()
+        self.extractName()
 
     
 if __name__ == "__main__":

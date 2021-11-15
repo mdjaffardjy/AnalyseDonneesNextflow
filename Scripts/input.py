@@ -7,7 +7,6 @@ FIRST PART
 
 keyWordsI = ['val', 'env', 'file', 'path', 'stdin', 'tuple', 'each', 'set']
 
-# [^,]\n+\s*set[^a-zA-Z0-9]
 listPatternI = []
 for words in keyWordsI:
     str = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
@@ -21,6 +20,7 @@ class Inputs:
         self.input_string = strInput
         self.list_input = []
         self.qualifier = {}
+        self.list_words_workflow = []
 
     def printInput(self):
         print(self.input_string)
@@ -31,12 +31,15 @@ class Inputs:
 
     def numberInputs(self):
         return len(self.list_input)
-
-    def printQualifier(self):
-        print(self.qualifier)
     
     def getQualifier(self):
         return self.qualifier
+    
+    def getInputs(self):
+        return self.list_input
+    
+    def getNameInWorkflow(self):
+        return self.list_words_workflow
         
     def splitInput(self):
         work = "a \n" + self.input_string
@@ -52,6 +55,27 @@ class Inputs:
                 input = work[index[i]:index[i+1]].lstrip().rstrip()
             self.list_input.append(input)
 
+    def extractName(self):
+        """pattern = r'(\sfrom\s*\w*)'
+        for l in self.list_input:
+            start = -1
+            for match in re.finditer(pattern, l):
+                start = match.span()[0] + len("from")+1
+                end = match.span()[1]
+            if start >= 0:
+                str = l[start:end].lstrip().rstrip()
+                self.list_words_workflow.append(str)"""
+
+        pattern = r'(\sfrom\s*((\'|")+.*(\'|")*|\w*))'
+        for l in self.list_input:
+            start = -1
+            for match in re.finditer(pattern, l):
+                start = match.span()[0] + len("from")+1
+                end = match.span()[1]
+            if start >= 0:
+                str = l[start:end].lstrip().rstrip()
+                self.list_words_workflow.append(str)
+              
 
     def analyseQualifier(self):
         for str in self.list_input:
@@ -65,6 +89,7 @@ class Inputs:
     def extractI(self):
         self.splitInput()
         self.analyseQualifier()
+        self.extractName() #For Parser : name in the process
 
     
 if __name__ == "__main__":

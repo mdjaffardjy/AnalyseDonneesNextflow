@@ -5,23 +5,23 @@ import re
 class Script:
     def __init__(self, strScript):
             self.script_string = strScript
-            self.language = []
+            self.language = None
 
     def printString(self):
         print(self.script_string)  
     
     def printLanguage(self):
-        str = ""
-        for i in range (len(self.language)):
-            if i != len(self.language)-1:
-                str +=self.language[i] + " - "
-            else:
-                str += self.language[i]
-        return str
+        print(self.language)
 
     def getLanguage(self):
         return self.language
     
+    #Extract language 
+    """
+    First : search the pattern which show the language
+    If doesn't find : bash 
+    Else : we find the end of the line and search the language between the start and the end
+    """
     def whichLanguage(self):
         pattern = r'(#!\/usr\/bin\/)'
         start = len(self.script_string)
@@ -30,7 +30,7 @@ class Script:
             start = match.span()[1]
             nb = 1
         if nb < 0:
-            self.language.append('bash')
+            self.language = 'bash'
         else:
             patternEnd = r'(\n)'
             end = len(self.script_string)
@@ -41,17 +41,10 @@ class Script:
             language = self.script_string[start:end].lstrip().rstrip()
             for match in re.finditer(patEnv, language):
                 language = language[match.span()[1]:].lstrip() 
-            self.language.append(language)
-
-
-
+            self.language = language
 
     def extractS(self):
         self.whichLanguage()
-
-
-##!/usr/bin/
-
-        
+      
 if __name__ == "__main__":
     print("I shouldn't be executed as a main")

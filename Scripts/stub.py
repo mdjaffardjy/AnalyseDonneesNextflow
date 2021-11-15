@@ -4,23 +4,23 @@ import re
 class Stub:
     def __init__(self, strStub):
             self.stub_string = strStub
-            self.language = []
+            self.language = None
 
     def printString(self):
         print(self.stub_string)  
     
     def printLanguage(self):
-        str = ""
-        for i in range (len(self.language)):
-            if i != len(self.language)-1:
-                str +=self.language[i] + " - "
-            else:
-                str += self.language[i]
-        return str
+        print(self.language)
 
     def getLanguage(self):
         return self.language
     
+    #Extract language 
+    """
+    First : search the pattern #!/usr/bin/
+    If doesn't find : bash 
+    Else : we find the end of the line and search the language between the start and the end
+    """
     def whichLanguage(self):
         pattern = r'(#!\/usr\/bin\/)'
         start = len(self.stub_string)
@@ -29,7 +29,7 @@ class Stub:
             start = match.span()[1]
             nb = 1
         if nb < 0:
-            self.language.append('bash')
+            self.language = 'bash'
         else:
             patternEnd = r'(\n)'
             end = len(self.stub_string)
@@ -40,7 +40,7 @@ class Stub:
             language = self.stub_string[start:end].lstrip().rstrip()
             for match in re.finditer(patEnv, language):
                 language = language[match.span()[1]:].lstrip() 
-            self.language.append(language)
+            self.language = language
 
     def extractS(self):
         self.whichLanguage()
