@@ -8,6 +8,9 @@ class TypeMainDSL1(TypeMain):
         super().__init__(address)
         self.processes=[]
         self.functions=[]
+        #TODO
+        #This attribute is temporary
+        self.onComplete=None
 
 
     #===========================================
@@ -41,7 +44,7 @@ class TypeMainDSL1(TypeMain):
             end= self.extract_curly(match.span()[1])
             process= Process(self.string[start:end])
             process.extractProcess()
-            self.processes.append(process)
+            self.processes.append(process)   
     
     #Print the names of the different processes
     def print_name_processes(self):
@@ -59,8 +62,17 @@ class TypeMainDSL1(TypeMain):
 
     #Removes the proesses from the workflow string: this isn't really usefull outside the prototyping/developpement stage
     def format_processes(self):
+        for p1 in self.processes:
+            i=-1
+            for p2 in self.processes:
+                if(p1.get_name()==p2.get_name()):
+                    i+=1
+            if(i>0):
+                p1.change_name(p1.get_name()+'_'+str(i))
+
+
         for i in range(len(self.processes)):
-            self.string= self.string.replace(self.processes[i].get_string(), 'PROCESS DEF '+self.processes[i].get_name())
+            self.string= self.string.replace(self.processes[i].get_string(), 'PROCESS DEF '+self.processes[i].get_name(), 1)
 
 
     #===========================================
@@ -110,7 +122,29 @@ class TypeMainDSL1(TypeMain):
         for i in range(len(self.functions)):
             self.string= self.string.replace(self.functions[i].get_string(), 'FUNCTION DEF '+self.functions[i].get_name())
 
-
+    #TODO 
+    #For know we are just gonna put the string in an attribute (string) and not analyse it YET
+    #My intuition right now is to create a subworkflow with the workflow.onComplete in it
+    #Or maybe create a new class 
+    #===========================================
+    #METHODS FOR workflow.onComplete
+    #TODO Do the same for workflow.onError
+    #===========================================
+    def temp_workflow_onComplete(self):
+        pattern= r'(workflow.onComplete\s*{)'
+        i=0
+        for match in re.finditer(pattern, self.string):
+            #This is just to test the fact that there isn't over one declaration
+            i+=1
+            if(i>1):
+                raise Exception("More than one 'workflow.onComplete' found in the workflow")
+            #Finding the pattern
+            start= match.span()[0]
+            end= self.extract_curly(match.span()[1])
+            self.onComplete= self.string[start:end]
+            #Replacing the declaration by a marker
+            self.string= self.string.replace(self.onComplete, 'WORKFLOW ON_COMPLETE')
+            
 
 
     #===========================================
@@ -118,11 +152,12 @@ class TypeMainDSL1(TypeMain):
     #===========================================
 
     #Saves the the worklfow string in a given address as a nextflow file
-    def save_file(self, address= "/home/george/Bureau/TER/", name='test'):
+    def save_file(self, address= "/home/george/Bureau/TER/", name='formated_workflow'):
         myText = open(address+name+'.nf','w')
         myText.write(self.string)
         myText.close()
 
+    #Supposong that remove comment works correctly
     #Initialise the basic stuff for a mainDSL1 type
     def initialise(self):
         self.initialise_basic_main()
@@ -130,9 +165,9 @@ class TypeMainDSL1(TypeMain):
         self.find_functions()
         self.format_processes()
         self.format_functions()
-        #This is not a mistake, some comments don't get removed because bash sometime has weird things like: "sdfsd'"
-        #So there's no harm in redoing it which actually removes in remaining comments since the processes are no longer there
-        self.remove_comments_4()
+        #TODO
+        #This is temporary => need to update the method so that is does more!
+        self.temp_workflow_onComplete()
         
 
 

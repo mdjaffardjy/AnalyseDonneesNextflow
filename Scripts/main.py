@@ -1,5 +1,8 @@
 from workflow import *
 
+
+#IMPORTANT!!!
+#lOOK AT the config file for the names of the workflow and the link to the main
 if __name__ == "__main__":
     #Right now we're supposing that the address which is given is the "root" of the workflow project
     #The main.nf is situadted at the root

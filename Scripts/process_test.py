@@ -37,6 +37,9 @@ class Process:
 
   def get_string(self):
     return self.process_string
+    
+  def change_name(self, temp):
+    self.name= temp
 
 
   #Like the main => does everything to extract the informations
