@@ -6,7 +6,7 @@ import glob
 
 if __name__ == "__main__":
     print("-----------------------------START-----------------------------")
-    #"""
+    """
     path = "/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.nf"
     bddProcess = glob.glob(path, recursive= True)
     print("Taille de la bdd :", len(bddProcess))
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             print("ERROR ", bddProcess[i])
             faute += 1
             None
-    #print("NB FAUTES :" , faute)
+    print("NB FAUTES :" , faute)
     os.chdir("/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Analyse")
     docs = open("statParts.csv", "w")
     txt = "Database size : {}\n".format(len(bddProcess))
@@ -83,16 +83,16 @@ if __name__ == "__main__":
     os.chdir(currentPath)
 
     """
-    adress = "/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test.nf"
+    adress = "/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test2.txt"
     f = open(adress,"r")
     lines = f.read()
 
     p = Process(lines) 
     inputs, outputs = p.extractAll()
     p.printInformations()
-    print("Inputs: ", inputs)
-    print("Outputs: ",outputs)
+    print("Inputs - Source channel : ", inputs)
+    print("Outputs -  Target channel : ",outputs)
 
     f.close()
-    """
+    #"""
     print("-----------------------------END-----------------------------")

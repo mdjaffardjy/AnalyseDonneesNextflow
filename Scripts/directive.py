@@ -52,6 +52,14 @@ class Directives:
                 directive = work[index[i]:].lstrip().rstrip()
             else:   
                 directive = work[index[i]:index[i+1]].lstrip().rstrip()
+
+            antiSlash = []
+            for match in re.finditer(r"(\\)", directive):
+                    antiSlash.append(match.span())
+            antiSlash.sort(reverse = True)
+            for j in range(len(antiSlash)):
+                directive = directive.replace(directive[antiSlash[j][0]:antiSlash[j][1]], " ")
+            directive =" ".join(directive.split())
             self.list_directive.append(directive)
 
     def analyseQualifier(self):

@@ -372,8 +372,8 @@ class Process:
     print("----STUB----")
     self.printStub()
     print("  ")
-    print("----NUMBERS----")
-    self.printNumberInformations()
+    #print("----NUMBERS----")
+    #self.printNumberInformations()
     
 if __name__ == "__main__":
     print("I shouldn't be executed as a main")

@@ -12,6 +12,11 @@ for words in keyWordsI:
     str = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
     listPatternI.append(str)
 
+listPatternIb = []
+for words in keyWordsI:
+    str = "(" + words + "(\s|\(|\{|\[)\w+)"
+    listPatternIb.append(str)
+
 """
 SECOND PART - Class
 """
@@ -53,28 +58,44 @@ class Inputs:
                 input = work[index[i]:].lstrip().rstrip()
             else:   
                 input = work[index[i]:index[i+1]].lstrip().rstrip()
+
+            antiSlash = []
+            for match in re.finditer(r"(\\)", input):
+                    antiSlash.append(match.span())
+            antiSlash.sort(reverse = True)
+            for j in range(len(antiSlash)):
+                input = input.replace(input[antiSlash[j][0]:antiSlash[j][1]], " ")
+            input =" ".join(input.split())
             self.list_input.append(input)
 
     def extractName(self):
-        """pattern = r'(\sfrom\s*\w*)'
-        for l in self.list_input:
-            start = -1
-            for match in re.finditer(pattern, l):
-                start = match.span()[0] + len("from")+1
+        #Two Cases : 
+        pattern = r'(\sfrom\s\w+)'
+        for idx in range (len(self.list_input)):
+            start = -1 
+            for match in re.finditer(pattern, self.list_input[idx]):
+                start = match.span()[0] + len("from") +1
                 end = match.span()[1]
-            if start >= 0:
-                str = l[start:end].lstrip().rstrip()
-                self.list_words_workflow.append(str)"""
+            #Precence of "from"
+            if start >=0:
+                str = self.list_input[idx][start:end].lstrip().rstrip()
+                self.list_words_workflow.append([idx,str])
+            #Without "from"
+            else:
+                startb = -1
+                for i in range(len(listPatternIb)):
+                    pat = listPatternIb[i]
+                    for match in re.finditer(pat,self.list_input[idx]):
+                        startb = match.span()[0] + len(keyWordsI[i]) + 1
+                        endb = match.span()[1]
+                    if startb >=0:
+                        str = self.list_input[idx][startb:endb].lstrip().rstrip()
+                        if str[0].isalpha():
+                            self.list_words_workflow.append([idx,str])
+                        else:
+                            self.list_words_workflow.append([idx,str[1:]])
+                        break
 
-        pattern = r'(\sfrom\s*((\'|")+.*(\'|")*|\w*))'
-        for l in self.list_input:
-            start = -1
-            for match in re.finditer(pattern, l):
-                start = match.span()[0] + len("from")+1
-                end = match.span()[1]
-            if start >= 0:
-                str = l[start:end].lstrip().rstrip()
-                self.list_words_workflow.append(str)
               
 
     def analyseQualifier(self):
