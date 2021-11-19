@@ -1,5 +1,5 @@
 from process import *
-
+from commonFunction import *
 import re
 """
 FIRST PART
@@ -23,7 +23,7 @@ class Outputs:
     def __init__(self, strOutput):
         self.output_string = strOutput
         self.list_output = []
-        self.qualifier = {}
+        self.list_qualifier = []
         self.list_words_workflow = []
 
     def printOutput(self):
@@ -37,7 +37,7 @@ class Outputs:
         return len(self.list_output)
 
     def getQualifier(self):
-        return self.qualifier
+        return self.list_qualifier
     
     def getOutputs(self):
         return self.list_output
@@ -46,27 +46,10 @@ class Outputs:
         return self.list_words_workflow
         
     def splitOutput(self):
-        work = "a \n" + self.output_string #for the first one
-        index = []
-        for pattern in listPatternO:
-            for match in re.finditer(pattern, work):
-                index.append(match.span()[0]+1)
-        index.sort()
-        for i in range (len(index)):
-            if i == len(index)-1:
-                output = work[index[i]:].lstrip().rstrip()
-            else:   
-                output = work[index[i]:index[i+1]].lstrip().rstrip()
-
-            antiSlash = []
-            for match in re.finditer(r"(\\)", output):
-                    antiSlash.append(match.span())
-            antiSlash.sort(reverse = True)
-            for j in range(len(antiSlash)):
-                output = output.replace(output[antiSlash[j][0]:antiSlash[j][1]], " ")
-
-            output =" ".join(output.split())            
-            self.list_output.append(output)
+        self.list_output = split(listPatternO, self.output_string)
+    
+    def extractQualifier(self):
+        self.list_qualifier = extractQ(self.list_output)
     
     def extractName(self):
         #Two Cases : 
@@ -119,19 +102,9 @@ class Outputs:
                             self.list_words_workflow.append([idx,str[1:]])
                         break
 
-
-    def analyseQualifier(self):
-        for str in self.list_output:
-            cut = re.split("[^\w]", str)
-            key = cut[0]
-            if key in self.qualifier:
-                self.qualifier[key] += 1
-            else:
-                self.qualifier.update({key:1})
-
     def extractO(self):
         self.splitOutput()
-        self.analyseQualifier()
+        self.extractQualifier()
         self.extractName()
 
     

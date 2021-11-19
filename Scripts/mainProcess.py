@@ -1,13 +1,13 @@
 from process import *
-
+from helpPrint import *
 import matplotlib.pyplot as plt
 import os
 import glob
 
 if __name__ == "__main__":
     print("-----------------------------START-----------------------------")
-    """
-    path = "/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.nf"
+    #"""
+    path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.txt"
     bddProcess = glob.glob(path, recursive= True)
     print("Taille de la bdd :", len(bddProcess))
     currentPath = os.getcwd() 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             faute += 1
             None
     print("NB FAUTES :" , faute)
-    os.chdir("/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Analyse")
+    os.chdir("/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Analyse")
     docs = open("statParts.csv", "w")
     txt = "Database size : {}\n".format(len(bddProcess))
     docs.write(txt)
@@ -83,16 +83,16 @@ if __name__ == "__main__":
     os.chdir(currentPath)
 
     """
-    adress = "/home/clemence/FAC/M1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test2.txt"
+    adress = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test2.txt"
     f = open(adress,"r")
     lines = f.read()
 
     p = Process(lines) 
     inputs, outputs = p.extractAll()
-    p.printInformations()
-    print("Inputs - Source channel : ", inputs)
-    print("Outputs -  Target channel : ",outputs)
-
+    printInformations(p)
+    printNameInWorkflow(p)
+    printLanguage(p)
+    printQualifier(p)
     f.close()
-    #"""
+    """
     print("-----------------------------END-----------------------------")
