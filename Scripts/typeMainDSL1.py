@@ -2,12 +2,15 @@ import re
 from typeMain import * 
 from process_test import *
 from function import *
+from channel import *
+from utility import *
 
 class TypeMainDSL1(TypeMain):
     def __init__(self, address):
         super().__init__(address)
         self.processes=[]
         self.functions=[]
+        self.channels=[]
         #TODO
         #This attribute is temporary
         self.onComplete=None
@@ -79,10 +82,136 @@ class TypeMainDSL1(TypeMain):
     #METHODS FOR MANIPULATING CHANNELS
     #===========================================
     
-    #Finds the channels and adds them to the list of Channels
-    #TODO
-    def find_channels(self):
-        pattern_basic= r'((c|C)hannel[ \n]*\.)'
+    def get_end_channel(self, start, curly_count=0, parenthesis_count=0):
+        index= start
+        while(index<len(self.string)):
+
+            if(self.string[index]=='{'):
+                curly_count+=1
+            elif(self.string[index]=='}'):
+                curly_count-= 1
+            elif(self.string[index]=='('):
+                parenthesis_count+= 1
+            elif(self.string[index]==')'):
+                parenthesis_count-= 1
+
+            elif(curly_count==0 and parenthesis_count==0):
+
+                if(self.string[index]==':'):
+                    return index
+                elif(self.string[index]=='\n' and get_next_element_caracter(self.string, index)[0]!='.'):
+                    return index
+            
+            index+=1
+        #raise Exception("Major Problem in get_end_channel: out of range")
+        return index 
+
+
+    def get_channel(self, id):
+        for c in self.channels:
+            if id== c.get_id():
+                return c
+        raise Exception('Channel not in list of channels')
+
+    
+    def extract_branches(self, start, end):
+        string= self.string[start:end]
+        tab=[]
+        pattern= r'(\w+)\s*:'
+        for match in re.finditer(pattern, string):
+            tab.append(match.group(1))
+        return tab
+
+    def get_added_operators(self):
+        tab=[]
+        pattern =r'.branch\s*{'
+        for match in re.finditer(pattern, self.string):
+            #print(match.span(0))
+            start=match.span(0)[0]
+            end= extract_curly(self.string, match.span(0)[1])
+            #print(string[start:end])
+            tab+= self.extract_branches(start, end)
+        return tab
+
+
+    #Method pas parfait => workflow.CHANNEL_54 dans eager
+    #Mais c'est pas très grave car on prend 'plus' qu'on a besoin
+    def extract_channels(self):
+        
+        #=================================================================
+        #PART ZERO: BEFORE WE START WE NEED TO EXTRACT THE ADDED OPERATORS CREATED WITH BRANCH 
+        #=================================================================
+        ope= self.get_added_operators()
+        added= '|'.join(ope)
+        if added != '':
+            added='|'+added
+        #print(added)
+        for o in ope:
+            pattern=r'\.\s*('+o+')\s*\.'
+            for match in re.finditer(pattern, self.string):
+                word=match.group(0)
+                self.string= self.string.replace(word, '.{}().'.format(o), 1)
+
+        #=================================================================
+        #FIRST PART: WE EXTRACT THE ONES WITH THE WORD CHANNEL 
+        #=================================================================
+        pattern= r'[^\w]((C|c)hannel\s*\.)'
+        index=1
+        for match in re.finditer(pattern, self.string):
+            start= match.span(1)[0]
+            end= self.get_end_channel(start)
+            code= self.string[start:end]
+            #print(code)
+            #print(code)
+            name= 'CHANNEL_'+str(index)
+            self.channels.append(Channel(name, code))
+            index+=1
+        for c in self.channels:
+            #print(c.get_id(), c.get_string())
+            self.string= self.string.replace(c.get_string(), c.get_id(), 1)
+        
+        #=================================================================
+        #SECOND PART: WE EXTRACT THE OTHER ONES 
+        #=================================================================
+        operations= 'distinct|filter|first|last|randomSample|take|unique|until|buffer|collate|collect|flatten|flatMap|groupBy|groupTuple|map|reduce|toList|toSortedList|transpose|splitCsv|splitFasta|splitFastq||splitText|cross|collectFile|combine|concat|join|merge|mix|phase|spread|branch|choice|multiMap|into|separate|tap|count|countBy|min|max|sum|toInteger|close|dump|ifEmpty|print|println|set|view|create|empty|from|fromPath|fromFilePairs|fromSRA|of|value|watchPath|subscribe'+added
+        pattern= r'(\w+)\s*\.\s*('+operations+')\s*({|\()'
+        tab=[]
+        for match in re.finditer(pattern, self.string):
+            if match.group(1)!='workflow':
+                #print(match.group(0))
+                start= match.span(0)[0]
+                if(self.string[match.span(0)[1]-1]=='('):
+                    end= self.get_end_channel(match.span(0)[1], 0, 1)
+                elif(self.string[match.span(0)[1]-1]=='{'):
+                    end= self.get_end_channel(match.span(0)[1], 1, 0)
+                else: 
+                    raise Exception("Don't know what i'm looking at..")
+                name= 'CHANNEL_'+str(index)
+                code= self.string[start:end]
+                self.channels.append(Channel(name, code))
+                index+=1
+        for c in self.channels:
+            #print(c.get_id(), c.get_string())
+            self.string= self.string.replace(c.get_string(), c.get_id(), 1)
+
+        #=================================================================
+        #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = CHANNEL_ID
+        #=================================================================
+        pattern= r'(\w+)\s*=\s*(CHANNEL_\d+)'
+        for match in re.finditer(pattern, self.string):
+            #print(match.group(0),match.group(1), match.group(2))
+            c= self.get_channel(match.group(2))
+            c.set_name(match.group(1))
+            self.string= self.string.replace(match.group(0), match.group(2), 1)
+
+        #=================================================================
+        #FOURTH PART: INITIALISE THE CHANNELS
+        #=================================================================
+        for c in self.channels:
+            c.initialise_channel()
+
+        #return string, channels
+
 
 
 
@@ -162,11 +291,12 @@ class TypeMainDSL1(TypeMain):
     def initialise(self):
         self.initialise_basic_main()
         self.find_processes()
-        self.find_functions()
         self.format_processes()
+        self.extract_channels()
+        #We extract the channels first since channels can be declared in functions
+        self.find_functions()
         self.format_functions()
-        #TODO
-        #This is temporary => need to update the method so that is does more!
+        
         self.temp_workflow_onComplete()
         
 
@@ -178,6 +308,12 @@ class TypeMainDSL1(TypeMain):
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
     m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf")
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf")
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf")
+    #Still need to look into sarek
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf")
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq-master/main.nf")
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf")
     m.initialise()
     m.print_name_processes()
 
@@ -190,7 +326,7 @@ if __name__ == "__main__":
 
 
 #TODO List
-# - IMPORTANT!!! Channels can appear in functions!! need to think about how to deal with that ! => Might not be as important as originally though
-# - Think about how to deal with channels and functions
 # - And to link everything together after
+# - Remove comments is still not perfect=> see metaboigniter
+# - workflow.onError
     
