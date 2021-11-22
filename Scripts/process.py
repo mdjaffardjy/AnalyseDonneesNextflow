@@ -13,7 +13,6 @@ Declaration of global variable
 """
 
 #List de pattern
-#Can be dvlp (dico)
 listPattern = [r'(input\s*:)', r'(output\s*:)', r'(when\s*:)', r'(script\s*:)', r'(shell\s*:)', 
                       r'(exec\s*:)',r'(""")', r"(''')", r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)", r'(stub\s*:)']
  
@@ -27,7 +26,6 @@ class Process:
     self.process_string = process
     #We are going to extract the informations from this variable and clean it when we finish to study a part
     self.process_work = process
-
     self.name = None
     self.directive = None
     self.input = None
@@ -118,29 +116,7 @@ class Process:
   def numberDirectives(self):
     return self.directive.numberDirectives()
  
-
-  # ------------------------- INPUTS --------------------------#
-  #Extract input 
-  def extractInput(self): 
-    patternStart = r'(input\s*:)'
-    start= [-1,-1]
-    for match in re.finditer(patternStart, self.process_work):
-      start = match.span()
-    #Verify if our process contains the patternStart
-    if start[1] != -1:
-      end = self.endProcess()
-      for pattern in listPattern:
-        if pattern != patternStart:
-          for match in re.finditer(pattern, self.process_work):
-            if (match.span()[0] < end) and (match.span()[0] > start[1]):
-              end = match.span()[0]
-      string =  self.process_work[start[1]:end].lstrip().rstrip()
-      if len(string) != 0:
-        studyInput = Inputs(string)
-        studyInput.extractI()
-        self.input = studyInput
-        self.process_work = self.process_work.replace(self.process_work[start[0]:end].lstrip().rstrip(), "")
-      
+  # ------------------------- INPUTS --------------------------#   
   #Print the input
   def printInput(self):
     if self.input != None:
@@ -150,27 +126,7 @@ class Process:
     return self.input.numberInputs()  
 
   # ------------------------- OUTPUTS --------------------------#
-  #Extract the output 
-  def extractOutput(self):
-    patternStart = r'(output\s*:)'
-    start= [-1,-1]
-    for match in re.finditer(patternStart, self.process_work):
-      start = match.span()
-    if start[1] != -1:
-      end = self.endProcess()
-      for pattern in listPattern:
-        if pattern != patternStart:
-          for match in re.finditer(pattern, self.process_work):
-            if (match.span()[0] < end) and (match.span()[0] > start[1]):
-              end = match.span()[0]
-      string = self.process_work[start[1]:end].lstrip().rstrip()
-      if len(string) != 0:
-        studyOutput = Outputs(string)
-        studyOutput.extractO()
-        self.output = studyOutput
-        self.process_work = self.process_work.replace(self.process_work[start[0]:end].lstrip().rstrip(), "")
-    
-  #Print the input
+  #Print the output
   def printOutput(self):
     if self.output != None:
       self.output.printListOutput()
@@ -179,26 +135,6 @@ class Process:
     return self.output.numberOutputs()
 
   # ------------------------- WHEN --------------------------#
-  #Extract When
-  def extractWhen(self):
-    patternStart = r'(when\s*:)'
-    start= [-1,-1]
-    for match in re.finditer(patternStart, self.process_work):
-      start = match.span()
-    if start[1] != -1:
-      end = self.endProcess()
-      for pattern in listPattern:
-        if pattern != patternStart:
-          for match in re.finditer(pattern, self.process_work):
-            if (match.span()[0] < end) and (match.span()[0] > start[1]):
-              end = match.span()[0]
-      string = self.process_work[start[1]:end].lstrip().rstrip()
-      if len(string) != 0:
-        studyWhen = When(string)
-        #studyWhen.extractW()
-        self.when = studyWhen
-        self.process_work = self.process_work.replace(self.process_work[start[0]:end].lstrip().rstrip(), "")
-
   def printWhen(self):
     if self.when != None:
       self.when.printWhen()
@@ -245,7 +181,6 @@ class Process:
       self.script.printString()
 
   # ------------------------- STUB --------------------------#
-  # To improve
   def extractStub(self):
     patternAccepted =  [r'(""")', r"(''')",r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)"]
     #Start 
@@ -271,6 +206,37 @@ class Process:
     if self.stub != None:
       self.stub.printString()
 
+
+  def extract(self, what, patternStart):
+    start = [-1,-1]
+    for match in re.finditer(patternStart, self.process_work):
+      start = match.span()
+    #Verify if our process contains the patternStart
+    if start[-1] != 1:
+      end = self.endProcess()
+      for pattern in listPattern:
+        if pattern != patternStart:
+          for match in re.finditer(pattern, self.process_work):
+            if (match.span()[0] < end) and (match.span()[0] > start[1]):
+              end = match.span()[0]
+      string = self.process_work[start[1]:end].lstrip().rstrip()
+    
+      if len(string) !=0:
+        if what == 'Input':
+          study= Inputs(string)
+          study.extractI()
+          self.input = study
+        if what == 'Output':
+          study = Outputs(string)
+          study.extractO()
+          self.output = study
+        if what == 'When':
+          study = When(string)
+          #study.extractW()
+          self.when = study
+      self.process_work = self.process_work.replace(self.process_work[start[0]:end].lstrip().rstrip(), "")
+  
+
   #Do everything to extract the informations
   def extractProcess(self):
     """
@@ -281,9 +247,9 @@ class Process:
     """
     self.extractName()
     self.extractDirective()
-    self.extractInput()
-    self.extractOutput()
-    self.extractWhen()
+    self.extract('Input', r'(input\s*:)')
+    self.extract('Output', r'(output\s*:)')
+    self.extract('When', r'(when\s*:)')
     self.extractStub()
     self.extractScript()
 
@@ -333,52 +299,5 @@ class Process:
     return [self.getName(), self.getDirective(), self.getInput(), self.getOutput(), 
                                   self.getWhen(), self.getScript(), self.getStub()]
 
-  def printNumberInformations(self):
-    if self.directive != None:
-      print("Directives :", self.numberDirectives())
-  
-    if self.input != None:
-      print("Inputs : ", self.numberInputs())
-
-    if self.output != None:
-      print("Outputs :", self.numberOutputs())
-
-    if self.script != None:
-      print("Language Script:", self.script.getLanguage())
-
-    if self.stub != None:
-      print("Language Stub:", self.stub.getLanguage())
-
-  
-  def printInformations(self):
-    print("----NAME PROCESS----")
-    self.printName()
-    print("  ")
-    print("----DIRECTIVES----")
-    self.printDirectives()
-    print("  ")
-    print("----INPUTS----")
-    self.printInput()
-    print("  ")
-    print("----OUTPUTS----")
-    self.printOutput()
-    print("  ")
-    print("----WHEN----")
-    self.printWhen()
-    print("  ")
-    print("----SCRIPT----")
-    self.printScript()
-    print("   ")
-    print("----STUB----")
-    self.printStub()
-    print("  ")
-    #print("----NUMBERS----")
-    #self.printNumberInformations()
-    
 if __name__ == "__main__":
     print("I shouldn't be executed as a main")
-
-
-
-
-  
