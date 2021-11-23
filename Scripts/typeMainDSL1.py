@@ -221,6 +221,7 @@ class TypeMainDSL1(TypeMain):
         #=================================================================
         #FOURTH PART: INITIALISE THE CHANNELS
         #=================================================================
+        #TODO: when we initialise it over-writes the thing just above 
         for c in self.channels:
             c.initialise_channel()
             print(c.get_id(), 'string :', c.get_full_string())

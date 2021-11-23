@@ -193,7 +193,8 @@ class Channel:
 
     def initialise_channel(self):
         self.string= self.string.strip()
-        self.set_full_string(self.string)
+        if(self.full_string==None):
+            self.set_full_string(self.string)
         self.check_first_word()
         self.check_set()
         #print(self.get_first_word())
