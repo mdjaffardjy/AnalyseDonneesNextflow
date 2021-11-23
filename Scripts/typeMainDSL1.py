@@ -199,19 +199,33 @@ class TypeMainDSL1(TypeMain):
         #=================================================================
         #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = CHANNEL_ID
         #=================================================================
-        #TODO ADD the case (var1, var2) or (var1, var2, ..., varX)
         pattern= r'(\w+)\s*=\s*(CHANNEL_\d+)'
         for match in re.finditer(pattern, self.string):
             #print(match.group(0),match.group(1), match.group(2))
             c= self.get_channel(match.group(2))
-            c.set_gives(match.group(1))
+            c.set_gives([match.group(1), 'P'])
+            c.set_full_string(match.group(1)+' = '+c.get_string())
             self.string= self.string.replace(match.group(0), match.group(2), 1)
+        #The case (var1, var2) or (var1, var2, ..., varX)
+        pattern= r'\((\s*\w+\s*,(\s*\w+\s*,)*\s*\w+\s*)\)\s*=\s*(CHANNEL_\d+)'
+        for match in re.finditer(pattern, self.string):
+            c= self.get_channel(match.group(3))
+            temp=match.group(1)
+            temp= temp.split(',')
+            for t in temp:
+                t= t.strip()
+                c.set_gives([t, 'P'])
+            c.set_full_string(match.group(1)+' = '+c.get_string())
+            self.string= self.string.replace(match.group(0), match.group(3), 1)
 
         #=================================================================
         #FOURTH PART: INITIALISE THE CHANNELS
         #=================================================================
         for c in self.channels:
             c.initialise_channel()
+            print(c.get_id(), 'string :', c.get_full_string())
+            print(c.get_id(), 'origin :',  c.get_origin())
+            print(c.get_id(), 'gives  :',  c.get_gives())
 
         #return string, channels
 
@@ -324,7 +338,7 @@ if __name__ == "__main__":
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq-master/main.nf")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf")
     m.initialise()
-    m.print_name_processes()
+    #m.print_name_processes()
 
     m.save_file()
     m.save_channels()
