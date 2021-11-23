@@ -122,9 +122,10 @@ class TypeMainDSL1(TypeMain):
             tab.append(match.group(1))
         return tab
 
+    #TODO Check to see if multiMap works well => haven't tested yet
     def get_added_operators(self):
         tab=[]
-        pattern =r'.branch\s*{'
+        pattern =r'.(branch|multiMap)\s*{'
         for match in re.finditer(pattern, self.string):
             #print(match.span(0))
             start=match.span(0)[0]
@@ -136,6 +137,7 @@ class TypeMainDSL1(TypeMain):
 
     #Method pas parfait => workflow.CHANNEL_54 dans eager
     #Mais c'est pas très grave car on prend 'plus' qu'on a besoin
+    #Collect les faux positifs enfaite mais pas très grave
     def extract_channels(self):
         
         #=================================================================
@@ -197,11 +199,12 @@ class TypeMainDSL1(TypeMain):
         #=================================================================
         #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = CHANNEL_ID
         #=================================================================
+        #TODO ADD the case (var1, var2) or (var1, var2, ..., varX)
         pattern= r'(\w+)\s*=\s*(CHANNEL_\d+)'
         for match in re.finditer(pattern, self.string):
             #print(match.group(0),match.group(1), match.group(2))
             c= self.get_channel(match.group(2))
-            c.set_name(match.group(1))
+            c.set_gives(match.group(1))
             self.string= self.string.replace(match.group(0), match.group(2), 1)
 
         #=================================================================
@@ -211,6 +214,12 @@ class TypeMainDSL1(TypeMain):
             c.initialise_channel()
 
         #return string, channels
+
+    def save_channels(self, address= "/home/george/Bureau/TER/", name='channels'):
+        myText = open(address+name+'.nf','w')
+        for c in self.channels:
+            myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
+        myText.close()
 
 
 
@@ -318,6 +327,7 @@ if __name__ == "__main__":
     m.print_name_processes()
 
     m.save_file()
+    m.save_channels()
     #m.print_processes()
 
     #m.print_name_functions()
@@ -329,4 +339,10 @@ if __name__ == "__main__":
 # - And to link everything together after
 # - Remove comments is still not perfect=> see metaboigniter
 # - workflow.onError
+# - Finish ifs and do the ... = dsfdsf ? dsfdsf : dsfsdfsd case
+#\w+\s*=\s*[\w\.(),\"'{}\[\]+-]+\s*\?\s*[\w\.(),\"'{}\[\]+-]+\s*\:\s*[\w\.(),\"'{}\[\]+-]+
+
+#Need to use this => then look it at it recursivly 
+#Since you can have (dffdsf:dsfsdf): dfsf
+#\w+\s*=\s*[\w\.(),\"'{}\[\]+-]+\s*\?
     
