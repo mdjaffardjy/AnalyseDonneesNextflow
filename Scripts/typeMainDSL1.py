@@ -134,6 +134,26 @@ class TypeMainDSL1(TypeMain):
             tab+= self.extract_branches(start, end)
         return tab
 
+    def link_channels_set(self):
+        pattern= r'(\w+)\s*=\s*(CHANNEL_\d+)'
+        for match in re.finditer(pattern, self.string):
+            #print(match.group(0),match.group(1), match.group(2))
+            c= self.get_channel(match.group(2))
+            c.set_gives([match.group(1), 'P'])
+            c.set_full_string(match.group(1)+' = '+c.get_string())
+            self.string= self.string.replace(match.group(0), match.group(2), 1)
+        #The case (var1, var2) or (var1, var2, ..., varX)
+        pattern= r'\((\s*\w+\s*,(\s*\w+\s*,)*\s*\w+\s*)\)\s*=\s*(CHANNEL_\d+)'
+        for match in re.finditer(pattern, self.string):
+            c= self.get_channel(match.group(3))
+            temp=match.group(1)
+            temp= temp.split(',')
+            for t in temp:
+                t= t.strip()
+                c.set_gives([t, 'P'])
+            c.set_full_string(match.group(1)+' = '+c.get_string())
+            self.string= self.string.replace(match.group(0), match.group(3), 1)
+
 
     #Method pas parfait => workflow.CHANNEL_54 dans eager
     #Mais c'est pas très grave car on prend 'plus' qu'on a besoin
@@ -199,24 +219,7 @@ class TypeMainDSL1(TypeMain):
         #=================================================================
         #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = CHANNEL_ID
         #=================================================================
-        pattern= r'(\w+)\s*=\s*(CHANNEL_\d+)'
-        for match in re.finditer(pattern, self.string):
-            #print(match.group(0),match.group(1), match.group(2))
-            c= self.get_channel(match.group(2))
-            c.set_gives([match.group(1), 'P'])
-            c.set_full_string(match.group(1)+' = '+c.get_string())
-            self.string= self.string.replace(match.group(0), match.group(2), 1)
-        #The case (var1, var2) or (var1, var2, ..., varX)
-        pattern= r'\((\s*\w+\s*,(\s*\w+\s*,)*\s*\w+\s*)\)\s*=\s*(CHANNEL_\d+)'
-        for match in re.finditer(pattern, self.string):
-            c= self.get_channel(match.group(3))
-            temp=match.group(1)
-            temp= temp.split(',')
-            for t in temp:
-                t= t.strip()
-                c.set_gives([t, 'P'])
-            c.set_full_string(match.group(1)+' = '+c.get_string())
-            self.string= self.string.replace(match.group(0), match.group(3), 1)
+        self.link_channels_set()
 
         #=================================================================
         #FOURTH PART: INITIALISE THE CHANNELS
@@ -224,11 +227,15 @@ class TypeMainDSL1(TypeMain):
         #TODO: when we initialise it over-writes the thing just above 
         for c in self.channels:
             c.initialise_channel()
+            
+
+        #return string, channels
+
+    def print_channels(self):
+        for c in self.channels:
             print(c.get_id(), 'string :', c.get_full_string())
             print(c.get_id(), 'origin :',  c.get_origin())
             print(c.get_id(), 'gives  :',  c.get_gives())
-
-        #return string, channels
 
     def save_channels(self, address= "/home/george/Bureau/TER/", name='channels'):
         myText = open(address+name+'.nf','w')
@@ -298,6 +305,29 @@ class TypeMainDSL1(TypeMain):
             #Replacing the declaration by a marker
             self.string= self.string.replace(self.onComplete, 'WORKFLOW ON_COMPLETE')
             
+    #===========================================
+    #METHODS to manipulate ifs
+    #===========================================
+    #TODO add case ?:
+    def clean_up_if_double_dots_question(self):
+        pattern= r'([^\=\n]+)\s*=\s*([^\?\n]+)\s*\?\s*([^\:\n]+)\s*\:\s*([^\n]+)'
+        for match in re.finditer(pattern, self.string):
+            #print(match.group(0))
+            variable = match.group(1)
+            condition = match.group(2)
+            condition_true = match.group(3)
+            condition_false = match.group(4)
+            new_string="if("+condition+") { \n"+variable+" = "+condition_true+"\n } else { \n"+variable+" = "+condition_false+"\n } "
+            self.string= self.string.replace(match.group(0), new_string)
+        #Update the sets in the channels
+        self.link_channels_set()
+    
+    def clean_up_if_one_line(self):
+        self.string= add_curly(add_spaces(self.string))
+    
+    def format_ifs(self):
+        self.string= format_conditions(self.string)
+
 
 
     #===========================================
@@ -320,17 +350,27 @@ class TypeMainDSL1(TypeMain):
         #We extract the channels first since channels can be declared in functions
         self.find_functions()
         self.format_functions()
+
+        self.clean_up_if_double_dots_question()
+        self.clean_up_if_one_line()
         
         self.temp_workflow_onComplete()
+
+        self.format_ifs()
+        self.print_channels()
         
 
-
+def tests():
+    m= TypeMainDSL1("/home/george/Bureau/TER/Prototypes/Nextflow_tests_for_channels/test.nf")
+    m.initialise()
+    m.save_file()
 
 #=================
 #IF USED AS A MAIN
 #=================
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
+    #See Line 344
     m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf")
@@ -343,6 +383,7 @@ if __name__ == "__main__":
 
     m.save_file()
     m.save_channels()
+    #tests()
     #m.print_processes()
 
     #m.print_name_functions()

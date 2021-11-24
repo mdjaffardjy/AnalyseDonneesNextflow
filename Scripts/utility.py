@@ -133,6 +133,7 @@ def link_conditions_2(conditions, negative=False):
 #need to return the last condition in the case of a following else
 #tabs are references 
 def format_if_recursif_3(string, start, end, conditions, last_conditon, new_string):
+    print('working')
     #Gettig the if or else
     next= get_next_element_word(string, start, True)
     #in the case of else, we check if it's just a simple else or else if 
@@ -214,8 +215,8 @@ def extract_para(string, start):
         return end
 
 def add_curly(string):
-    pattern_global=r'((if|else\s+if) *\([^\n]*\)|else)\s*[^\w]'
-    pattern_precise=r'((if|else\s+if) *\([^\n]*\)|else)\s*{[^\w]'
+    pattern_global= r'((if|else +if) *\([^\n]*\)|else)\s*[^\w]*'
+    pattern_precise=r'((if|else +if) *\([^\n]*\)|else)\s*{[^\w]*'
     tab_pattern= [m.start(0) for m in re.finditer(pattern_global, string)]
     tab_curly= [m.start(0) for m in re.finditer(pattern_precise, string)]
     new_string=string
@@ -230,6 +231,7 @@ def add_curly(string):
         #print(first_word, string[first_index:first_index+len(first_word)])
         second_word, second_index= get_next_element_word(string, first_index+len(first_word))
         #print(second_word, string[second_index:second_index+len(second_word)])
+        #print(first_word, second_word)
         if(first_word=='if'):
             next_caracter, next_index= get_next_element_caracter(string, first_index+len(first_word))
             end= extract_para(string, next_index+1)
@@ -261,10 +263,10 @@ def add_curly(string):
 
 
 def format_conditions(string):
-    string= format_channels(string)
+    """string= format_channels(string)
     string= put_on_one_line(string)
     string= add_spaces(string)
-    string= add_curly(string)
+    string= add_curly(string)"""
     #print(string)
     i=0
     format=[]
@@ -315,7 +317,7 @@ def format_conditions(string):
             i=end
             start=i
         elif(first_word=='else' and the_word_after=='if'):
-            print(format[0])
+            #print(format[0])
             #print(format[0].copy())
             #print('else if!!!')
             format= format_if_recursif_3(string, i, len(string), [], format[0].copy(), '')
