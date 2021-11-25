@@ -357,7 +357,7 @@ class TypeMainDSL1(TypeMain):
         self.temp_workflow_onComplete()
 
         self.format_ifs()
-        self.print_channels()
+        #self.print_channels()
         
 
 def tests():

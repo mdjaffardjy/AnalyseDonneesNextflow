@@ -1,5 +1,16 @@
 import re
 
+
+#Function that returns an empty string
+def create_empty(string, start, end):
+    empty=''
+    for i in range(start, end):
+        if(string[i]=='\n'):
+            empty+='\n'
+        else:
+            empty+=' '
+    return empty
+
 def get_next_element_caracter(string, i):
     while(i+1<len(string)):
         i+=1
@@ -317,6 +328,20 @@ def format_conditions(string):
     string= add_spaces(string)
     string= add_curly(string)"""
     #print(string)
+
+    #Start by removing the strings things "..." to remove any ambiguity
+    strings=[]
+    index_replace=0 
+    pattern_small=r'\'.*\'|\".*\"'
+    for match in re.finditer(pattern_small, string): 
+        start= match.span()[0]
+        end= match.span()[1]
+        strings.append([string[start:end], "string_{}".format(index_replace)])
+        index_replace+=1
+        #string=string[:start]+create_empty(string, start, end)+string[end:]
+    for s in strings:
+        string= string.replace(s[0], s[1])
+
     i=0
     format=[]
     new_string=""
@@ -343,7 +368,7 @@ def format_conditions(string):
             break
 
         first_word, the_word_after= first_word.strip(), the_word_after.strip()
-        print(first_word, the_word_after)
+        #print(first_word, the_word_after)
         
 
         if(first_word=='if'):
@@ -379,6 +404,14 @@ def format_conditions(string):
             i=index_next_word+len(first_word)
         #print(new_string)
 
+    #Put the strings back
+    #Start at the end of the list to replace in the big numbers first since we're replacing all the occurences 
+    for i in range(len(strings)-1, -1, -1):
+        #print(i)
+        s= strings[i]
+        #print('HERE')
+        #print(s[1], s[0])
+        new_string= new_string.replace(s[1], s[0])
 
     return new_string
 
