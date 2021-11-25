@@ -67,17 +67,37 @@ def extract_condition_2(string):
     for match in re.finditer(pattern, string):
         return match.group(1)
 
-def get_index_next_curly(string, i):
+#This could create a problem if there is something like this: "..'.." but since there shoudn't be any bash that shoudn't be a problem
+def get_index_next_curly(string, i, check_string=False):
+    in_string=False
     while(i<len(string)):
-        if(string[i]=='{'):
-            return i
+        if(not check_string):
+            if(string[i]=='{'):
+                return i
+        if(check_string):
+            if(string[i]=="'" or string[i]=='"' and not in_string):
+                in_string=True
+            elif (string[i]=="'" or string[i]=='"' and in_string):
+                in_string= False
+            elif(string[i]=='{' and not in_string):
+                return i
         i+=1
+    raise Exception("Curly never opened!!!")
 
 
-def get_index_next_curly_close(string, i):
+def get_index_next_curly_close(string, i, check_string=False):
+    in_string=False
     while(i<len(string)):
-        if(string[i]=='}'):
-            return i
+        if(not check_string):
+            if(string[i]=='}'):
+                return i
+        if(check_string):
+            if(string[i]=="'" or string[i]=='"' and not in_string):
+                in_string=True
+            elif (string[i]=="'" or string[i]=='"' and in_string):
+                in_string= False
+            elif(string[i]=='}' and not in_string):
+                return i
         i+=1
     raise Exception("Curly never closed!!!")
 
@@ -98,7 +118,7 @@ def link_conditions(conditions, negative=False):
 
 
 def add_spaces(string):
-    i=0
+    """i=0
     while(True):
         if i>=len(string):
             break
@@ -110,7 +130,36 @@ def add_spaces(string):
             string= string[:i]+' '+string[i:i+4]+' '+string[i+4:]
             i+=6
 
-        i+=1
+        i+=1"""
+    tab_replace=[]
+    #============================
+    # simple if
+    #============================
+    pattern = r'[^\w](if)\s*\('
+    for match in re.finditer(pattern, string):
+        #print('here')
+        start, end= match.span(0)[0], match.span(0)[1]
+        start_if, end_if= match.span(1)[0], match.span(1)[1]
+        new= string[start:start_if]+' '+string[start_if:end_if]+' '+string[end_if:end]
+        #print('replace: ', match.group(0), new)
+        tab_replace.append([match.group(0), new])
+        #string= string.replace(match.group(0), new , 1)
+
+    #============================
+    # simple else
+    #============================
+    pattern = r'[^\w](else)[^\w]'
+    for match in re.finditer(pattern, string):
+        #print('here')
+        start, end= match.span(0)[0], match.span(0)[1]
+        start_else, end_else= match.span(1)[0], match.span(1)[1]
+        new= string[start:start_else]+' '+string[start_else:end_else]+' '+string[end_else:end]
+        #string= string.replace(match.group(0), new , 1)
+        tab_replace.append([match.group(0), new])
+    
+    for r in tab_replace:
+        string= string.replace(r[0], r[1], 1)
+    
 
     return string
 
@@ -133,7 +182,7 @@ def link_conditions_2(conditions, negative=False):
 #need to return the last condition in the case of a following else
 #tabs are references 
 def format_if_recursif_3(string, start, end, conditions, last_conditon, new_string):
-    print('working')
+    #print('working')
     #Gettig the if or else
     next= get_next_element_word(string, start, True)
     #in the case of else, we check if it's just a simple else or else if 
@@ -294,7 +343,7 @@ def format_conditions(string):
             break
 
         first_word, the_word_after= first_word.strip(), the_word_after.strip()
-        #print(first_word, the_word_after)
+        print(first_word, the_word_after)
         
 
         if(first_word=='if'):
@@ -332,3 +381,14 @@ def format_conditions(string):
 
 
     return new_string
+
+
+if __name__ == "__main__":
+    test="""
+        if("${params.fasta}".endsWith(".gz")){
+    process_poo
+    } else {
+    fasta_for_indexing = Channel_u
+}
+        """
+    print(format_conditions(add_spaces(test)))
