@@ -25,6 +25,7 @@ class Outputs:
         self.list_output = []
         self.list_qualifier = []
         self.list_words_workflow = []
+        self.list_emit = []
 
     def printOutput(self):
         print(self.output_string)
@@ -102,10 +103,25 @@ class Outputs:
                             self.list_words_workflow.append([idx,string[1:]])
                         break
 
+
+    def extractEmit(self):
+        patEmit = r'(emit\s*:\s*\w+)'
+        for idx in range (len(self.list_output)):
+            for match in re.finditer(patEmit, self.list_output[idx]):
+                start = match.span()[0] 
+                end = match.span()[1]
+                work = self.list_output[idx][start:end]
+                pat = r'(emit\s*:)'
+                for match in re.finditer(pat, work):
+                    startb = match.span()[1]
+                emit = work[startb:].lstrip().rstrip()
+                self.list_emit.append([idx,emit])
+
     def extractO(self):
         self.splitOutput()
         self.extractQualifier()
         self.extractName()
+        self.extractEmit()
 
     
 if __name__ == "__main__":

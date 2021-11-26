@@ -21,9 +21,12 @@ if __name__ == "__main__":
             f = open(bddProcess[i],"r")
             process = f.read()
             p = Process(process) 
+            p.extractProcess()
             inputs, outputs = p.extractAll()
             print("FILE : ", bddProcess[i])
-            print(p.script.tools)
+            #print(p.script.tools)
+            print(p.output.list_emit)
+
             #print(p.script.annotations)
             #print("Inputs: ", inputs)
             #print("Outputs: ",outputs)
@@ -87,15 +90,19 @@ if __name__ == "__main__":
     os.chdir(currentPath)
 
     """
+    #print(os.getcwd() )
     adress = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test2.txt"
     f = open(adress,"r")
     lines = f.read()
 
     p = Process(lines) 
+    p.extractProcess()
     inputs, outputs = p.extractAll()
+    print(p.output.list_output)
+    print(p.output.list_emit)
     #print(p.script.script_string)
-    print(p.script.tools)
-    print(p.script.annotations)
+    #print("TOOLS : ", p.script.tools)
+    #print("ANNOTATIONS : ", p.script.annotations)
     #printInformations(p)
     #printNameInWorkflow(p)
     #printLanguage(p)
