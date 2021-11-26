@@ -367,6 +367,14 @@ class TypeMainDSL1(TypeMain):
     def format_ifs(self):
         self.string= format_conditions(self.string)
 
+    def create_channels_links(self, dot, name):
+        dot.node(name, '', color= '2', shape='doublecircle')
+    
+    def create_edge(self, dot, l1, l2, la):
+        dot.edge(l1, l2, constraint='true', label='')
+        
+
+
     #===========================================
     #METHODS STRUCTURE
     #===========================================
@@ -379,7 +387,7 @@ class TypeMainDSL1(TypeMain):
             input, output= p.extractAll()
             #print('input :', input)
             #print('output :', output)
-            dot.node(p.getName(), p.getName(), color= '2', shape='box')
+            dot.node(p.getName(), p.getName(), color= '3', shape='box')
         
         #ADD THE CHANNELS (LINKS)
         added_link= True
@@ -410,11 +418,12 @@ class TypeMainDSL1(TypeMain):
                                     if(not check_containing(reference, links_added)):
                                         if(not check_containing(c1.get_id(), channels_added)):
                                             #TODO Find what to put in the channel to show
-                                            dot.node(c1.get_id(), 'CHANNEL', color= '1')
+                                            self.create_channels_links(dot, c1.get_id())
                                             channels_added.append(c1.get_id())
                                         added_link = True
                                         links_added.append(reference)
-                                        dot.edge(c1.get_id(), p.getName(), constraint='true', label=c_name)
+                                        #dot.edge(c1.get_id(), p.getName(), constraint='true', label=c_name)
+                                        self.create_edge(dot, c1.get_id(), p.getName(), c_name)
                     #===============================================================
                     #Case p.output -> c1_origin
                     #===============================================================
@@ -428,23 +437,60 @@ class TypeMainDSL1(TypeMain):
                                     if(not check_containing(reference, links_added)):
                                         if(not check_containing(c1.get_id(), channels_added)):
                                             #TODO Find what to put in the channel to show
-                                            dot.node(c1.get_id(), 'CHANNEL', color= '1')
+                                            self.create_channels_links(dot, c1.get_id())
                                             channels_added.append(c1.get_id())
                                         added_link = True
                                         links_added.append(reference)
                                         print(reference)
-                                        dot.edge(p.getName(),c1.get_id(), constraint='true', label=c_name)
+                                        #dot.edge(p.getName(),c1.get_id(), constraint='true', label=c_name)
+                                        self.create_edge(dot, p.getName(), c1.get_id(), c_name)
 
-                #print('poo')    
-                #Channels
-                for c2 in temp_channels:
-                    #Obsiously if they're diffrent
-                    if(c1!=c2):
-                        c2_gives= c2.get_gives()
-                        c2_origin= c2.get_origin()
-                        #Case c1_gives -> p.input
+                #===============================================================
+                #Case c1_gives -> c2_origin
+                #===============================================================
+                for c1_gives_for in c1_gives:
+                    c1_name, type_c1=  c1_gives_for[0], c1_gives_for[1]
+                    if(type_c1=='P'):
+                        for c2 in temp_channels:
+                            if(c1!=c2):
+                                c2_gives= c2.get_gives()
+                                c2_origin= c2.get_origin()
+                                #Obsiously if they're diffrent
+                                for c2_origin_for in c2_origin:
+                                    c2_name, type_c2=  c2_origin_for[0], c2_origin_for[1]
+                                    if(type_c2=='P'):
+                                        if(c2_name == c1_name):
+                                            reference='{}:{} -> {}:{}'.format(c1.get_id(), c1_name, c2.get_id(), c2_name)
+                                            if(not check_containing(reference, links_added)):
+                                                if(not check_containing(c1.get_id(), channels_added)):
+                                                    #TODO Find what to put in the channel to show
+                                                    self.create_channels_links(dot, c1.get_id())
+                                                    channels_added.append(c1.get_id())
+                                                if(not check_containing(c2.get_id(), channels_added)):
+                                                    #TODO Find what to put in the channel to show
+                                                    self.create_channels_links(dot, c2.get_id())
+                                                    channels_added.append(c2.get_id())
+                                                added_link = True
+                                                links_added.append(reference)
+                                                print(reference)
+                                                #dot.edge(c1.get_id(),c2.get_id(), constraint='true', label=c1_name)
+                                                self.create_edge(dot, c1.get_id(), c2.get_id(), c1_name)
 
-                        #Case p.output -> c1_origin 
+            #===============================================================
+            #Case p.output -> p.input
+            #===============================================================
+            for p1 in temp_processes:
+                    input_p1, output_p1= p.extractAll()
+                    for p2 in temp_processes:
+                        if(p1!=p2):
+                            input_p2, output_p2= p.extractAll()
+                            if(output_p1== input_p2):
+                                reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1 , p2.getName(), output_p2)
+                                if(not check_containing(reference, links_added)):
+                                    added_link = True
+                                    links_added.append(reference)
+                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
+                                    self.create_edge(dot, p1.getName(), p2.getName(), output_p1)
 
 
 
