@@ -2,7 +2,7 @@ import re
 
 
 def check_containing(ele, tab):
-    index= tab.count(ele)
+    index   = tab.count(ele)
     if(index==0):
         return False
     return True
