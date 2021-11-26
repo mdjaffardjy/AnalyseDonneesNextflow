@@ -1,6 +1,12 @@
 import re
 
 
+def check_containing(ele, tab):
+    index= tab.count(ele)
+    if(index==0):
+        return False
+    return True
+
 #Function that returns an empty string
 def create_empty(string, start, end):
     empty=''
@@ -418,10 +424,12 @@ def format_conditions(string):
 
 if __name__ == "__main__":
     test="""
-        if("${params.fasta}".endsWith(".gz")){
-    process_poo
-    } else {
-    fasta_for_indexing = Channel_u
-}
+        if(clemence){
+            yo
+        }else{
+            no yo
+        }
         """
-    print(format_conditions(add_spaces(test)))
+    #print(format_conditions(add_curly(add_spaces(test))))
+    a=[1, 2,3, 4, 5, 6]
+    print(check_containing(743, a))

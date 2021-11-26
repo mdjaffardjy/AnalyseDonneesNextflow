@@ -1,9 +1,10 @@
 import re
 from typeMain import * 
-from process_test import *
+from process import *
 from function import *
 from channel import *
 from utility import *
+import graphviz
 
 class TypeMainDSL1(TypeMain):
     def __init__(self, address):
@@ -155,7 +156,7 @@ class TypeMainDSL1(TypeMain):
             self.string= self.string.replace(match.group(0), match.group(3), 1)
 
 
-    #Method pas parfait => workflow.CHANNEL_54 dans eager
+    #Method pas parfait 
     #Mais c'est pas très grave car on prend 'plus' qu'on a besoin
     #Collect les faux positifs enfaite mais pas très grave
     def extract_channels(self):
@@ -179,6 +180,7 @@ class TypeMainDSL1(TypeMain):
         #=================================================================
         pattern= r'[^\w]((C|c)hannel\s*\.)'
         index=1
+        #print(str(index))
         for match in re.finditer(pattern, self.string):
             start= match.span(1)[0]
             end= self.get_end_channel(start)
@@ -221,15 +223,43 @@ class TypeMainDSL1(TypeMain):
         #=================================================================
         self.link_channels_set()
 
+    
         #=================================================================
-        #FOURTH PART: INITIALISE THE CHANNELS
+        #FIFTH PART: INITIALISE THE CHANNELS
         #=================================================================
         #TODO: when we initialise it over-writes the thing just above 
-        for c in self.channels:
-            c.initialise_channel()
+        """for c in self.channels:
+            c.initialise_channel()"""
             
 
         #return string, channels
+
+    def check_attributions(self):
+        #=================================================================
+        #FOURTH PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = ... => affectation
+        #=================================================================
+        index= len(self.channels)
+        pattern= r'\w+ *= *\w+'
+        all, dots=[], []
+        for match in re.finditer(pattern, self.string):
+            all.append(match.group(0))
+        pattern= r'\.\w+ *= *\w+'
+        #print('all', all)
+        for match in re.finditer(pattern, self.string):
+            dots.append(match.group(0).replace('.', ''))
+        #print('dots', dots)
+        tab= list(set(all) - set(dots))
+        #print('tab', tab)
+        for c in tab:
+            name= 'CHANNEL_'+str(index)
+            code= c
+            temp_channel= Channel(name, code)
+            temp_channel.not_normal()
+            self.channels.append(temp_channel)
+            index+=1
+        for c in self.channels:
+            #print(c.get_id(), c.get_string())
+            self.string= self.string.replace(c.get_string(), c.get_id(), 1)
 
     def print_channels(self):
         for c in self.channels:
@@ -240,8 +270,17 @@ class TypeMainDSL1(TypeMain):
     def save_channels(self, address= "/home/george/Bureau/TER/", name='channels'):
         myText = open(address+name+'.nf','w')
         for c in self.channels:
-            myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
+            #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
+            myText.write(c.get_id()+ ' string : '+c.get_full_string()+'\n')
+            myText.write(c.get_id()+' origin : '+  str(c.get_origin())+'\n')
+            myText.write(c.get_id() +' gives  : '+  str(c.get_gives())+'\n\n\n')
+
+
         myText.close()
+    
+    def initialise_channels(self):
+        for c in self.channels:
+            c.initialise_channel()
 
 
 
@@ -328,6 +367,95 @@ class TypeMainDSL1(TypeMain):
     def format_ifs(self):
         self.string= format_conditions(self.string)
 
+    #===========================================
+    #METHODS STRUCTURE
+    #===========================================
+    def get_structure(self, address= "/home/george/Bureau/TER/"):
+        dot = graphviz.Digraph(filename='structure_worklow', format='png', comment='structure'\
+                                 , node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
+        #ADD THE PREOCESSES
+        for p in self.processes:
+            #p.printName()
+            input, output= p.extractAll()
+            #print('input :', input)
+            #print('output :', output)
+            dot.node(p.getName(), p.getName(), color= '2', shape='box')
+        
+        #ADD THE CHANNELS (LINKS)
+        added_link= True
+        temp_channels, temp_processes= self.channels.copy(), self.processes.copy()
+        links_added=[]
+        channels_added=[]
+        while(added_link):
+            added_link = False
+            for c1 in temp_channels:
+                c1_gives= c1.get_gives()
+                c1_origin= c1.get_origin()
+                #Processes
+                for p in temp_processes:
+                    input, output= p.extractAll()
+                    #===============================================================
+                    #Case c1_gives -> p.input
+                    #TODO right now we're not looking at the type or checking at least -> see HERE1
+                    #===============================================================
+                    for c1_gives_for in c1_gives:
+                        c_name, type_c=  c1_gives_for[0], c1_gives_for[1]
+                        for input_for in input:
+                            id_input, input_name=  input_for[0], input_for[1]
+                            #print(c_name, input_name)
+                            #TODO HERE1
+                            if(type_c=='P'):
+                                if(c_name == input_name):
+                                    reference='{}:{} -> {}:{}'.format(c1.get_id(), c_name, p.getName(), input_name)
+                                    if(not check_containing(reference, links_added)):
+                                        if(not check_containing(c1.get_id(), channels_added)):
+                                            #TODO Find what to put in the channel to show
+                                            dot.node(c1.get_id(), 'CHANNEL', color= '1')
+                                            channels_added.append(c1.get_id())
+                                        added_link = True
+                                        links_added.append(reference)
+                                        dot.edge(c1.get_id(), p.getName(), constraint='true', label=c_name)
+                    #===============================================================
+                    #Case p.output -> c1_origin
+                    #===============================================================
+                    for output_for in output:
+                        id_output, output_name= output_for[0], output_for[1]
+                        for c1_origin_for in c1_origin:
+                            c_name, type_c=  c1_origin_for[0], c1_origin_for[1]
+                            if(type_c=='P'):
+                                if(c_name == output_name):
+                                    reference='{}:{} -> {}:{}'.format(p.getName(), output_name, c1.get_id(), c_name)
+                                    if(not check_containing(reference, links_added)):
+                                        if(not check_containing(c1.get_id(), channels_added)):
+                                            #TODO Find what to put in the channel to show
+                                            dot.node(c1.get_id(), 'CHANNEL', color= '1')
+                                            channels_added.append(c1.get_id())
+                                        added_link = True
+                                        links_added.append(reference)
+                                        print(reference)
+                                        dot.edge(p.getName(),c1.get_id(), constraint='true', label=c_name)
+
+                #print('poo')    
+                #Channels
+                for c2 in temp_channels:
+                    #Obsiously if they're diffrent
+                    if(c1!=c2):
+                        c2_gives= c2.get_gives()
+                        c2_origin= c2.get_origin()
+                        #Case c1_gives -> p.input
+
+                        #Case p.output -> c1_origin 
+
+
+
+        
+
+
+
+        dot.render(directory=address)
+        dot.save(directory=address)
+            
+
 
 
     #===========================================
@@ -357,6 +485,10 @@ class TypeMainDSL1(TypeMain):
         self.temp_workflow_onComplete()
 
         self.format_ifs()
+
+        self.check_attributions()
+
+        self.initialise_channels()
         #self.print_channels()
         
 
@@ -376,9 +508,12 @@ if __name__ == "__main__":
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf")
     #Still need to look into sarek
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf")
+    #Seen that there is a bug with condition
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq-master/main.nf")
+    #Major problem here
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf")
     m.initialise()
+    m.get_structure()
     #m.print_name_processes()
 
     m.save_file()
@@ -395,10 +530,5 @@ if __name__ == "__main__":
 # - And to link everything together after
 # - Remove comments is still not perfect=> see metaboigniter
 # - workflow.onError
-# - Finish ifs and do the ... = dsfdsf ? dsfdsf : dsfsdfsd case
-#\w+\s*=\s*[\w\.(),\"'{}\[\]+-]+\s*\?\s*[\w\.(),\"'{}\[\]+-]+\s*\:\s*[\w\.(),\"'{}\[\]+-]+
-
-#Need to use this => then look it at it recursivly 
-#Since you can have (dffdsf:dsfsdf): dfsf
-#\w+\s*=\s*[\w\.(),\"'{}\[\]+-]+\s*\?
+# - CONDITIONS!!!!
     

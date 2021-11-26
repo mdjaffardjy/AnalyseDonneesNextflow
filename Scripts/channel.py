@@ -12,12 +12,16 @@ class Channel:
         self.full_string = None
         self.value = None 
         self.condition = None
+        #We use this attribute to ddistingue 2 cases the normal case and the last case channel_x = channel_y
+        self.normal = True
         #Probably have to ignore empty()
         self.origin = [] #Nothing, other channel, path
         #The channel 
         self.gives= []
 
-    
+    def not_normal(self):
+        self.normal = False
+
     def get_string(self):
         return self.string
 
@@ -180,14 +184,17 @@ class Channel:
         for match in re.finditer(pattern, self.string):
             #print(match.group(1))
             self.gives.append([match.group(1), 'P'])
-  
-            
-
-            
+          
     def check_set(self):
         pattern= r'\.\s*set\s*{\s*(\w+)\s*}'
         for match in re.finditer(pattern, self.string):
             self.gives.append([match.group(1), 'P'])
+
+    def extract_affectation(self):
+        pattern= r'(\w+) *= *(\w+)'
+        for match in re.finditer(pattern, self.string):
+            self.gives.append([match.group(1), 'P'])
+            self.origin.append([match.group(2), 'P'])
 
     
 
@@ -195,13 +202,16 @@ class Channel:
         self.string= self.string.strip()
         if(self.full_string==None):
             self.set_full_string(self.string)
-        self.check_first_word()
-        self.check_set()
-        #print(self.get_first_word())
-        self.check_join()
-        self.check_fork()
-        self.check_factory()
-        None
+        if(self.normal):
+            self.check_first_word()
+            self.check_set()
+            #print(self.get_first_word())
+            self.check_join()
+            self.check_fork()
+            self.check_factory()
+        else:
+            self.extract_affectation()
+
         #DO_STUFF
 
 def tests():
@@ -483,15 +493,13 @@ def tests():
 
 if __name__ == "__main__":
     test="""
-        Channel
-            .fromFilePairs( input, size: 1 )
-            .filter { it =~/.*.bam/ }
-            .map { row -> [ row[0], [ row[1][0] ] ] }
-            .ifEmpty { exit 1, "[nf-core/eager] error: Cannot find any bam file matching: ${input}" }
-            .set { ch_reads_for_faketsv }
+        asv_table  = dbotu3_table_filtering_tax
         """
     c= Channel('channel_1', test)
-    #c.initialise_channel()
+    c.not_normal()
+    c.initialise_channel()
+    print(c.get_gives())
+    print(c.get_origin())
 
     tests()
 
