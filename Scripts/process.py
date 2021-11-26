@@ -245,18 +245,19 @@ class Process:
   def extractAll(self):
     #self.extractProcess()
 
-    if self.input != None and self.output != None:
-      input, output= self.input.getNameInWorkflow(), self.output.getNameInWorkflow()
-      return input, output
-
-    elif self.input == None and self.output != None:
-      return [], self.output.getNameInWorkflow()
-
-    elif self.input != None and self.output == None:
-      return self.input.getNameInWorkflow(), []
-    
+    if self.input != None:
+      inputs = self.input.getNameInWorkflow()
     else:
-      return [], []
+      inputs = []
+    
+    if self.output != None:
+      outputs = self.output.getNameInWorkflow()
+      emit = self.output.getEmit()
+    else:
+      outputs = []
+      emit = []
+    
+    return inputs, outputs, emit
 
   def getName(self):
     return self.name
