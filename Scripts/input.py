@@ -9,13 +9,13 @@ keyWordsI = ['val', 'env', 'file', 'path', 'stdin', 'tuple', 'each', 'set']
 
 listPatternI = []
 for words in keyWordsI:
-    str = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
-    listPatternI.append(str)
+    string = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
+    listPatternI.append(string)
 
 listPatternIb = []
 for words in keyWordsI:
-    str = "(" + words + "(\s|\(|\{|\[)\w+)"
-    listPatternIb.append(str)
+    string = "(" + words + "(\s|\(|\{|\[)\w+)"
+    listPatternIb.append(string)
 
 """
 SECOND PART - Class
@@ -31,8 +31,8 @@ class Inputs:
         print(self.input_string)
 
     def printListInput(self):
-        for str in self.list_input:
-            print(str)
+        for string in self.list_input:
+            print(string)
 
     def numberInputs(self):
         return len(self.list_input)
@@ -62,8 +62,8 @@ class Inputs:
                 end = match.span()[1]
             #Precence of "from"
             if start >=0:
-                str = self.list_input[idx][start:end].lstrip().rstrip()
-                self.list_words_workflow.append([idx,str])
+                string = self.list_input[idx][start:end].lstrip().rstrip()
+                self.list_words_workflow.append([idx,string])
             #Without "from"
             else:
                 startb = -1
@@ -73,11 +73,11 @@ class Inputs:
                         startb = match.span()[0] + len(keyWordsI[i]) + 1
                         endb = match.span()[1]
                     if startb >=0:
-                        str = self.list_input[idx][startb:endb].lstrip().rstrip()
-                        if str[0].isalpha():
-                            self.list_words_workflow.append([idx,str])
+                        string = self.list_input[idx][startb:endb].lstrip().rstrip()
+                        if string[0].isalpha():
+                            self.list_words_workflow.append([idx,string])
                         else:
-                            self.list_words_workflow.append([idx,str[1:]])
+                            self.list_words_workflow.append([idx,string[1:]])
                         break
                     
     def extractI(self):

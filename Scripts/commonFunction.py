@@ -1,6 +1,3 @@
-"""
-Author : Clemence SEBE
-"""
 import re
 """
 This file contains all the functions which could be use in different Class

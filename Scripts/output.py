@@ -8,13 +8,13 @@ keyWordsO = ['val', 'env', 'file', 'path', 'stdout', 'tuple', 'set']
 
 listPatternO = []
 for words in keyWordsO:
-    str = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
-    listPatternO.append(str)
+    string = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
+    listPatternO.append(string)
 
 listPatternOb = []
 for words in keyWordsO:
-    str = "(" + words + "(\s|\(|\{|\[)\w+)"
-    listPatternOb.append(str)
+    string = "(" + words + "(\s|\(|\{|\[)\w+)"
+    listPatternOb.append(string)
 
 """
 SECOND PART - Class
@@ -30,8 +30,8 @@ class Outputs:
         print(self.output_string)
 
     def printListOutput(self):
-        for str in self.list_output:
-            print(str)
+        for string in self.list_output:
+            print(string)
 
     def numberOutputs(self):
         return len(self.list_output)
@@ -72,20 +72,20 @@ class Outputs:
                     for match in re.finditer(endWord, work):
                         if match.span()[0] < end:
                             end = match.span()[0]
-                    str = work[:end].lstrip().rstrip()
-                    self.list_words_workflow.append([idx,str])
+                    string = work[:end].lstrip().rstrip()
+                    self.list_words_workflow.append([idx,string])
                 else:
                     placeComma.sort()
                     for i in range (len(placeComma)):
                         if i == 0:
-                            str = work[0:placeComma[i][0]].lstrip().rstrip()
+                            string = work[0:placeComma[i][0]].lstrip().rstrip()
                         elif i == len(placeComma)-1:
-                            str = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
-                            self.list_words_workflow.append([idx,str])
-                            str = work[placeComma[i][1]:].lstrip().rstrip()
+                            string = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
+                            self.list_words_workflow.append([idx,string])
+                            string = work[placeComma[i][1]:].lstrip().rstrip()
                         else:
-                            str = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
-                        self.list_words_workflow.append([idx,str])
+                            string = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
+                        self.list_words_workflow.append([idx,string])
             #Without "into"
             else:
                 startb = -1
@@ -95,11 +95,11 @@ class Outputs:
                         startb = match.span()[0] + len(keyWordsO[i]) + 1
                         endb = match.span()[1]
                     if startb >=0:
-                        str = self.list_output[idx][startb:endb].lstrip().rstrip()
-                        if str[0].isalpha():
-                            self.list_words_workflow.append([idx,str])
+                        string = self.list_output[idx][startb:endb].lstrip().rstrip()
+                        if string[0].isalpha():
+                            self.list_words_workflow.append([idx,string])
                         else:
-                            self.list_words_workflow.append([idx,str[1:]])
+                            self.list_words_workflow.append([idx,string[1:]])
                         break
 
     def extractO(self):

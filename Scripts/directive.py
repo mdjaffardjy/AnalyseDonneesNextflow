@@ -11,9 +11,8 @@ keyWordsD = ["accelerator", "afterScript", "beforeScript", "cache", "cpus", "con
 
 listPatternD = []
 for words in keyWordsD:
-    str = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
-    listPatternD.append(str)
-
+    string = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
+    listPatternD.append(string)
 """
 SECOND PART - Class
 """
@@ -27,8 +26,8 @@ class Directives:
         print(self.directive_string)
     
     def printListDirective(self):
-        for str in self.list_directive:
-            print(str)
+        for string in self.list_directive:
+            print(string)
     
     def numberDirectives(self):
         return len(self.list_directive)

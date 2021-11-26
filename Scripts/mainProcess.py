@@ -22,8 +22,12 @@ if __name__ == "__main__":
             process = f.read()
             p = Process(process) 
             inputs, outputs = p.extractAll()
-            print("Inputs: ", inputs)
-            print("Outputs: ",outputs)
+            print("FILE : ", bddProcess[i])
+            print(p.script.tools)
+            #print(p.script.annotations)
+            #print("Inputs: ", inputs)
+            #print("Outputs: ",outputs)
+            #print(p.script.script_string)
             informations = p.getAll()
             for part, k in zip(informations[1:], keyword):
                 if part != None:
@@ -89,10 +93,13 @@ if __name__ == "__main__":
 
     p = Process(lines) 
     inputs, outputs = p.extractAll()
-    printInformations(p)
-    printNameInWorkflow(p)
-    printLanguage(p)
-    printQualifier(p)
+    #print(p.script.script_string)
+    print(p.script.tools)
+    print(p.script.annotations)
+    #printInformations(p)
+    #printNameInWorkflow(p)
+    #printLanguage(p)
+    #printQualifier(p)
     f.close()
     """
     print("-----------------------------END-----------------------------")

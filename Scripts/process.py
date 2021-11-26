@@ -294,6 +294,7 @@ class Process:
     return self.script
   def getStub(self):
     return self.stub
+  
 
   def getAll(self):
     return [self.getName(), self.getDirective(), self.getInput(), self.getOutput(), 
