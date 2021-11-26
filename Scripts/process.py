@@ -237,6 +237,51 @@ class Process:
       self.process_work = self.process_work.replace(self.process_work[start[0]:end].lstrip().rstrip(), "")
   
 
+
+  def extractAll(self):
+    #self.extractProcess()
+
+    if self.input != None and self.output != None:
+      input, output= self.input.getNameInWorkflow(), self.output.getNameInWorkflow()
+      return input, output
+
+    elif self.input == None and self.output != None:
+      return [], self.output.getNameInWorkflow()
+
+    elif self.input != None and self.output == None:
+      return self.input.getNameInWorkflow(), []
+    
+    else:
+      return [], []
+
+  def getName(self):
+    return self.name
+  def getDirective(self):
+    return self.directive
+  def getInput(self):
+    return self.input
+  def getOutput(self):
+    return self.output 
+  def getWhen(self):
+    return self.when
+  def getScript(self):
+    return self.script
+  def getStub(self):
+    return self.stub
+
+  def getAll(self):
+    return [self.getName(), self.getDirective(), self.getInput(), self.getOutput(), 
+                                  self.getWhen(), self.getScript(), self.getStub()]
+
+  def change_name(self, temp):
+    self.name= temp
+
+  def get_name(self):
+    return self.name
+
+  def get_string(self):
+    return self.process_string
+
   #Do everything to extract the informations
   def extractProcess(self):
     """
@@ -265,40 +310,6 @@ class Process:
       print("ERROR - Something is wrong ! - self.process_work is not empty : ", self.process_work)
     #To continued
 
-  def extractAll(self):
-    self.extractProcess()
-
-    if self.input != None and self.output != None:
-      return self.input.getNameInWorkflow(), self.output.getNameInWorkflow()
-
-    elif self.input == None and self.output != None:
-      return [], self.output.getNameInWorkflow()
-
-    elif self.input != None and self.output == None:
-      return self.input.getNameInWorkflow(), []
-    
-    else:
-      return [], []
-
-  def getName(self):
-    return self.name
-  def getDirective(self):
-    return self.directive
-  def getInput(self):
-    return self.input
-  def getOutput(self):
-    return self.output 
-  def getWhen(self):
-    return self.when
-  def getScript(self):
-    return self.script
-  def getStub(self):
-    return self.stub
-  
-
-  def getAll(self):
-    return [self.getName(), self.getDirective(), self.getInput(), self.getOutput(), 
-                                  self.getWhen(), self.getScript(), self.getStub()]
 
 if __name__ == "__main__":
     print("I shouldn't be executed as a main")
