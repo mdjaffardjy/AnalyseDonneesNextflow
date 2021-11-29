@@ -368,10 +368,10 @@ class TypeMainDSL1(TypeMain):
         self.string= format_conditions(self.string)
 
     def create_channels_links(self, dot, name):
-        dot.node(name, '', color= '2', shape='doublecircle')
+        dot.node(name, '', color= '1', shape='doublecircle')
     
     def create_edge(self, dot, l1, l2, la):
-        dot.edge(l1, l2, constraint='true', label='')
+        dot.edge(l1, l2, constraint='true', label=la)
         
 
 
@@ -387,7 +387,7 @@ class TypeMainDSL1(TypeMain):
             input, output= p.extractAll()
             #print('input :', input)
             #print('output :', output)
-            dot.node(p.getName(), p.getName(), color= '3', shape='box')
+            dot.node(p.getName(), p.getName(), color= '2', shape='box')
         
         #ADD THE CHANNELS (LINKS)
         added_link= True
@@ -396,6 +396,25 @@ class TypeMainDSL1(TypeMain):
         channels_added=[]
         while(added_link):
             added_link = False
+
+            #===============================================================
+            #Case p.output -> p.input
+            #===============================================================
+            for p1 in temp_processes:
+                    input_p1, output_p1= p.extractAll()
+                    for p2 in temp_processes:
+                        if(p1!=p2):
+                            input_p2, output_p2= p.extractAll()
+                            if(output_p1== input_p2):
+                                reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1 , p2.getName(), output_p2)
+                                if(not check_containing(reference, links_added)):
+                                    added_link = True
+                                    links_added.append(reference)
+                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
+                                    self.create_edge(dot, p1.getName(), p2.getName(), output_p1)
+
+
+
             for c1 in temp_channels:
                 c1_gives= c1.get_gives()
                 c1_origin= c1.get_origin()
@@ -441,7 +460,7 @@ class TypeMainDSL1(TypeMain):
                                             channels_added.append(c1.get_id())
                                         added_link = True
                                         links_added.append(reference)
-                                        print(reference)
+                                        #print(reference)
                                         #dot.edge(p.getName(),c1.get_id(), constraint='true', label=c_name)
                                         self.create_edge(dot, p.getName(), c1.get_id(), c_name)
 
@@ -472,37 +491,321 @@ class TypeMainDSL1(TypeMain):
                                                     channels_added.append(c2.get_id())
                                                 added_link = True
                                                 links_added.append(reference)
-                                                print(reference)
+                                                #print(reference)
                                                 #dot.edge(c1.get_id(),c2.get_id(), constraint='true', label=c1_name)
                                                 self.create_edge(dot, c1.get_id(), c2.get_id(), c1_name)
 
-            #===============================================================
-            #Case p.output -> p.input
-            #===============================================================
-            for p1 in temp_processes:
-                    input_p1, output_p1= p.extractAll()
-                    for p2 in temp_processes:
-                        if(p1!=p2):
-                            input_p2, output_p2= p.extractAll()
-                            if(output_p1== input_p2):
-                                reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1 , p2.getName(), output_p2)
-                                if(not check_containing(reference, links_added)):
-                                    added_link = True
-                                    links_added.append(reference)
-                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
-                                    self.create_edge(dot, p1.getName(), p2.getName(), output_p1)
-
-
-
-        
-
-
-
         dot.render(directory=address)
         dot.save(directory=address)
-            
 
+    def get_structure_2(self, address= "/home/george/Bureau/TER/"):
+        dot = graphviz.Digraph(filename='structure_worklow_2', format='png', comment='structure'\
+                                 , node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
+        #[0] -> the pointer and [1] -> of what (either process or channel)
+        tab_origin, tab_gives= [], []
+        #ADD THE PREOCESSES
+        for p in self.processes:
+            #p.printName()
+            input, output= p.extractAll()
+            for i in input:
+                id, name= i[0], i[1]
+                tab_origin.append([name, p.getName()])
+            for o in output:
+                id, name= o[0], o[1]
+                tab_gives.append([name, p.getName()])
+            #print('input :', input)
+            #print('output :', output)
+            dot.node(p.getName(), p.getName(), color= '2', shape='box')
 
+        links_added=[]
+        temp_channels, temp_processes= self.channels.copy(), self.processes.copy()
+        #===============================================================
+        #Case p.output -> p.input
+        #===============================================================
+        #For earch process
+        for p1 in temp_processes:
+            #Get the inputs and outputs
+            input_p1, output_p1= p1.extractAll()
+            #For the other processes
+            for p2 in temp_processes:
+                #Check it's not the same process
+                if(p1!=p2):
+                    #Get the inputs and outputs
+                    input_p2, output_p2= p2.extractAll()
+                    #For each inputs and outputs for both processes
+                    for output_p1_for_full in output_p1:
+                        output_p1_for_id, output_p1_for= output_p1_for_full[0], output_p1_for_full[1]
+                        for input_p2_for_full in input_p2:
+                            input_p2_for_id, input_p2_for= input_p2_for_full[0], input_p2_for_full[1]
+                            #check if the link matches
+                            if(output_p1_for== input_p2_for):
+                                reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1_for , p2.getName(), input_p2_for)
+                                #Check that we've not already added it to the graph
+                                if(not check_containing(reference, links_added)):
+                                    #Adding it to the graph
+                                    links_added.append(reference)
+                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
+                                    self.create_edge(dot, p1.getName(), p2.getName(), output_p1_for)
+        
+        #The next step is starting from the inputs and outputs from the different processes and linking the rest of the structure from that
+        added_link= True
+        channels_added=[]
+        index=1
+        while(added_link):
+            #print('here')
+            added_link = False
+            new_channels_added=[]
+            #===========================================
+            #===========================================
+            #From the origin tab
+            #===========================================
+            #===========================================
+            for origin in tab_origin:
+                origin_name, name_thing= origin[0], origin[1]
+                for c in temp_channels:
+                    c_gives= c.get_gives()
+                    for c_gives_for in c_gives:
+                        c_name, type_c=  c_gives_for[0], c_gives_for[1]
+                        if(type_c=='P'):
+                            if(c_name== origin_name):
+                                reference='{}:{} -> {}:{}'.format(c.get_id(), c_name , name_thing, origin_name)
+                                if(not check_containing(reference, links_added)):
+                                    links_added.append(reference)
+                                    if(not check_containing(c.get_id(), channels_added)):
+                                        #TODO Find what to put in the channel to show
+                                        self.create_channels_links(dot, c.get_id())
+                                        channels_added.append(c.get_id())
+                                        new_channels_added.append(c)
+                                    self.create_edge(dot, c.get_id(), name_thing, c_name)
+                                    added_link= True
+                
+            for c in new_channels_added:
+                c_origin, c_gives= c.get_origin(), c.get_gives()
+                for o in c_origin:
+                    tab_origin.append([o, c.get_id()])
+                for g in c_gives:
+                    tab_gives.append([g, c.get_id()])    
+
+            #===========================================
+            #===========================================
+            #From the gives tab
+            #===========================================
+            #===========================================
+            new_channels_added=[]
+            for gives in tab_gives:
+                gives_name, name_thing= gives[0], gives[1]
+                for c in temp_channels:
+                    c_origin= c.get_origin()
+                    for c_origin_for in c_origin:
+                        c_name, type_c=  c_origin_for[0], c_origin_for[1]
+                        if(type_c=='P'):
+                            if(c_name== gives_name):
+                                reference='{}:{} -> {}:{}'.format(name_thing, gives_name, c.get_id(), c_name)
+                                if(not check_containing(reference, links_added)):
+                                    links_added.append(reference)
+                                    if(not check_containing(c.get_id(), channels_added)):
+                                        #TODO Find what to put in the channel to show
+                                        self.create_channels_links(dot, c.get_id())
+                                        channels_added.append(c.get_id())
+                                        new_channels_added.append(c)
+                                    self.create_edge(dot,name_thing, c.get_id(),c_name)
+                                    added_link= True
+                
+            for c in new_channels_added:
+                c_origin, c_gives= c.get_origin(), c.get_gives()
+                for o in c_origin:
+                    tab_origin.append([o, c.get_id()])
+                for g in c_gives:
+                    tab_gives.append([g, c.get_id()])
+        
+        
+        dot.render(directory=address)
+        dot.save(directory=address)
+
+    #TODO:
+    #   - Need to add support => not just for pointers but for file and other types
+    #   - Right documentations for the method
+    #   - Check the difference between 2 and 3 => don't understand why it works but it does so hey ho
+    #Method that constructs the structure of the workflow thanks to the list of channels and processes
+    def get_structure_3(self, address= "/home/george/Bureau/TER/"):
+        #Start by defining the graphviz diagram
+        dot = graphviz.Digraph(filename='structure_worklow_3', format='png', comment='structure'\
+                                 , node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
+        #Defining 2 lists: tab_origin and tab_gives
+        #These 2 lists allow us to get the structure since we start from the processes
+        #and follow the 'route' which is drawn for us
+        #tab_origin contains all the elements c such as x -> c for every x 
+        #tab_gives contains all the elements c such as c -> x for every x 
+        #[0] -> the pointer and [1] -> of what (either process or channel)
+        tab_origin, tab_gives= [], []
+        #Start by adding all the inputs and outputs of the processes 
+        #to the different lists => since there is no (~or very little) false positives
+        for p in self.processes:
+            input, output= p.extractAll()
+            for i in input:
+                id, name= i[0], i[1]
+                tab_origin.append([name, p.getName()])
+            for o in output:
+                id, name= o[0], o[1]
+                tab_gives.append([name, p.getName()])
+            #Adding the processes to the diagram/ network
+            dot.node(p.getName(), p.getName(), color= '2', shape='box')
+        #Defining the list links_added which allows us to check if we have already added 
+        #a link to the network => it is just to avoid redundancies 
+        links_added=[]
+        temp_channels, temp_processes= self.channels.copy(), self.processes.copy()
+        
+        #print('Gives: ', c.get_gives())
+        #print('Origin: ', c.get_origin())
+        #print(temp_channels[0].get_gives(), '\n')
+        #===============================================================
+        #Case p.output -> p.input
+        #===============================================================
+        #For earch process
+        for p1 in temp_processes:
+            #Get the inputs and outputs
+            input_p1, output_p1= p1.extractAll()
+            #For the other processes
+            for p2 in temp_processes:
+                #Check it's not the same process
+                if(p1!=p2):
+                    #Get the inputs and outputs
+                    input_p2, output_p2= p2.extractAll()
+                    #For each inputs and outputs for both processes
+                    for output_p1_for_full in output_p1:
+                        output_p1_for_id, output_p1_for= output_p1_for_full[0], output_p1_for_full[1]
+                        for input_p2_for_full in input_p2:
+                            input_p2_for_id, input_p2_for= input_p2_for_full[0], input_p2_for_full[1]
+                            #check if the link matches
+                            if(output_p1_for== input_p2_for):
+                                reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1_for , p2.getName(), input_p2_for)
+                                #Check that we've not already added it to the graph
+                                if(not check_containing(reference, links_added)):
+                                    #Adding it to the graph
+                                    links_added.append(reference)
+                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
+                                    self.create_edge(dot, p1.getName(), p2.getName(), output_p1_for)
+        
+        #The next step is starting from the inputs and outputs from the different processes and linking the rest of the structure from that
+        added_link= True
+        channels_added=[]
+        index=1
+        while(added_link):
+            #print('here')
+            #print(tab_origin, '\n')
+            added_link = False
+            new_channels_added=[]
+            #===========================================
+            #===========================================
+            #From the origin tab
+            #===========================================
+            #===========================================
+            for origin in tab_origin:
+                origin_name, name_thing= origin[0], origin[1]
+                for c in temp_channels:
+                    c_gives= c.get_gives()
+                    for c_gives_for in c_gives:
+                        c_name, type_c=  c_gives_for[0], c_gives_for[1]
+                        if(type_c=='P'):
+                            if(c_name== origin_name):
+                                reference='{}:{} -> {}:{}'.format(c.get_id(), c_name , name_thing, origin_name)
+                                #print(reference)
+                                if(not check_containing(reference, links_added)):
+                                    links_added.append(reference)
+                                    if(not check_containing(c.get_id(), channels_added)):
+                                        #TODO Find what to put in the channel to show
+                                        self.create_channels_links(dot, c.get_id())
+                                        channels_added.append(c.get_id())
+                                        new_channels_added.append(c)
+                                    self.create_edge(dot, c.get_id(), name_thing, c_name)
+                                    added_link= True
+                
+                #Add the same for the processes
+                for p in temp_processes:
+                    if(p.getName()!=name_thing):
+                        #Get the inputs and outputs
+                        input_p, output_p= p.extractAll()
+                        #For each inputs and outputs for both processes
+                        for output_p_full in output_p:
+                            output_p_id, output_p_name= output_p_full[0], output_p_full[1]
+                            if(output_p_name== origin_name):
+                                reference='{}:{} -> {}:{}'.format(p.getName(),output_p_name , name_thing, origin_name)
+                                #Check that we've not already added it to the graph
+                                if(not check_containing(reference, links_added)):
+                                    #Adding it to the graph
+                                    links_added.append(reference)
+                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
+                                    self.create_edge(dot, p.getName(), name_thing, output_p_name)
+                                    added_link= True
+                
+            for c in new_channels_added:
+                c_origin, c_gives= c.get_origin(), c.get_gives()
+                for o in c_origin:
+                    if(o[1]=='P'):
+                        tab_origin.append([o[0], c.get_id()])
+                for g in c_gives:
+                    if(g[1]=='P'):
+                        tab_gives.append([g[0], c.get_id()])    
+
+            #===========================================
+            #===========================================
+            #From the gives tab
+            #===========================================
+            #===========================================
+            new_channels_added=[]
+            new_processes_added=[]
+            for gives in tab_gives:
+                gives_name, name_thing= gives[0], gives[1]
+                for c in temp_channels:
+                    c_origin= c.get_origin()
+                    for c_origin_for in c_origin:
+                        c_name, type_c=  c_origin_for[0], c_origin_for[1]
+                        if(type_c=='P'):
+                            if(c_name== gives_name):
+                                reference='{}:{} -> {}:{}'.format(name_thing, gives_name, c.get_id(), c_name)
+                                if(not check_containing(reference, links_added)):
+                                    links_added.append(reference)
+                                    if(not check_containing(c.get_id(), channels_added)):
+                                        #TODO Find what to put in the channel to show
+                                        self.create_channels_links(dot, c.get_id())
+                                        channels_added.append(c.get_id())
+                                        new_channels_added.append(c)
+                                    self.create_edge(dot,name_thing, c.get_id(),c_name)
+                                    added_link= True
+
+                #Add the same for the processes
+                for p in temp_processes:
+                    
+                    if(p.getName()!=name_thing):
+                        
+                        #Get the inputs and outputs
+                        input_p, output_p= p.extractAll()
+                        #For each inputs and outputs for both processes
+                        for input_p_full in input_p:
+                            input_p_id, input_p_name= input_p_full[0], input_p_full[1]
+                            if(input_p_name== gives_name):
+                                reference='{}:{} -> {}:{}'.format(name_thing, gives_name, p.getName(),input_p_name )
+                                #Check that we've not already added it to the graph
+                                if(not check_containing(reference, links_added)):
+                                    #Adding it to the graph
+                                    links_added.append(reference)
+                                    #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
+                                    self.create_edge(dot, name_thing, p.getName(),input_p_name)
+                                    added_link= True
+                
+            for c in new_channels_added:
+                c_origin, c_gives= c.get_origin(), c.get_gives()
+                for o in c_origin:
+                    if(o[1]=='P'):
+                        tab_origin.append([o[0], c.get_id()])
+                for g in c_gives:
+                    if(g[1]=='P'):
+                        tab_gives.append([g[0], c.get_id()])   
+        
+        
+        dot.render(directory=address)
+        dot.save(directory=address)
+        
 
     #===========================================
     #GENERAL METHODS
@@ -543,13 +846,20 @@ def tests():
     m.initialise()
     m.save_file()
 
+def test_structure(adresse= "/home/george/Bureau/TER/Workflow_Database/Tests/Test2/main.nf"):
+    m= TypeMainDSL1(adresse)
+    m.initialise()
+    #m.get_structure()
+    m.get_structure()
+    m.get_structure_2()
+    m.get_structure_3()
 #=================
 #IF USED AS A MAIN
 #=================
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
     #See Line 344
-    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf")
+    """m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf")
     #Still need to look into sarek
@@ -560,10 +870,13 @@ if __name__ == "__main__":
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf")
     m.initialise()
     m.get_structure()
+    m.get_structure_3()
+    m.get_structure_2()
     #m.print_name_processes()
 
     m.save_file()
-    m.save_channels()
+    m.save_channels()"""
+    test_structure()
     #tests()
     #m.print_processes()
 
@@ -577,4 +890,5 @@ if __name__ == "__main__":
 # - Remove comments is still not perfect=> see metaboigniter
 # - workflow.onError
 # - CONDITIONS!!!!
+# - I don't like the way i've defined the reconstruction of the structure => it does everythong and doesn't start at processes and finds the route from there => doesn't know if this makes sense but you understand ;)
     
