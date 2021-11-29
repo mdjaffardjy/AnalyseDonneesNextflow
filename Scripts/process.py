@@ -168,7 +168,11 @@ class Process:
           for match in re.finditer(pattern, self.process_work):
             if (match.span()[0] < end) and (match.span()[0] > start[1]):
               end = match.span()[0]
-      string =  self.process_work[start[1]:end].lstrip().rstrip()
+
+      if patternMatch == r'(""")' or patternMatch == r"(''')":
+        string =  self.process_work[start[0]:end].lstrip().rstrip()
+      else:
+        string =  self.process_work[start[1]:end].lstrip().rstrip()
       if len(string) != len("\n"):
         studyScript = Script(string)
         studyScript.extractS()
@@ -241,18 +245,19 @@ class Process:
   def extractAll(self):
     #self.extractProcess()
 
-    if self.input != None and self.output != None:
-      input, output= self.input.getNameInWorkflow(), self.output.getNameInWorkflow()
-      return input, output
-
-    elif self.input == None and self.output != None:
-      return [], self.output.getNameInWorkflow()
-
-    elif self.input != None and self.output == None:
-      return self.input.getNameInWorkflow(), []
-    
+    if self.input != None:
+      inputs = self.input.getNameInWorkflow()
     else:
-      return [], []
+      inputs = []
+    
+    if self.output != None:
+      outputs = self.output.getNameInWorkflow()
+      emit = self.output.getEmit()
+    else:
+      outputs = []
+      emit = []
+    
+    return inputs, outputs, emit
 
   def getName(self):
     return self.name

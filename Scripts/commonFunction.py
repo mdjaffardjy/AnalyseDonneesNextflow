@@ -82,3 +82,32 @@ def whichLanguage(txt):
             test2 = work.split('/')
             language = test2[-1]
     return language
+
+"""
+Prepare the string for the extraction of tools after
+"""
+def justScript(txt):
+    study = ''
+    work = txt
+    #Long - several lines
+    pattern = [r'(""")', r"(''')"]  
+    idx = []
+    for pat in pattern:
+        for match in re.finditer(pat, txt):
+            idx.append([match.span()[0], match.span()[1]])
+    idx.sort()
+    for i in range (0, len(idx),2):
+        study += txt[idx[i][1]:idx[i+1][0]]
+        work = work.replace(txt[idx[i][0]:idx[i+1][1]], "\n")
+    
+    #Short - one line
+    pattern = [r'(\n+\s*".*"\n*)', r"(\n+\s*'.*'\n*)"]
+    for pat in pattern:
+        for match in re.finditer(pat,work):
+            temp = work[match.span()[0]: match.span()[1]].lstrip().rstrip()
+            study += "\n" + temp[1:-1]
+            #little = work[match.span()[0]: match.span()[1]]
+            #work = work.replace(little, "\n")
+    #print("STUDY : ",study)
+    #print("WORK : ", work)
+    return study
