@@ -1,12 +1,12 @@
 from process import *
-from helpPrint import *
+from functionsProcess.helpPrint import *
 import matplotlib.pyplot as plt
 import os
 import glob
 
 if __name__ == "__main__":
     print("-----------------------------START-----------------------------")
-    #"""
+    """
     path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.txt"
     bddProcess = glob.glob(path, recursive= True)
     print("Taille de la bdd :", len(bddProcess))
@@ -23,13 +23,16 @@ if __name__ == "__main__":
             p = Process(process) 
             p.extractProcess()
             inputs, outputs, emit = p.extractAll()
-            print("FILE : ", bddProcess[i])
+            #print("FILE : ", bddProcess[i])
             #print(p.script.tools)
-            print("Emit : ", emit)
-
+            #print("Emit : ", emit)
+            dico = p.script.getAnnotations()
+            #print(dico.keys())
+            for a in dico.keys():
+                print(dico[a])
             #print(p.script.annotations)
-            print("Inputs: ", inputs)
-            print("Outputs: ",outputs)
+            #print("Inputs: ", inputs)
+            #print("Outputs: ",outputs)
             #print(p.script.script_string)
             informations = p.getAll()
             for part, k in zip(informations[1:], keyword):
@@ -91,24 +94,28 @@ if __name__ == "__main__":
 
     """
     #print(os.getcwd() )
-    adress = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test2.txt"
+    adress = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test.txt"
     f = open(adress,"r")
     lines = f.read()
 
     p = Process(lines) 
     p.extractProcess()
     inputs, outputs, emit = p.extractAll()
+    print(p.get_name())
     #print(p.output.list_output)
-    print("Inputs: ", inputs)
-    print("Outputs: ",outputs)
-    print("Emit : ", emit)
+    #print("Inputs: ", inputs)
+    #print("Outputs: ",outputs)
+    #print("Emit : ", emit)
     #print(p.script.script_string)
-    #print("TOOLS : ", p.script.tools)
-    #print("ANNOTATIONS : ", p.script.annotations)
+    print("")
+    print("TOOLS : ", p.script.tools)
+    dico = p.script.getAnnotations()
+    #print("ANNOTATIONS in bio.tools : ", dico.keys())
+    print("ANNOTATIONS in bio.tools : ", dico)
     #printInformations(p)
     #printNameInWorkflow(p)
     #printLanguage(p)
     #printQualifier(p)
     f.close()
-    """
+    #"""
     print("-----------------------------END-----------------------------")

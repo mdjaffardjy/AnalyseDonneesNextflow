@@ -1,5 +1,3 @@
-from process import *
-
 """
 Process Informations
 """

@@ -1,5 +1,4 @@
-from process import *
-from commonFunction import *
+from functionsProcess.commonFunction import *
 
 """
 FIRST PART

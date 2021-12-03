@@ -54,6 +54,9 @@ class TypeMainDSL1(TypeMain):
     def print_name_processes(self):
         for p in self.processes:
             p.printName()
+    
+    def get_process(self):
+        return self.processes
 
     #Return the number of processes
     def get_nb_processes(self):

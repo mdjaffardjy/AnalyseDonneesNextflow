@@ -1,9 +1,9 @@
-from directive import *
-from input import *
-from output import * 
-from when import * 
-from script import *
-from stub import *
+from functionsProcess.directive import *
+from functionsProcess.input import *
+from functionsProcess.output import * 
+from functionsProcess.when import * 
+from functionsProcess.script import *
+from functionsProcess.stub import *
 
 import re
 """
@@ -47,6 +47,9 @@ class Process:
   #Print the process
   def printProcess(self):
     print(self.process_string)
+  
+  def getStringProcess(self):
+    print(self.process_string)
 
   # ------------------------- NAME --------------------------#
   #Extract the name of the process
@@ -78,6 +81,9 @@ class Process:
   #Print the name of the process
   def printName(self):
     print(self.name)
+  
+  def getName(self):
+    return self.name
   
   # ------------------------- DIRECTIVES --------------------------#
   #Extract directives
@@ -306,8 +312,8 @@ class Process:
     """
     Verify if all the things were analysed - if self.process_work est empty
     """
-    self.process_work = self.process_work.replace("process", "")
     self.process_work = self.process_work.replace(self.name, "")
+    self.process_work = self.process_work.replace("process", "")
     self.process_work = self.process_work.replace("{", "")
     self.process_work = self.process_work.replace("}", "")
     self.process_work = self.process_work.lstrip().rstrip()

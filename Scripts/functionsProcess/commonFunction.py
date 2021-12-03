@@ -23,11 +23,11 @@ def clean(txt):
 """
 Split 
 """
-def split(list, txt):
+def split(lists, txt):
     listEnd = []
     work = "a \n" + txt
     index = []
-    for pattern in list:
+    for pattern in lists:
         for match in re.finditer(pattern, work):
             index.append(match.span()[0]+1)
     index.sort()

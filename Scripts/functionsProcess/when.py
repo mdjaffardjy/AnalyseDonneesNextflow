@@ -1,5 +1,3 @@
-from process import *
-
 class When:
     def __init__(self, strWhen):
             self.when_string = strWhen

@@ -7,7 +7,7 @@ import re
 import requests
 from ratelimiter import RateLimiter
 import json
-import search_biotools_dump as sb
+import functionsProcess.search_biotools_dump as sb
 
 EXCEPTIONS = ["export", 'awk', 'sed', 'grep', "cmd", "module", "cat", "elif", "sort", "cd", "zcat",
               "rm", "for", "find", "java", "forgi", "sleep", "tabix", "zgrep", "wget", "mv", "mkdir", "echo",

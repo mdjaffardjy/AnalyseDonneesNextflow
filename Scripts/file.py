@@ -134,7 +134,7 @@ class File:
     def initialise_basic_file(self):
         #Do Stuff
         self.set_string()
-        self.remove_comments()
+        #self.remove_comments()
 
 
 #=================
