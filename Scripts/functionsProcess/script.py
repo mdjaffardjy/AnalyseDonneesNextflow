@@ -5,8 +5,8 @@ class Script:
     def __init__(self, strScript):
             self.script_string = strScript
             self.language = None
-            self.tools = None
-            self.annotations = None
+            self.tools = []
+            self.annotations = {}
 
     def printString(self):
         print(self.script_string)  
@@ -27,9 +27,14 @@ class Script:
         self.language = whichLanguage(self.script_string)
 
     def extractTools(self):
-        work = justScript(self.script_string)
-        self.tools = get_toolnames(work)
-        self.annotations = get_info_biotools_set_of_tools_dump(self.tools)
+        #print("SCRIPT:")
+        #print(self.script_string)
+        if self.language == 'bash':
+            work = justScript(self.script_string)
+            #print(work)
+            self.tools = get_toolnames(work)
+            self.annotations = get_info_biotools_set_of_tools_dump(self.tools)
+        #print()
 
     def extractS(self):
         self.whichLanguage()

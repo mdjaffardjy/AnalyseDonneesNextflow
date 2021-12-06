@@ -6,8 +6,9 @@ import glob
 
 if __name__ == "__main__":
     print("-----------------------------START-----------------------------")
-    """
-    path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.txt"
+    #"""
+    #path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.txt"
+    path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/ReJourneedu18Novembre/nextflow-wfs/data-nf/stevekm/nextflow-demos/*.nf"
     bddProcess = glob.glob(path, recursive= True)
     print("Taille de la bdd :", len(bddProcess))
     currentPath = os.getcwd() 
@@ -24,12 +25,12 @@ if __name__ == "__main__":
             p.extractProcess()
             inputs, outputs, emit = p.extractAll()
             #print("FILE : ", bddProcess[i])
-            #print(p.script.tools)
+            #print(p.script)
             #print("Emit : ", emit)
             dico = p.script.getAnnotations()
             #print(dico.keys())
-            for a in dico.keys():
-                print(dico[a])
+            #for a in dico.keys():
+            #    print(dico[a])
             #print(p.script.annotations)
             #print("Inputs: ", inputs)
             #print("Outputs: ",outputs)
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     p = Process(lines) 
     p.extractProcess()
     inputs, outputs, emit = p.extractAll()
-    print(p.get_name())
+    #print(p.get_name())
     #print(p.output.list_output)
     #print("Inputs: ", inputs)
     #print("Outputs: ",outputs)
@@ -117,5 +118,5 @@ if __name__ == "__main__":
     #printLanguage(p)
     #printQualifier(p)
     f.close()
-    #"""
+    """
     print("-----------------------------END-----------------------------")

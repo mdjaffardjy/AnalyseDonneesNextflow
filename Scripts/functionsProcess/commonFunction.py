@@ -88,26 +88,51 @@ Prepare the string for the extraction of tools after
 """
 def justScript(txt):
     study = ''
-    work = txt
-    #Long - several lines
-    pattern = [r'(""")', r"(''')"]  
-    idx = []
-    for pat in pattern:
-        for match in re.finditer(pat, txt):
-            idx.append([match.span()[0], match.span()[1]])
-    idx.sort()
-    for i in range (0, len(idx),2):
-        study += txt[idx[i][1]:idx[i+1][0]]
-        work = work.replace(txt[idx[i][0]:idx[i+1][1]], "\n")
-    
-    #Short - one line
-    pattern = [r'(\n+\s*".*"\n*)', r"(\n+\s*'.*'\n*)"]
-    for pat in pattern:
-        for match in re.finditer(pat,work):
-            temp = work[match.span()[0]: match.span()[1]].lstrip().rstrip()
-            study += "\n" + temp[1:-1]
-            #little = work[match.span()[0]: match.span()[1]]
-            #work = work.replace(little, "\n")
-    #print("STUDY : ",study)
-    #print("WORK : ", work)
+    work = '\n' + txt + '\n'
+
+    #Verify that the script is not empty:
+    empty = True
+    for char in txt:
+        if char.isalpha():
+            empty = False
+    if not empty:
+
+        #First delete comment : 
+        patComment =  r'(\n+\s*\t*#.*)'
+        tabIdx = []
+        for match in re.finditer(patComment, work):
+            tabIdx.append([match.span()[0],match.span()[1]])
+        tabIdx.sort(reverse=True)
+        for idx in tabIdx:
+            work = work.replace(work[idx[0]:idx[1]], "")
+        
+
+        #Long script:
+        #patBefore = [r'("""\n""")', r"('''\n''')"]
+        """tabIdx = []
+        for pat in patBefore:
+            for match in re.finditer(pat, work):
+                tabIdx.append(work[match.span()[0]: match.span()[1]])
+        for i in range (len(tabIdx)):
+            work = work.replace(work[tabIdx[i][0]:tabIdx[i][1]], "\n")"""
+
+        #print("AVANT : ", work)
+        patLong = [r"(\n+\s*\t*'''\n*)", r'(\n+\s*\t*"""\n*)']
+        tabIdx = []
+        for pat in patLong:
+            for match in re.finditer(pat, work):
+                tabIdx.append([match.span()[0], match.span()[1]])
+        tabIdx.sort()
+        for i in range (0, len(tabIdx),2):
+            study += work[tabIdx[i][1]:tabIdx[i+1][0]]
+            work = work.replace(work[tabIdx[i][0]:tabIdx[i+1][1]], "\n")
+
+        #Short - one line
+        pattern = [r'(\n+\s*".*"\n*)', r"(\n+\s*'.*'\n*)"]
+        for pat in pattern:
+            for match in re.finditer(pat,work):
+                temp = work[match.span()[0]: match.span()[1]].lstrip().rstrip()
+                study += "\n" + temp
+        #print("APRES :", work)
+        #print(study)
     return study

@@ -31,22 +31,28 @@ if __name__ == "__main__":
 
     print("Work on the different wf")
     tabWf = []
+    #idx = 0 #AIDE DEBUT A ENLEVER
     for url in dicoWf:
+        #if idx == 0:
         wfN = Nextflow_WF(url, dicoWf[url])
         wfN.extract()
         tabWf.append(wfN)
+        #idx +=1
 
     #ANALYSE
     print("Analyse")
     nbToolsPerWf = {}
     for wf in tabWf:
+        dejaVu = []
         tools = wf.getAnnotations()
         for t in tools:
             tt = tools[t]['name']
-            if not  tt in nbToolsPerWf:
-                nbToolsPerWf.update({tt:1})
-            else:
-                nbToolsPerWf[tt] += 1
+            if not tt in dejaVu:
+                if not  tt in nbToolsPerWf:
+                    nbToolsPerWf.update({tt:1})
+                else:
+                    nbToolsPerWf[tt] += 1
+                dejaVu.append(tt)
     print(nbToolsPerWf)
 
     os.chdir("/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Analyse")
@@ -63,6 +69,6 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     chart = sns.barplot(x=x, y=y, palette="rocket")
     chart.set_xticklabels(chart.get_xticklabels(), rotation=80, size=5)
-    plt.savefig("nextflowToolsTEST.png")
+    plt.savefig("nextflowTools.png")
 
     print("--------------------------End----------------------")

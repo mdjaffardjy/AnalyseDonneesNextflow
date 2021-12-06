@@ -50,12 +50,15 @@ class Nextflow_WF:
             #print(self.listFiles[i])
             try:
                 file = TypeMainDSL1(self.listFiles[i]) #for the moment typeMainDSL1
-                file.initialise()
+                #file.initialise()
+                file.initialise_basic_main()
+                file.find_processes()
                 self.processAnalyse.append(file.get_process()) #already does extractProcess
             except Exception as exc:
                 nbErrors +=1
                 errors.append(exc)
-        print("NB errors :", nbErrors)
+                print(exc, " ", self.listFiles[i])
+        print("NB errors :", nbErrors, "/",len(self.listFiles))
         #print(errors)
 
         for p in self.processAnalyse:
@@ -69,7 +72,7 @@ class Nextflow_WF:
 
                 nameTools = work.getScript().getTools()
                 annot = work.getScript().getAnnotations()
-
+                #print(nameTools)
                 for t in nameTools:
                     if not t in self.toolsName:
                         self.toolsName.append(t)
@@ -91,7 +94,7 @@ class Nextflow_WF:
         self.processNb = len(self.processName)
         self.toolsNb = len(self.toolsName)
 
-        #print(self.processName)
+        #print(self.annotations.keys())
 
 
 if __name__ == "__main__":

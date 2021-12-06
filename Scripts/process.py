@@ -176,9 +176,9 @@ class Process:
               end = match.span()[0]
 
       if patternMatch == r'(""")' or patternMatch == r"(''')":
-        string =  self.process_work[start[0]:end].lstrip().rstrip()
+        string =  self.process_work[start[0]:end].rstrip()
       else:
-        string =  self.process_work[start[1]:end].lstrip().rstrip()
+        string =  self.process_work[start[1]:end].rstrip()
       if len(string) != len("\n"):
         studyScript = Script(string)
         studyScript.extractS()
@@ -205,7 +205,7 @@ class Process:
           for match in re.finditer(pattern, self.process_work):
             if (match.span()[0] < end) and (match.span()[0] > start[1]):
               end = match.span()[0]
-      string = self.process_work[start[1]:end].lstrip().rstrip()
+      string = self.process_work[start[1]:end].rstrip()
       if len(string) != 0:
         studyStub = Stub(string)
         studyStub.extractS()
