@@ -105,14 +105,18 @@ def analysePartProcess(dicoWf):
                 if part != None:
                     keyword[k] += 1
                     keywordAll[k] +=1
-                if k == 'script' and part != None:
+                if k == 'script'and part != None:
                     l = part.getLanguage()
                     if l in languageScript:
                         languageScript[l] +=1
-                        languageScriptAll[l] += 1
                     else:
                         languageScript.update({l: 1})
+                        
+                    if l in languageScriptAll:
+                        languageScriptAll[l] +=1
+                    else :
                         languageScriptAll.update({l: 1})
+
 
         for k in keyword:
             nb = keyword[k]

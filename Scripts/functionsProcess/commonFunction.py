@@ -60,7 +60,7 @@ Analyse Language
 """
 def whichLanguage(txt):
     language =""
-    pattern = r'(#!/)'
+    pattern = r'(#!)'
     start = -1
     nb = -1
     for match in re.finditer(pattern, txt):
