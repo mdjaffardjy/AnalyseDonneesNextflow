@@ -91,6 +91,8 @@ class Outputs:
                             else:
                                 string = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
                             self.list_words_workflow.append([idx,string])
+                        string = work[placeComma[-1][1]:].lstrip().rstrip()
+                        self.list_words_workflow.append([idx,string])
                 #Without "into"
                 else:
                     startb = -1
