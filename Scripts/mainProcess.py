@@ -6,7 +6,7 @@ import glob
 
 if __name__ == "__main__":
     print("-----------------------------START-----------------------------")
-    #"""
+    """
     #path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/bddProcess"+"/**/*.txt"
     path = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/ReJourneedu18Novembre/nextflow-wfs/data-nf/stevekm/nextflow-demos/*.nf"
     bddProcess = glob.glob(path, recursive= True)
@@ -104,9 +104,9 @@ if __name__ == "__main__":
     inputs, outputs, emit = p.extractAll()
     #print(p.get_name())
     #print(p.output.list_output)
-    #print("Inputs: ", inputs)
-    #print("Outputs: ",outputs)
-    #print("Emit : ", emit)
+    print("Inputs: ", inputs)
+    print("Outputs: ",outputs)
+    print("Emit : ", emit)
     #print(p.script.script_string)
     print("")
     print("TOOLS : ", p.script.tools)
@@ -118,5 +118,5 @@ if __name__ == "__main__":
     #printLanguage(p)
     #printQualifier(p)
     f.close()
-    """
+    #"""
     print("-----------------------------END-----------------------------")

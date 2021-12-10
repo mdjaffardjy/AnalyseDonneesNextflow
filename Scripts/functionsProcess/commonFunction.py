@@ -86,6 +86,7 @@ def whichLanguage(txt):
 """
 Prepare the string for the extraction of tools after
 """
+import re
 def justScript(txt):
     study = ''
     work = '\n' + txt + '\n'
@@ -96,43 +97,33 @@ def justScript(txt):
         if char.isalpha():
             empty = False
     if not empty:
-
         #First delete comment : 
-        patComment =  r'(\n+\s*\t*#.*)'
+        patComment =  r'(s*\t*#.*\n)'
         tabIdx = []
         for match in re.finditer(patComment, work):
             tabIdx.append([match.span()[0],match.span()[1]])
         tabIdx.sort(reverse=True)
         for idx in tabIdx:
-            work = work.replace(work[idx[0]:idx[1]], "")
-        
-
-        #Long script:
-        #patBefore = [r'("""\n""")', r"('''\n''')"]
-        """tabIdx = []
-        for pat in patBefore:
-            for match in re.finditer(pat, work):
-                tabIdx.append(work[match.span()[0]: match.span()[1]])
-        for i in range (len(tabIdx)):
-            work = work.replace(work[tabIdx[i][0]:tabIdx[i][1]], "\n")"""
-
-        #print("AVANT : ", work)
-        patLong = [r"(\n+\s*\t*'''\n*)", r'(\n+\s*\t*"""\n*)']
+            work = work.replace(work[idx[0]:idx[1]].strip(), "\n")
+                
+        patLong = [r"(\n+\s*'''\n*)", r'(\n+\s*"""\n*)']
         tabIdx = []
         for pat in patLong:
             for match in re.finditer(pat, work):
                 tabIdx.append([match.span()[0], match.span()[1]])
         tabIdx.sort()
         for i in range (0, len(tabIdx),2):
-            study += work[tabIdx[i][1]:tabIdx[i+1][0]]
-            work = work.replace(work[tabIdx[i][0]:tabIdx[i+1][1]], "\n")
+            study += work[tabIdx[i][1]:tabIdx[i+1][0]] + "\n"
+        #clean work
+        tabIdx.sort(reverse= True)
+        for i in range (0, len(tabIdx),2):
+            work = work.replace(work[tabIdx[i+1][0]:tabIdx[i][1]], "\n")
 
         #Short - one line
         pattern = [r'(\n+\s*".*"\n*)', r"(\n+\s*'.*'\n*)"]
         for pat in pattern:
             for match in re.finditer(pat,work):
+                #enlever les " " ou ' '                
                 temp = work[match.span()[0]: match.span()[1]].lstrip().rstrip()
-                study += "\n" + temp
-        #print("APRES :", work)
-        #print(study)
+                study += "\n" + temp[1:-1]
     return study
