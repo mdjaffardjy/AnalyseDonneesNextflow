@@ -288,6 +288,21 @@ def whyNoTools(dicoWf, part):
                     fileInfo.write(string)
                     fileInfo.write("\n")
 
+def graphAnnotations(pandaFrame):
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbOperations", data=pandaFrame)
+    plt.savefig("annotationsNbOperations.png")
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbInputs", data=pandaFrame)
+    plt.savefig("annotationsNbInputs.png")
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbOutputs", data=pandaFrame)
+    plt.savefig("annotationsNbOutputs.png")
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbTopics", data=pandaFrame)
+    plt.savefig("annotationsNbTopics.png") 
+    
+
 def analysePart(part):
     try:
         os.chdir(part)
@@ -300,7 +315,7 @@ def analysePart(part):
     nbToolsPerWf = extractTools(dicoWf, part)
     print(nbToolsPerWf)
     if len(nbToolsPerWf) != 0:
-        print(bold_color.BLUE + "Draw Graphs" + bold_color.END)
+        print(bold_color.BLUE + "Draw Graphs Tools" + bold_color.END)
         graphTools(nbToolsPerWf)
 
         print(bold_color.BLUE + "Preparation Annotations" + bold_color.END)
@@ -308,9 +323,8 @@ def analysePart(part):
         print(bold_color.BLUE + "Creation Stat Annotations" + bold_color.END)
         stat = createPandaFrame(annotations)
         print(stat)
-        """
-        Ajouter image
-        """
+        print(bold_color.BLUE + "Draw Graphs Annotations" + bold_color.END)
+        graphAnnotations(stat)
 
     ##stat2 = get_df_stats_annot(dicoToolsAnnot)
     print(bold_color.BLUE + "Why No Tools" + bold_color.END)
