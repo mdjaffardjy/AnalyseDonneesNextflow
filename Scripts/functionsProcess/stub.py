@@ -14,6 +14,9 @@ class Stub:
     def printLanguage(self):
         print(self.language)
 
+    def getString(self):
+        return self.stub_string
+
     def getLanguage(self):
         return self.language
     
@@ -27,9 +30,10 @@ class Stub:
         self.language = whichLanguage(self.stub_string)
 
     def extractTools(self):
-        work = justScript(self.stub_string)
-        self.tools = get_toolnames(work)
-        self.annotations = get_info_biotools_set_of_tools_dump(self.tools)
+        if self.language == 'bash':
+            work = justScript(self.stub_string)
+            self.tools = get_toolnames(work)
+            self.annotations = get_info_biotools_set_of_tools_dump(self.tools)
 
     def extractS(self):
         self.whichLanguage()

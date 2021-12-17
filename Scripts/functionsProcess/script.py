@@ -14,6 +14,9 @@ class Script:
     def printLanguage(self):
         print(self.language)
 
+    def getString(self):
+        return self.script_string
+
     def getLanguage(self):
         return self.language
     

@@ -32,10 +32,15 @@ class Nextflow_WF:
         self.forks = forks
         self.stars = stars 
 
-        self.toolsNb = None
-        self.toolsName = [] #list tools
-        self.toolsNbInWf = {}
-        self.annotations = {}
+        self.script_toolsNb = None
+        self.script_toolsName = [] #list tools
+        self.script_toolsNbInWf = {}
+        self.script_annotations = {}
+
+        self.stub_toolsNb = None
+        self.stub_toolsName = [] #list tools
+        self.stub_toolsNbInWf = {}
+        self.stub_annotations = {}
 
         self.processNb = None
         self.processName = [] #list name 
@@ -45,11 +50,14 @@ class Nextflow_WF:
     def getNameFolder(self):
         return self.nameFolder
 
-    def getTools(self):
-        return self.toolsName
+    def getToolsScript(self):
+        return self.script_toolsName
 
-    def getAnnotations(self):
-        return self.annotations
+    def getAnnotationsScript(self):
+        return self.script_annotations
+
+    def getAnnotationsStub(self):
+        return self.stub_annotations
 
     def getProcess(self):
         return self.process
@@ -102,25 +110,47 @@ class Nextflow_WF:
                     annot = work.getScript().getAnnotations()
                     #print(nameTools)
                     for t in nameTools:
-                        if not t in self.toolsName:
-                            self.toolsName.append(t)
+                        if not t in self.script_toolsName:
+                            self.script_toolsName.append(t)
                     
                     for t in nameTools:
                         string = ""
                         for i in range (len(t)):
                             string += t[i] + " "
-                        if not string in self.toolsNbInWf:
-                            self.toolsNbInWf.update({string:1})
+                        if not string in self.script_toolsNbInWf:
+                            self.script_toolsNbInWf.update({string:1})
                         else:
-                            self.toolsNbInWf[string] += 1
+                            self.script_toolsNbInWf[string] += 1
 
                     for a in annot:
                         bioId = annot[a]['name']
-                        if not bioId in self.annotations:
-                            self.annotations.update({a:annot[a]})
+                        if not bioId in self.script_annotations:
+                            self.script_annotations.update({a:annot[a]})
+
+                if work.getStub() != None:
+                    nameTools = work.getStub().getTools()
+                    annot = work.getStub().getAnnotations()
+                    for t in nameTools:
+                        if not t in self.stub_toolsName:
+                            self.stub_toolsName.append(t)
+                    
+                    for t in nameTools:
+                        string = ""
+                        for i in range (len(t)):
+                            string += t[i] + " "
+                        if not string in self.stub_toolsNbInWf:
+                            self.stub_toolsNbInWf.update({string:1})
+                        else:
+                            self.stub_toolsNbInWf[string] += 1
+
+                    for a in annot:
+                        bioId = annot[a]['name']
+                        if not bioId in self.stub_annotations:
+                            self.stub_annotations.update({a:annot[a]})
 
         self.processNb = len(self.processName)
-        self.toolsNb = len(self.toolsName)
+        self.script_toolsNb = len(self.script_toolsName)
+        self.stub_toolsNb = len(self.stub_toolsName)
 
 if __name__ == "__main__":
     print("I shouldn't be executed as a main")
