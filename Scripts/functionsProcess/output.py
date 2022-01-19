@@ -3,8 +3,10 @@ import re
 """
 FIRST PART
 """ 
+#List created from https://www.nextflow.io/docs/latest/process.html#outputs
 keyWordsO = ['val', 'env', 'file', 'path', 'stdout', 'tuple', 'set']
 
+#Create Pattern
 listPatternO = []
 for words in keyWordsO:
     string = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
@@ -50,12 +52,15 @@ class Outputs:
         return self.list_emit
         
     def splitOutput(self):
-        self.list_output = split(listPatternO, self.output_string)
+        self.list_output = splits(listPatternO, self.output_string)
     
     def extractQualifier(self):
         self.list_qualifier = extractQ(self.list_output)
     
     def extractName(self):
+        """
+        Extract the global name of each outputs (name in all the workflows)
+        """
         #Two Cases : 
         pattern = r'(\sinto\s((\w+\s*,?\s*))*)'
         for idx in range(len(self.temp)):
@@ -111,6 +116,9 @@ class Outputs:
 
 
     def extractEmit(self):
+        """
+        Extract the global name of each outputs with emit (dsl2) (name in all the workflows)
+        """
         patEmit = r'(emit\s*:\s*\w+)'
         containEmit = []
         for idx in range (len(self.list_output)):

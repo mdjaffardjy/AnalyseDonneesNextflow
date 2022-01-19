@@ -22,8 +22,9 @@ def clean(txt):
 
 """
 Split 
+Separate a text into different elements 
 """
-def split(lists, txt):
+def splits(lists, txt):
     listEnd = []
     work = "a \n" + txt
     index = []
@@ -42,6 +43,7 @@ def split(lists, txt):
 
 """
 Extract 
+Extract the fist name (qualifier : val, env, publishDir, ...)
 """
 def extractQ(txt):
     listEnd = []
@@ -58,29 +60,53 @@ SCRIPT - STUB
 """
 Analyse Language
 """
+import os
 def whichLanguage(txt):
+    fileLanguage = open("../../../../Scripts/language.txt", "r")
+    fileLines = fileLanguage.readlines()
+    languageKnown = []
+    for lines in fileLines:
+        l = lines.split()
+        if len(l) != 0:
+            languageKnown.append(l[0])
+    fileLanguage.close()
+
     language =""
     pattern = r'(#!)'
     start = -1
-    nb = -1
     for match in re.finditer(pattern, txt):
         start = match.span()[0]
-        nb = 1
-    if nb < 0:
+    if start == -1:
         language = 'bash'
     else:
         patternEnd = r'(\n)'
         end = len(txt)
         for match in re.finditer(patternEnd, txt):
             if match.span()[0] < end and match.span()[0] > start:
-                end = match.span()[0]
+                end = match.span()[1]
         work =txt[start:end].lstrip().rstrip()
-        test1 = work.split()
-        if len(test1) > 1:
-            language = test1[-1]
-        else:
-            test2 = work.split('/')
-            language = test2[-1]
+        work = work + " "
+        for l in languageKnown:
+            res = work.find(l)
+            if res != -1:
+                #Verify that behind their are no letters
+                if not work[res-1].isalpha() and not work[res+len(l)].isalpha():
+                    language = l
+                    break
+
+        #Language used not in the reference file
+        #Fonctionne que si le language est a la derniere place (pas d'option apres) => voir comment faire ????
+        if language == "": 
+            test1 = work.split()
+            if len(test1) > 1:
+                language = test1[-1]
+            else:
+                test2 = work.split('/')
+                language = test2[-1]
+        
+            fileLanguage = open("../../../../Scripts/language.txt", "a")
+            fileLanguage.write("\n" + language)
+            fileLanguage.close()
     return language
 
 """
@@ -123,7 +149,7 @@ def justScript(txt):
         pattern = [r'(\n+\s*".*"\n*)', r"(\n+\s*'.*'\n*)"]
         for pat in pattern:
             for match in re.finditer(pat,work):
-                #enlever les " " ou ' '                
+                #del les " " ou ' '                
                 temp = work[match.span()[0]: match.span()[1]].lstrip().rstrip()
                 study += "\n" + temp[1:-1]
     return study

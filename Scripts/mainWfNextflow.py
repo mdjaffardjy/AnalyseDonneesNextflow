@@ -19,48 +19,66 @@ class bold_color:
    END = '\033[0m'
 
 def createDicoWfN(data):
+    """
+    Browse a json file and analyse the different workflows 
+    and add in a dictionary those we do not have any errors
+    """
     currentPath = os.getcwd()
     dicoWf= {}
-    nbWf = len(data.keys())
+    nbWf = len(data.keys()) -1 #del the last which is 'last_date'
     idx = 1
-    for bigNames in data:
-        print("WORKFLOW : ", idx , "/", nbWf)
-        idx +=1
-        url = "https://github.com/" + bigNames
-        files = data[bigNames]["files"]
-        name = data[bigNames]["name"] 
-        creation_date = data[bigNames]["creation_date"]
-        actual_date = data[bigNames]["actual_date"]
-        last_push = data[bigNames]["last_push"]
-        owner = data[bigNames]["owner"]
-        description = data[bigNames]["description"]
-        forks = data[bigNames]["forks"]
-        stars = data[bigNames]["stars"]
-        link = data[bigNames]["link"]
+    #notNow = [33,114,186,418,533,1188,1605,1625] #passe pas find_process meme sans process -> remove comment ? 
+    notNow = []
+    for bigNames in data: 
+        if bigNames != 'last_date':
+            print("WORKFLOW : ", idx , "/", nbWf, " : ", bigNames)
+            idx +=1
+            #Collect informations
+            url = "https://github.com/" + bigNames
+            files = data[bigNames]["files"]
+            name = data[bigNames]["name"] 
+            creation_date = data[bigNames]["creation_date"]
+            actual_date = data[bigNames]["actual_date"]
+            last_push = data[bigNames]["last_push"]
+            owner = data[bigNames]["owner"]
+            description = data[bigNames]["description"]
+            forks = data[bigNames]["forks"]
+            stars = data[bigNames]["stars"]
+            link = data[bigNames]["link"]
 
-        nameFolder = bigNames.replace("/", "_")
-        os.chdir(currentPath)
-        try :
-            os.chdir("../Workflows/bddFiles/" + bigNames)
-        except:
-            os.chdir("../Workflows/bddFiles")
-            #os.system("mkdir " + nameFolder)
-            #os.chdir(currentPath)
-            #os.chdir("../Workflows/bddFiles/" + nameFolder)
-            os.makedirs(bigNames, exist_ok=True)
+            #Try to go in the good directory and if does not exist create it
+            nameFolder = bigNames.replace("/", "_")
             os.chdir(currentPath)
-            os.chdir("../Workflows/bddFiles/" + bigNames)
+            try :
+                os.chdir("../Workflows/bddFiles/" + bigNames)
+            except:
+                os.chdir("../Workflows/bddFiles")
+                os.makedirs(bigNames, exist_ok=True)
+                os.chdir(currentPath)
+                os.chdir("../Workflows/bddFiles/" + bigNames)
 
-        wfN = Nextflow_WF(url, files, name, nameFolder, creation_date, actual_date, last_push, owner, description, forks, stars)
-        wfN.extract()
-        dicoWf.update({bigNames : wfN})
+            #Create an instance of this workflow with all the informations
+            if not (idx-1) in notNow:
+                wfN = Nextflow_WF(url, files, name, nameFolder, creation_date, actual_date, last_push, owner, description, forks, stars)
+                ok = wfN.extract()
+                #If no problem : add to the dictionnary
+                if ok:
+                    dicoWf.update({bigNames : wfN})
+                #Else can't analyse it
+                else:
+                    print("Can't study for the moment")
     os.chdir(currentPath)   
     return dicoWf
 
+#-------------------------------------------------#
 def extractTools(dicoWf, part):
+    """
+    Return all the tools and their numbers used in all the workflows present in he dictionary
+    """
     nbTools = {}
     for wfn in dicoWf:
         wf = dicoWf[wfn]
+        #A tool is only counted once in a worflow even if it used several times in different processes
         dejaVu = []
         if part == 'script':
             tools = wf.getAnnotationsScript()
@@ -74,6 +92,7 @@ def extractTools(dicoWf, part):
                 else:
                     nbTools[tt] += 1
                 dejaVu.append(tt)
+    #Create the return and save informations in a file
     nbToolsPerWf = {}
     fileTools = open("nextflowTools.txt", "w")
     fileTools.write("toolname\twf_nb\n")
@@ -82,7 +101,13 @@ def extractTools(dicoWf, part):
         fileTools.write(k + " : " + str(v) + "\n")
     return nbToolsPerWf
 
+#-------------------------------------------------#
 def analysePartProcess(dicoWf):
+    """
+    Save all the informations about the different Workflows in different files
+    One file : a 'big' summary
+    One file for each workflow : a 'little' summary
+    """
     fileInfo = open("InfoWfNextflow/statPartsAll.csv", "w")
     txt = "Database worflow size : {}\n".format(len(dicoWf))
     fileInfo.write(txt)
@@ -91,7 +116,6 @@ def analysePartProcess(dicoWf):
     keywordAll = {'directives':0, 'input':0, 'output':0, 'when':0, 'script':0, 'stub':0}
     languageScriptAll = {}
     languageStubAll = {}
-    nbTot = 0
     nbTotProcess = 0
     for wfn in dicoWf:
         wf = dicoWf[wfn]
@@ -107,7 +131,6 @@ def analysePartProcess(dicoWf):
         fileInfoWf.write(txt)
         for name in dicoProcess:
             nbTotProcess += 1
-            nbTot += 1
             informations = dicoProcess[name].getAll()
             for part, k in zip(informations[1:], keyword):
                 if part != None:
@@ -137,7 +160,6 @@ def analysePartProcess(dicoWf):
                     else :
                         languageStubAll.update({l: 1})
 
-
         for k in keyword:
             nb = keyword[k]
             nb2 = len(dicoProcess) - keyword[k]
@@ -153,13 +175,11 @@ def analysePartProcess(dicoWf):
         for l in languageStub:
             txt = "{}\t{}\n".format(l, languageStub[l])
             fileInfoWf.write(txt)
-        """for _ in range (3):
-            fileInfoWf.write("\n")"""
     
     fileInfo.write("Numbers of process : {}\n".format(nbTotProcess))
     for k in keywordAll:
         nb = keywordAll[k]
-        nb2 = nbTot - keywordAll[k]
+        nb2 = nbTotProcess - keywordAll[k]
         txt = "{}\t{}\t{}\n".format(k, nb, nb2)
         fileInfo.write(txt)
     fileInfo.write("\n\n")
@@ -172,8 +192,12 @@ def analysePartProcess(dicoWf):
     for l in languageStubAll:
         txt = "{}\t{}\n".format(l, languageStubAll[l])
         fileInfo.write(txt)
-    
+
+#-------------------------------------------------#  
 def graphTools(nbTools):
+    """
+    Draw a histogram of the tools used
+    """
     tabTools = []
     for t in nbTools:
         tabTools.append([nbTools[t], t])
@@ -188,9 +212,13 @@ def graphTools(nbTools):
     chart.set_xticklabels(chart.get_xticklabels(), rotation=90, size=5)
     plt.savefig("nextflowTools.png")
 
+#-------------------------------------------------#  
 def extractAnnotations(dicoWf, part):
+    """
+    Extract the annotations of each workflow (no duplication)
+    After going to help to create summary 
+    """
     dicoAnnot = {}
-    ##dicoToolsAnnot = {}
     for wfn in dicoWf:
         wf = dicoWf[wfn]
         name = wf.getNameFolder()
@@ -202,13 +230,15 @@ def extractAnnotations(dicoWf, part):
         for a in annot:
             if not annot[a] in tabAnnot:
                 tabAnnot.append(annot[a])
-            ##if a not in dicoToolsAnnot:
-            ##    dicoToolsAnnot.update({a:annot[a]})
         dicoAnnot.update({name : tabAnnot})
+    return dicoAnnot      
 
-    return dicoAnnot ##, dicoToolsAnnot       
-
+#-------------------------------------------------#  
 def createPandaFrame(annotations):
+    """
+    Create a PandaFrame with statistic about tools
+    Save it in a csv file
+    """
     dfToolsStatsAnnot = pd.DataFrame(columns=["toolname","nbOperations", "nbInputs", "nbOutputs", "nbTopics"])
     dejaVu = []
     for a in annotations:
@@ -230,36 +260,29 @@ def createPandaFrame(annotations):
     dfToolsStatsAnnot.to_csv("statAnnotations.csv",index=False)  
     return dfToolsStatsAnnot
 
-"""def get_df_stats_annot(dict_tools):
-    #ne prend pas en compte les synonymes
-    df_tools_stats_annot = pd.DataFrame(columns=["toolname",
-                                                 "tool_id",
-                                                 "nb_operations",
-                                                 "nb_inputs",
-                                                 "nb_outputs",
-                                                 "nb_topics"])
+#-------------------------------------------------#
+def graphAnnotations(pandaFrame):
+    """
+    Histogram of all the informations contain in the pandaFrame (tools)
+    """
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbOperations", data=pandaFrame)
+    plt.savefig("annotationsNbOperations.png")
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbInputs", data=pandaFrame)
+    plt.savefig("annotationsNbInputs.png")
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbOutputs", data=pandaFrame)
+    plt.savefig("annotationsNbOutputs.png")
+    fig, ax = plt.subplots()
+    chart = sns.countplot(x="nbTopics", data=pandaFrame)
+    plt.savefig("annotationsNbTopics.png") 
 
-    for tool in dict_tools: #TODO : unicité ? dict tools plus gd que tot tools
-        # print(tool)
-        if len(dict_tools[tool]["function"]) > 0:
-            nb_operations = len(dict_tools[tool]["function"][0]["operation"][0])
-            nb_inputs = len(dict_tools[tool]["function"][0]["input"])
-            nb_outputs = len(dict_tools[tool]["function"][0]["output"])
-        else:
-            nb_operations = 0
-            nb_inputs = 0
-            nb_outputs = 0
-        nb_topics = len(dict_tools[tool]["topic"][0])
-        df_tools_stats_annot = df_tools_stats_annot.append({"toolname": tool,
-                                                            "tool_id" : dict_tools[tool]["name"],
-                                                            "nb_operations": nb_operations,
-                                                            "nb_inputs": nb_inputs,
-                                                            "nb_outputs": nb_outputs,
-                                                            "nb_topics": nb_topics}, ignore_index=True)
-    df_tools_stats_annot.to_csv("statAnnotations2.csv",index=False)  
-    return df_tools_stats_annot """  
-
+#-------------------------------------------------#
 def whyNoTools(dicoWf, part):
+    """
+    Create a file with all the script with no tools to see and understand why there is no tools
+    """
     string = "whyNo_" + part + ".txt"
     fileInfo = open(string, "w")
     for wfn in dicoWf:
@@ -274,7 +297,7 @@ def whyNoTools(dicoWf, part):
                 work = dicoProcess[name].getStub()
             
             if work != None:
-                infoTools = work.getTools()
+                infoTools = work.getAnnotations()
                 if len(infoTools) == 0:
                     if writeName:
                         fileInfo.write(nameWf + " ::\n")
@@ -288,22 +311,12 @@ def whyNoTools(dicoWf, part):
                     fileInfo.write(string)
                     fileInfo.write("\n")
 
-def graphAnnotations(pandaFrame):
-    fig, ax = plt.subplots()
-    chart = sns.countplot(x="nbOperations", data=pandaFrame)
-    plt.savefig("annotationsNbOperations.png")
-    fig, ax = plt.subplots()
-    chart = sns.countplot(x="nbInputs", data=pandaFrame)
-    plt.savefig("annotationsNbInputs.png")
-    fig, ax = plt.subplots()
-    chart = sns.countplot(x="nbOutputs", data=pandaFrame)
-    plt.savefig("annotationsNbOutputs.png")
-    fig, ax = plt.subplots()
-    chart = sns.countplot(x="nbTopics", data=pandaFrame)
-    plt.savefig("annotationsNbTopics.png") 
-    
-
-def analysePart(part):
+#-------------------------------------------------#
+def analysePart(part, dico):
+    """
+    Global functions to analyse Script or Stub
+    """
+    #Go in the good directory
     try:
         os.chdir(part)
     except:
@@ -312,38 +325,95 @@ def analysePart(part):
 
     print(bold_color.BOLD + bold_color.RED+"ANALYSE "+ part +bold_color.END)    
     print(bold_color.BLUE + "Preparation Tools" + bold_color.END)
-    nbToolsPerWf = extractTools(dicoWf, part)
+    nbToolsPerWf = extractTools(dico, part)
     print(nbToolsPerWf)
     if len(nbToolsPerWf) != 0:
         print(bold_color.BLUE + "Draw Graphs Tools" + bold_color.END)
         graphTools(nbToolsPerWf)
 
         print(bold_color.BLUE + "Preparation Annotations" + bold_color.END)
-        annotations = extractAnnotations(dicoWf, part)  ##, dicoToolsAnnot
+        annotations = extractAnnotations(dico, part)
         print(bold_color.BLUE + "Creation Stat Annotations" + bold_color.END)
         stat = createPandaFrame(annotations)
         print(stat)
         print(bold_color.BLUE + "Draw Graphs Annotations" + bold_color.END)
         graphAnnotations(stat)
 
-    ##stat2 = get_df_stats_annot(dicoToolsAnnot)
     print(bold_color.BLUE + "Why No Tools" + bold_color.END)
     whyNoTools(dicoWf, part)
     os.chdir("../")
 
+#-------------------------------------------------#
+def whichWithTools(dicoWf):
+    """
+    Create a new dictionary with all the workflows which contain less one bio.tools
+    """
+    perfect = 0
+    newDicoWf = {}
+    for wfn in dicoWf:
+        npProcessScriptWithAnnotations = 0
+        nbProcessScript = 0
+        npProcessStubWithAnnotations = 0
+        nbProcessStub = 0
+        wf = dicoWf[wfn]
+        dicoProcess = wf.getProcess()
+        for name in dicoProcess:
+            script = dicoProcess[name].getScript()
+            if script != None:
+                nbProcessScript += 1 
+                scriptTools = script.getAnnotations()
+                if len(scriptTools) > 0:
+                    npProcessScriptWithAnnotations +=1
+            
+            stub = dicoProcess[name].getStub()
+            if stub != None:
+                nbProcessStub += 1 
+                stubTools = stub.getAnnotations()
+                if len(stubTools) > 0: 
+                    npProcessStubWithAnnotations += 1
 
+        if script != None and stub != None:
+            if npProcessScriptWithAnnotations != 0 or npProcessStubWithAnnotations != 0: #or or and ??
+                perfect += 1
+                newDicoWf.update({wfn: wf})
+        elif script != None and stub == None:
+            if npProcessScriptWithAnnotations != 0:
+                perfect += 1
+                newDicoWf.update({wfn: wf})
+        elif script == None and stub != None:
+            if npProcessStubWithAnnotations != 0:
+                perfect += 1
+                newDicoWf.update({wfn: wf})
+
+    percent = (perfect/len(dicoWf))*100
+    print(bold_color.BOLD + "Numbers with less one Bio.tools : " + str(perfect) + "/"+str(len(dicoWf)) + " soit " + str(percent) + "%" +  bold_color.END)
+    
+    return newDicoWf
+
+"""
+Main Part - Analyse All the Worflow in the json file
+"""
 if __name__ == "__main__":
     startTime = time.time()
     print(bold_color.YELLOW + "--------------------------Start----------------------"+bold_color.END)
     currentPath = os.getcwd()
     #Browse the crawler result
-    crawler = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow_petit.json"
+    crawler = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow.json"
     with open(crawler) as mon_fichier:
         data = json.load(mon_fichier)
 
+    #Creation of the first dictionary with all the workflows we can analyse for the moment 
     print(bold_color.BOLD + bold_color.RED+"CREATE DICO"+bold_color.END)
     dicoWf = createDicoWfN(data)
-    
+    print(bold_color.BOLD + "Can analyse : ", str(len(dicoWf)) , "/", str(len(data)-1)+bold_color.END)
+
+    print(bold_color.BOLD + bold_color.RED+"INFO ON TOOLS AND WORKFLOW"+bold_color.END)
+    #Creation of a new dictionary with all the workflows we can analyse and include less one Bio.tools 
+    newDicoWf = whichWithTools(dicoWf)
+
+    percent2 = len(newDicoWf)/((len(data)-1))*100
+    print(bold_color.BOLD + "FINAL : ", str(percent2) , "% of all the Worflows would be analyse !" + bold_color.END)
+
     #ANALYSE
     try:
         os.chdir("../Analyse")
@@ -352,16 +422,15 @@ if __name__ == "__main__":
         os.makedirs("Analyse/stub", exist_ok=True)
         os.makedirs("Analyse/script", exist_ok=True)
         os.makedirs("Analyse/InfoWfNextflow", exist_ok=True)
-        os.chdir("../Analyse")
+        os.chdir("Analyse")
 
-    print(bold_color.BOLD + bold_color.RED + "ANALYSE GLOBAL" + bold_color.END)
-    analysePartProcess(dicoWf)
-
-    #os.chdir(currentPath)
-    analysePart('script')
-    #os.chdir(currentPath)
-    analysePart('stub')
- 
+    print(bold_color.BOLD + bold_color.RED + "ANALYSE GLOBAL ON " + str(len(newDicoWf)) + bold_color.END)
+    #Analyse the Process of the different Workflows
+    analysePartProcess(newDicoWf)
+    #Analyse the tools most used in the workflows
+    analysePart('script', newDicoWf)
+    analysePart('stub', newDicoWf)
+    
     finalTime = str((time.time() - startTime)/60)
     print(bold_color.BOLD + "Execution Time :" + bold_color.END + finalTime +" min")
     print(bold_color.YELLOW +"--------------------------End----------------------"+bold_color.END)

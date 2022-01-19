@@ -125,7 +125,7 @@ def get_toolnames(strScript):
  #------------------------------------------------------------------------------------------------
 def get_info_biotools_set_of_tools_dump(set_tools, treshold = 5):
     """
-    
+    author : marinedjaffardjy 
     """
     # queries the biotools dump for a set of tools
     #we can control the treshold of selectivity for the levensthein distance score

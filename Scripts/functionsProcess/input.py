@@ -3,9 +3,10 @@ import re
 """
 FIRST PART
 """ 
-
+#List created from https://www.nextflow.io/docs/latest/process.html#inputs
 keyWordsI = ['val', 'env', 'file', 'path', 'stdin', 'tuple', 'each', 'set']
 
+#Create Pattern
 listPatternI = []
 for words in keyWordsI:
     string = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
@@ -46,12 +47,15 @@ class Inputs:
         return self.list_words_workflow
         
     def splitInput(self):
-        self.list_input = split(listPatternI, self.input_string)
+        self.list_input = splits(listPatternI, self.input_string)
 
     def extractQualifier(self):
         self.list_qualifier = extractQ(self.list_input)
 
     def extractName(self):
+        """
+        Extract the global name of each inputs (name in all the workflows)
+        """
         #Two Cases : 
         pattern = r'(\sfrom\s\w+)'
         for idx in range (len(self.list_input)):
@@ -82,7 +86,7 @@ class Inputs:
     def extractI(self):
         self.splitInput()
         self.extractQualifier()
-        self.extractName() #For Parser : name in the process
+        self.extractName()
 
     
 if __name__ == "__main__":

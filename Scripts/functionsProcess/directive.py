@@ -3,15 +3,17 @@ from functionsProcess.commonFunction import *
 """
 FIRST PART
 """
-# To improve
+#List created from https://www.nextflow.io/docs/latest/process.html#directives
 keyWordsD = ["accelerator", "afterScript", "beforeScript", "cache", "cpus", "conda", "container", "containerOptions", "clusterOptions", "disk",
             "echo", "errorStrategy", "executor", "ext", "label", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module",
             "penv", "pod", "publishDir", "queue", "scratch", "stageInMode", "stageOutMode", "storeDir", "tag", "time", "validExitStatus"]
 
+#Create Pattern
 listPatternD = []
 for words in keyWordsD:
     string = "([^,]\\n+\\s*" + words + "[^a-zA-Z0-9])"
     listPatternD.append(string)
+    
 """
 SECOND PART - Class
 """
@@ -41,7 +43,7 @@ class Directives:
         self.list_qualifier = extractQ(self.list_directive)
     
     def splitDirective(self):
-        self.list_directive = split(listPatternD, self.directive_string)
+        self.list_directive = splits(listPatternD, self.directive_string)
 
     def extractD(self):
         self.splitDirective()

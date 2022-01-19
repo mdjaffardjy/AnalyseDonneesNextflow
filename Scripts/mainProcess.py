@@ -95,29 +95,49 @@ if __name__ == "__main__":
 
     """
     #print(os.getcwd() )
-    adress = "/home/clemence/FAC/Master/M1/S1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test.txt"
+    """adress = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Workflows/Tuto_Nextflow/test.txt"
     f = open(adress,"r")
-    lines = f.read()
+    lines = f.read()"""
+    lines = '''
+process merge_jma {
+    tag "${name}"
+    publishDir "${params.outdir}"
+    input:
+        file(cojo)
+    output:
+        file(
+            "*merged.jma.cojo"
+            )
+    script:
+    """
+    head -n 1 -q ${params.plinkpat}.jma.cojo \
+    | head -n1 > ${params.plinkpre}merged.jma.cojo
+    tail -n +2 -q *.jma.cojo \
+    | sort -k1,1n -k2,2V >> ${params.plinkpre}merged.jma.cojo
+    """
+}
+
+    '''
 
     p = Process(lines) 
     p.extractProcess()
     inputs, outputs, emit = p.extractAll()
     #print(p.get_name())
     #print(p.output.list_output)
-    print("Inputs: ", inputs)
+    """print("Inputs: ", inputs)
     print("Outputs: ",outputs)
     print("Emit : ", emit)
-    print(p.script.script_string)
+    print("Script : ", p.script.script_string)
     print(p.script.language)
     print("")
     print("TOOLS : ", p.script.tools)
     dico = p.script.getAnnotations()
     #print("ANNOTATIONS in bio.tools : ", dico.keys())
-    print("ANNOTATIONS in bio.tools : ", dico)
-    #printInformations(p)
+    print("ANNOTATIONS in bio.tools : ", dico)"""
+    printInformations(p)
     #printNameInWorkflow(p)
     #printLanguage(p)
     #printQualifier(p)
-    f.close()
+    #f.close()
     #"""
     print("-----------------------------END-----------------------------")

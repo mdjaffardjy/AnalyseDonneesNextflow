@@ -13,9 +13,45 @@ Declaration of global variable
 """
 
 #List de pattern
-listPattern = [r'(input\s*:)', r'(output\s*:)', r'(when\s*:)', r'(script\s*:)', r'(shell\s*:)', 
-                      r'(exec\s*:)',r'(""")', r"(''')", r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)", r'(stub\s*:)']
- 
+listPattern = [r'(input\s*:\n)', r'(output\s*:\n)', r'(when\s*:\n)', r'(script\s*:\n)', r'(shell\s*:\n)', 
+                      r'(exec\s*:\n)',r'(""")', r"(''')", r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)", r'(stub\s*:)']
+
+def endPairs(txt,idx,s):
+    count_curly = 1
+    end = idx
+    while(count_curly != 0):
+        if(txt[end] == s[0]):
+            count_curly += 1
+        elif(txt[end] == s[1]):
+            count_curly -= 1
+        end += 1
+    return end
+
+def findPairs(txt, symbole):
+    tab = []
+    for i in range (len(txt)):
+        if txt[i] == symbole[0]:
+            end = endPairs(txt,i+1, symbole)
+            tab.append([i,end])
+    return tab
+
+def prepare(txt):
+    work = txt
+    symbole = [['{', '}'], ['(', ')']]
+    for s in symbole:
+        tab = findPairs(txt, s)
+        for i in range (len(tab)):
+            if s[0] == '{' and i ==0:
+                None
+            else:
+                start = tab[i][0]
+                end = tab[i][1]
+                change = txt[start:end].replace("\n", " ")
+                change = change.split()
+                change = " ".join(change)
+                work = work.replace(txt[start:end], change)
+    return "\n" + work    
+
 """
 SECOND PART - Class
 """
@@ -25,7 +61,7 @@ class Process:
     #String of the process
     self.process_string = process
     #We are going to extract the informations from this variable and clean it when we finish to study a part
-    self.process_work = process
+    self.process_work = prepare(process)
     self.name = None
     self.directive = None
     self.input = None
@@ -33,6 +69,7 @@ class Process:
     self.when = None
     self.script = None
     self.stub = None
+    self.allAnalyse = True
     
 
   #Function which find the last "}" 
@@ -61,13 +98,13 @@ class Process:
     #Find where is the first patternStart
     start = self.endProcess()
     for match in re.finditer(patternStart, self.process_string):
-      if match.span()[1] < start:
+      if match.span()[1] <= start:
         start = match.span()[1]
 
     #Find where is the first { (partternEnd)
     end = self.endProcess()
     for match in re.finditer(patternEnd, self.process_string):
-      if match.span()[0] < end:
+      if match.span()[0] <= end:
         end = match.span()[0]
 
     #The name is between the pattern start and end 
@@ -93,7 +130,7 @@ class Process:
     patternStart = r'({)'
     start = self.endProcess()
     for match in re.finditer(patternStart, self.process_work):
-      if match.span()[1] < start:
+      if match.span()[1] <= start:
         start = match.span()[1]
 
     #Check if we don't have a process empty (with no directives ...)
@@ -104,7 +141,7 @@ class Process:
       for pattern in listPattern:
         for match in re.finditer(pattern, self.process_work):
           #Check the next step after the step we want to study + we want the first one just after
-          if (match.span()[0] < end) and (match.span()[0] > start):
+          if (match.span()[0] <= end) and (match.span()[0] >= start):
             end = match.span()[0]
       string =  self.process_work[start:end].lstrip().rstrip()
       if len(string) != 0:
@@ -149,12 +186,12 @@ class Process:
   #Always at then end - finish a process
   def extractScript(self):
     #Start 
-    patternStart = [r'(script\s*:)', r'(shell\s*:)', r'(exec\s*:)', r'(""")', r"(''')",r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)"]
+    patternStart = [r'(script\s*:\n)', r'(shell\s*:\n)', r'(exec\s*:\n)', r'(""")', r"(''')",r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)"]
     start = [-1,self.endProcess()]
     patternMatch = ""
     for pattern in patternStart:
       for match in re.finditer(pattern, self.process_work):
-        if match.span()[1] < start[1]:
+        if match.span()[1] <= start[1]:
           start = match.span()
           patternMatch = pattern
 
@@ -172,7 +209,7 @@ class Process:
       for pattern in listPattern:
         if not pattern in patternStart:
           for match in re.finditer(pattern, self.process_work):
-            if (match.span()[0] < end) and (match.span()[0] > start[1]):
+            if (match.span()[0] <= end) and (match.span()[0] >= start[1]):
               end = match.span()[0]
 
       if patternMatch == r'(""")' or patternMatch == r"(''')":
@@ -203,7 +240,7 @@ class Process:
       for pattern in listPattern:
         if pattern != patternStart and not (pattern in patternAccepted):
           for match in re.finditer(pattern, self.process_work):
-            if (match.span()[0] < end) and (match.span()[0] > start[1]):
+            if (match.span()[0] <= end) and (match.span()[0] >= start[1]):
               end = match.span()[0]
       string = self.process_work[start[1]:end].rstrip()
       if len(string) != 0:
@@ -222,12 +259,12 @@ class Process:
     for match in re.finditer(patternStart, self.process_work):
       start = match.span()
     #Verify if our process contains the patternStart
-    if start[-1] != 1:
+    if start[-1] != -1:
       end = self.endProcess()
       for pattern in listPattern:
         if pattern != patternStart:
           for match in re.finditer(pattern, self.process_work):
-            if (match.span()[0] < end) and (match.span()[0] > start[1]):
+            if (match.span()[0] <= end) and (match.span()[0] >= start[1]):
               end = match.span()[0]
       string = self.process_work[start[1]:end].lstrip().rstrip()
     
@@ -249,8 +286,6 @@ class Process:
 
 
   def extractAll(self):
-    #self.extractProcess()
-
     if self.input != None:
       inputs = self.input.getNameInWorkflow()
     else:
@@ -303,23 +338,33 @@ class Process:
     """
     self.extractName()
     self.extractDirective()
-    self.extract('Input', r'(input\s*:)')
-    self.extract('Output', r'(output\s*:)')
-    self.extract('When', r'(when\s*:)')
+    self.extract('Input', r'(input\s*:\n)')
+    self.extract('Output', r'(output\s*:\n)')
+    self.extract('When', r'(when\s*:\n)')
     self.extractStub()
     self.extractScript()
 
     """
     Verify if all the things were analysed - if self.process_work est empty
     """
-    self.process_work = self.process_work.replace(self.name, "")
-    self.process_work = self.process_work.replace("process", "")
+    firstLine = "process" + self.name 
+    self.process_work = self.process_work.lstrip().rstrip()
+    temp = self.process_work.split("\n")
+    tempBis = temp[0].split()
+    tempLine = "".join(tempBis)
+    self.process_work = self.process_work.replace(temp[0], tempLine)
+
+    self.process_work = self.process_work.replace(firstLine, "")
     self.process_work = self.process_work.replace("{", "")
     self.process_work = self.process_work.replace("}", "")
     self.process_work = self.process_work.lstrip().rstrip()
+
     if len(self.process_work) != 0:
-      print("ERROR - Something is wrong ! - self.process_work is not empty : ", self.process_work)
-    #To continued
+      print("ERROR in ", self.name , " - Something is wrong ! - self.process_work is not empty : ", self.process_work)
+      self.allAnalyse = False
+
+  def goodForAnalyse(self):
+    return self.allAnalyse
 
 
 if __name__ == "__main__":

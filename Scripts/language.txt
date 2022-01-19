@@ -1,0 +1,16 @@
+bash
+python
+Rscript
+ruby
+julia
+perl
+bashlog
+sh
+ksh
+
+groovy
+assembly/!{pair_id}_gatb
+line.
+mothur
+_ygESaTlCXg 
+work
