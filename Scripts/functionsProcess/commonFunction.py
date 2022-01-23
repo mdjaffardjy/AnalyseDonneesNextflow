@@ -106,9 +106,6 @@ def whichLanguage(txt):
             fileLanguage = open("../../../../Scripts/language.txt", "a")
             fileLanguage.write("\n" + language)
             fileLanguage.close()
-            fileLanguage = open("language.txt", "a")
-            fileLanguage.write("\n" + language)
-            fileLanguage.close()
     language = language.lstrip().rstrip()
     if language == 'sh' or language == 'ksh' or language == 'bashlog':
         language = 'bash'

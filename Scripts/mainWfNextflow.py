@@ -1,5 +1,3 @@
-from locale import normalize
-from turtle import fillcolor
 from wfNextflow import *
 import os
 import matplotlib.pyplot as plt
