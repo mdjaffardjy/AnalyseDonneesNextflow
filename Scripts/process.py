@@ -20,36 +20,36 @@ def endPairs(txt,idx,s):
     count_curly = 1
     end = idx
     while(count_curly != 0):
-        if(txt[end] == s[0]):
-            count_curly += 1
-        elif(txt[end] == s[1]):
-            count_curly -= 1
-        end += 1
+      if(txt[end] == s[0]):
+        count_curly += 1
+      elif(txt[end] == s[1]):
+        count_curly -= 1
+      end += 1
     return end
 
 def findPairs(txt, symbole):
     tab = []
     for i in range (len(txt)):
-        if txt[i] == symbole[0]:
-            end = endPairs(txt,i+1, symbole)
-            tab.append([i,end])
+      if txt[i] == symbole[0]:
+        end = endPairs(txt,i+1, symbole)
+        tab.append([i,end])
     return tab
 
 def prepare(txt):
     work = txt
     symbole = [['{', '}'], ['(', ')']]
     for s in symbole:
-        tab = findPairs(txt, s)
-        for i in range (len(tab)):
-            if s[0] == '{' and i ==0:
-                None
-            else:
-                start = tab[i][0]
-                end = tab[i][1]
-                change = txt[start:end].replace("\n", " ")
-                change = change.split()
-                change = " ".join(change)
-                work = work.replace(txt[start:end], change)
+      tab = findPairs(txt, s)
+      for i in range (len(tab)):
+        if s[0] == '{' and i ==0:
+          None
+        else:
+          start = tab[i][0]
+          end = tab[i][1]
+          change = txt[start:end].replace("\n", " ")
+          change = change.split()
+          change = " ".join(change)
+          work = work.replace(txt[start:end], change)
     return "\n" + work    
 
 """
@@ -349,6 +349,7 @@ class Process:
     """
     firstLine = "process" + self.name 
     self.process_work = self.process_work.lstrip().rstrip()
+
     temp = self.process_work.split("\n")
     tempBis = temp[0].split()
     tempLine = "".join(tempBis)

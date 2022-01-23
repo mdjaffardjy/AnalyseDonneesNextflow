@@ -1,8 +1,10 @@
+from importlib.metadata import files
 import os
 from process import *
 from typeMainDSL1 import *
 from functionsProcess.toolFunction import *
 import re
+from pathlib import Path
 
 """
 If two or more process have the same name in the workflows - give an index number
@@ -53,6 +55,9 @@ class Nextflow_WF:
         self.processName = [] #list name 
         self.process = {} # dico : key name process and value tab : @ process
         self.processAnalyse = [] 
+
+        #Name Process with tools used
+        self.dicoProcessTools = {}
     
     #--------------------------------------------#
     def getNameFolder(self):
@@ -69,6 +74,12 @@ class Nextflow_WF:
 
     def getProcess(self):
         return self.process
+
+    def getTools(self):
+        return self.script_toolsName + self.stub_toolsName
+
+    def getProcessTools(self):
+        return self.dicoProcessTools
         
     #--------------------------------------------#
     def extract(self):
@@ -86,7 +97,13 @@ class Nextflow_WF:
                 try: 
                     #Download file if we need:
                     try:
-                        with open(nameFile): pass
+                        with open(nameFile): 
+                            p = os.getcwd() + "/" + nameFile
+                            fileSize = Path(p).stat().st_size
+                            increment = 0
+                            while fileSize == 0 and increment != 10:
+                                increment += 1
+                                os.system('wget -q "' + urlfile + '" -O ' + nameFile)
                     except Exception as exc:
                         os.system('wget -q "' + urlfile + '" -O ' + nameFile)
 
@@ -104,7 +121,7 @@ class Nextflow_WF:
                 except Exception as exc:
                     nbErrors +=1
                     errors.append(exc)
-                    print("ERROR in extractInfoWorkflow : " , exc, " ", self.listFiles[i])
+                    print("ERROR in extractInfoWorkflow : " , exc, " ", self.listFiles[i] + " " + nameFile)
                     ok = False
         if nbErrors != 0:
             print("     NB errors :", nbErrors, "/",len(self.listFiles))
@@ -119,16 +136,16 @@ class Nextflow_WF:
                     name = findName(name, self.processName)
                     self.processName.append(name)
                     self.process.update({name:work})
-
+                    tools = []
                     #Script
                     if work.getScript() != None:
-                        nameTools = work.getScript().getTools()
+                        nameCommands = work.getScript().getTools()
                         annot = work.getScript().getAnnotations()
-                        for t in nameTools:
+                        for t in nameCommands:
                             if not t in self.script_toolsName:
                                 self.script_toolsName.append(t)
                         
-                        for t in nameTools:
+                        for t in nameCommands:
                             string = ""
                             for i in range (len(t)):
                                 string += t[i] + " "
@@ -141,15 +158,17 @@ class Nextflow_WF:
                             bioId = annot[a]['name']
                             if not bioId in self.script_annotations:
                                 self.script_annotations.update({a:annot[a]})
+                            if not bioId in tools:
+                                tools.append(bioId)
                     #Stub
                     if work.getStub() != None:
-                        nameTools = work.getStub().getTools()
+                        nameCommands = work.getStub().getTools()
                         annot = work.getStub().getAnnotations()
-                        for t in nameTools:
+                        for t in nameCommands:
                             if not t in self.stub_toolsName:
                                 self.stub_toolsName.append(t)
                         
-                        for t in nameTools:
+                        for t in nameCommands:
                             string = ""
                             for i in range (len(t)):
                                 string += t[i] + " "
@@ -162,7 +181,9 @@ class Nextflow_WF:
                             bioId = annot[a]['name']
                             if not bioId in self.stub_annotations:
                                 self.stub_annotations.update({a:annot[a]})
-
+                            if not bioId in tools:
+                                tools.append(bioId)
+                    self.dicoProcessTools.update({name:tools})
             self.processNb = len(self.processName)
             self.script_toolsNb = len(self.script_toolsName)
             self.stub_toolsNb = len(self.stub_toolsName)

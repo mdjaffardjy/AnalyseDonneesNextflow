@@ -99,24 +99,39 @@ if __name__ == "__main__":
     f = open(adress,"r")
     lines = f.read()"""
     lines = '''
-process merge_jma {
-    tag "${name}"
-    publishDir "${params.outdir}"
+process INTERPROSCAN {
+    tag "$meta.id"
+    label 'process_medium'
+    publishDir "${params.outdir}",
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:['id']) }
+
+    
+    container "annotater/interproscan:5.36-0.9"
+
     input:
-        file(cojo)
+    tuple val(meta), path(fasta)
+
     output:
-        file(
-            "*merged.jma.cojo"
-            )
+    tuple val(meta), path("*.{tsv,xml,gff,json,html,svg}"), emit: outfiles
+    path "versions.yml"           , emit: version
+
     script:
+    def software = getSoftwareName(task.process)
+    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}_interpro"
     """
-    head -n 1 -q ${params.plinkpat}.jma.cojo \
-    | head -n1 > ${params.plinkpre}merged.jma.cojo
-    tail -n +2 -q *.jma.cojo \
-    | sort -k1,1n -k2,2V >> ${params.plinkpre}merged.jma.cojo
+    /usr/local/interproscan/interproscan.sh \\
+          --input $fasta \\
+          --cpu $task.cpus \\
+          --output-file-base ${prefix} \\
+          $options.args
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(/usr/local/interproscan/interproscan.sh -version 2>&1 | head -n 1 | sed 's/^InterProScan version //')
+    END_VERSIONS
     """
 }
-
     '''
 
     p = Process(lines) 
@@ -126,15 +141,17 @@ process merge_jma {
     #print(p.output.list_output)
     """print("Inputs: ", inputs)
     print("Outputs: ",outputs)
-    print("Emit : ", emit)
-    print("Script : ", p.script.script_string)
+    print("Emit : ", emit)"""
+    """print("Script : ", p.script.script_string)
     print(p.script.language)
     print("")
     print("TOOLS : ", p.script.tools)
     dico = p.script.getAnnotations()
     #print("ANNOTATIONS in bio.tools : ", dico.keys())
     print("ANNOTATIONS in bio.tools : ", dico)"""
-    printInformations(p)
+    #printInformations(p)
+    print(p.printDirectives())
+    print(p.numberDirectives())
     #printNameInWorkflow(p)
     #printLanguage(p)
     #printQualifier(p)

@@ -1,10 +1,18 @@
+from locale import normalize
+from turtle import fillcolor
 from wfNextflow import *
 import os
 import matplotlib.pyplot as plt
+import networkx as nx
 import seaborn as sns
 import json
 import pandas as pd
 import time
+import graphviz
+from pyvis.network import Network
+
+from sknetwork.data import convert_edge_list
+from sknetwork.visualization import svg_graph
 
 class bold_color:
    PURPLE = '\033[95m'
@@ -23,7 +31,7 @@ def createDicoWfN(data):
     Browse a json file and analyse the different workflows 
     and add in a dictionary those we do not have any errors
     """
-    currentPath = os.getcwd()
+    currentPath = os.getcwd()        
     dicoWf= {}
     nbWf = len(data.keys()) -1 #del the last which is 'last_date'
     idx = 1
@@ -102,9 +110,50 @@ def extractTools(dicoWf, part):
     return nbToolsPerWf
 
 #-------------------------------------------------#
+def allLanguage(dico):
+    """
+    All the language of all the workklows if we could analysed it (with and without bio.tools)
+    """
+    file = open("language.csv", "w")
+    file.write("All the Language used in all the Workflows used for the analysed or not\n\n")
+    languageScript = {}
+    languageStub = {}
+    sumTotal = 0 
+    for wfn in dico:
+        wf = dico[wfn]
+        dicoProcess = wf.getProcess()
+        for name in dicoProcess:
+            sumTotal += 1
+            script = dicoProcess[name].getScript()
+            if script != None:
+                l = script.getLanguage()
+                if l in languageScript:
+                    languageScript[l] +=1
+                else:
+                    languageScript.update({l: 1})
+            stub = dicoProcess[name].getStub()
+            if stub != None:
+                l = stub.getLanguage()
+                if l in languageStub:
+                    languageStub[l] +=1
+                else:
+                    languageStub.update({l: 1})
+    string = "Numbers of process : " + str(sumTotal) + "\n\n"
+    file.write(string)
+    file.write("Language Script : \n")
+    for l in languageScript:
+        txt = "{}\t{}\n".format(l, languageScript[l])
+        file.write(txt)
+    file.write("\n")
+    file.write("Language Stub : \n")
+    for l in languageStub:
+        txt = "{}\t{}\n".format(l, languageStub[l])
+        file.write(txt)
+
+#-------------------------------------------------#
 def analysePartProcess(dicoWf):
     """
-    Save all the informations about the different Workflows in different files
+    Save all the informations about the different Workflows analysed in different files
     One file : a 'big' summary
     One file for each workflow : a 'little' summary
     """
@@ -194,7 +243,7 @@ def analysePartProcess(dicoWf):
         fileInfo.write(txt)
 
 #-------------------------------------------------#  
-def graphTools(nbTools):
+def graphTools(nbTools, nbWf, histx):
     """
     Draw a histogram of the tools used
     """
@@ -211,6 +260,61 @@ def graphTools(nbTools):
     chart = sns.barplot(x=x, y=y, palette="rocket")
     chart.set_xticklabels(chart.get_xticklabels(), rotation=90, size=5)
     plt.savefig("nextflowTools.png")
+
+    #*********************************#
+    fileTools = open('nextflowTools.txt', 'r')
+    lines = fileTools.readlines()
+    dicoNum = {}
+    sumTotal = 0
+    for i in range (1,len(lines)):
+        line = lines[i].split()
+        num = line[-1]
+        if num in dicoNum:
+            dicoNum[num] +=1
+            sumTotal +=1
+        else:
+            dicoNum.update({num:1})
+            sumTotal +=1
+
+    x = histx
+    y = []
+    for i in range (len(x)):
+        numbers = x[i]
+        dash = numbers.find('-')
+        if i == len(x)-1:
+            cpt = 0
+            end = int(numbers[numbers.find('>=')+len('>='):])
+            for n in dicoNum:
+                nb = int(n)
+                if nb >= end:
+                    cpt +=dicoNum[n]
+            y.append(cpt*100/sumTotal)
+        elif dash != -1:
+            cpt = 0
+            one = int(numbers[0:dash])
+            two = int(numbers[dash+len('-'):])
+            for n in dicoNum:
+                nb = int(n)
+                if nb>=one and nb <= two:
+                    cpt +=dicoNum[n]
+            y.append(cpt*100/sumTotal)
+                    
+        else:
+            val = 0
+            num = int(numbers)
+            for n in dicoNum:
+                nb = int(n)
+                if nb == num:
+                    val = dicoNum[n]*100/sumTotal
+            y.append(val)
+    
+    fig, ax = plt.subplots()
+    chart = sns.barplot(x=x, y=y,palette="rocket")
+    chart.set_xticklabels(chart.get_xticklabels(), size=8)
+    plt.xlabel("Numbers of workflows")
+    plt.ylabel("Percent of tools")
+    plt.title("Distribution of the {} tools in a database composed of {} workflows".format(sumTotal,nbWf))
+    plt.savefig("Histogram.png")
 
 #-------------------------------------------------#  
 def extractAnnotations(dicoWf, part):
@@ -312,6 +416,148 @@ def whyNoTools(dicoWf, part):
                     fileInfo.write("\n")
 
 #-------------------------------------------------#
+def graphNetwork(dico, tabEdge):    
+    print(bold_color.BLUE + "CREATION NETWORKS" + bold_color.END)
+    tabTools = []
+    idx = 0
+    file = open("Networks/NumbersNameCorrespondence.txt", "w")
+    #Creation of a tab : idx + name of the wf + list of tools used in this wf
+    for k in dico:
+        annot = dico[k].getAnnotationsScript()
+        tools = []
+        for a in annot:
+            if not annot[a]['name'] in tools:
+                tools.append(annot[a]['name'])
+        tabTools.append([idx, k, tools])
+        string = str(idx) + " : " + k + "\n"
+        file.write(string)
+        idx +=1
+    file.close()
+
+    #Creation of a tab : idx wf 1 + idx wf 2 + numbers of shared tools 
+    tabComparison = []
+    for i in range(len(tabTools)):
+        toolsOne = tabTools[i][2]
+        for j in range(i+1,len(tabTools)):
+            nbCommon = 0
+            toolsTwo = tabTools[j][2]
+            for t in toolsTwo:
+                if t in toolsOne:
+                    nbCommon +=1
+            tabComparison.append([i, j, nbCommon])
+
+    node = [[] for _ in range(len(tabEdge))]
+    edge = [[] for _ in range(len(tabEdge))]
+    
+    for i in range(len(tabComparison)):
+        dejavu = []
+        nbSame = tabComparison[i][2]
+        for j in range (len(tabEdge)-1,-1,-1):
+            if not j in dejavu :
+                if nbSame >= tabEdge[j]:
+                    for k in range (j,-1,-1):
+                        one = str(tabComparison[i][0])
+                        two = str(tabComparison[i][1])
+                        edge[k].append((one,two))
+                        if not one in node[k]:
+                                  node[k].append(one)
+                        if not two in node[k]:
+                                  node[k].append(two)
+                        dejavu.append(k)
+
+    for i in range (len(tabEdge)):
+        print("Network :", str(i+1) , " / ", str(len(tabEdge)))
+        if len(node[i]) != 0:
+            name = 'Networks/graphviz_network_' + str(tabEdge[i]) + '.gv'  
+            g = graphviz.Graph(filename=name, engine='sfdp', format='png', \
+                                node_attr={'color': 'orangered1', 'style': 'filled', 'shape':'oval'}) 
+            
+            for j in range (len(edge[i])):
+                g.edge(edge[i][j][0], edge[i][j][1])
+            g.render()
+            g.save()
+
+            #Interactif networks
+            """g2 = nx.Graph()
+            g2.add_nodes_from(node[i])
+            g2.add_edges_from(edge[i])
+            
+            net = Network('100%', '100%')
+            net.from_nx(g2)
+            name = 'Networks/pyvisnetwork' + str(tabEdge[i]) + '.html'
+            net.show_buttons(filter_=['physics'])
+            net.save_graph(name)
+            """
+            graph = convert_edge_list(edge[i])
+            adjacency = graph.adjacency
+            names = graph.names
+            name = 'Networks/scikit_network' + str(tabEdge[i]) + '.png'
+            _ = svg_graph(adjacency, names=names,node_color='#f95548',edge_color='#4bafde',node_size=2.5, filename= name)
+
+#-------------------------------------------------#
+def graphTopics(dico):
+    dicoTopic = {}
+    for wfn in dico:
+        wf = dico[wfn]
+        annot = wf.getAnnotationsScript()
+        topics = []
+        for a in annot:
+            for i in range (len(annot[a]['topic'])):
+                for j in range (len((annot[a]['topic'][i]))):
+                    topics.append(annot[a]['topic'][i][j])
+        uniqueTopics = []
+        url = []
+        for i in range (len(topics)):
+            uri = topics[i]['uri']
+            t = uri.split('/')[-1]
+            if not t in url:
+                uniqueTopics.append([t, topics[i]['term']])
+                url.append(t)
+        for work in uniqueTopics:
+            if not work[0] in dicoTopic:
+                dicoTopic.update({work[0]:[work[1],1]})
+            else:
+                dicoTopic[work[0]][1] += 1
+
+    x,y = [], []
+    for t in dicoTopic:
+        x.append(dicoTopic[t][1])
+        y.append(dicoTopic[t][0])
+    fig, ax = plt.subplots(figsize=(20,20))
+    ax.pie(x, normalize=True)
+    ax.set_title("A faire")
+    plt.legend(y, loc='center right', bbox_to_anchor=(0.5, 0., 0.5, 0.5))
+    plt.savefig("Topics/camembert.png")
+    fig, ax = plt.subplots(figsize=(30,15))
+    chart = sns.barplot(x=x, y=y, palette="rocket")
+    ax.set_title("A faire")
+    #chart.set_xticklabels(chart.get_xticklabels(), rotation=90)
+    plt.savefig("Topics/camembert2.png")
+
+    import numpy as np
+    fig, ax = plt.subplots(figsize=(30,30), subplot_kw=dict(aspect="equal"))
+    data=x
+    recipe=y
+    wedges, _ = ax.pie(data )#, wedgeprops=dict(width=0.2), startangle=-40)
+
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.3)
+    kw = dict(arrowprops=dict(arrowstyle="-"),
+            bbox=bbox_props, zorder=0, va="center")
+
+    for i, p in enumerate(wedges):
+        ang = (p.theta2 - p.theta1)/0.6 + p.theta1
+        y = np.sin(np.deg2rad(ang))
+        x = np.cos(np.deg2rad(ang))
+        horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+        connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+        kw["arrowprops"].update({"connectionstyle": connectionstyle})
+        ax.annotate(recipe[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+                    horizontalalignment=horizontalalignment, **kw)
+
+    ax.set_title("A faire")
+    plt.savefig("Topics/camembert3.png")
+
+#-------------------------------------------------#
 def analysePart(part, dico):
     """
     Global functions to analyse Script or Stub
@@ -329,7 +575,11 @@ def analysePart(part, dico):
     print(nbToolsPerWf)
     if len(nbToolsPerWf) != 0:
         print(bold_color.BLUE + "Draw Graphs Tools" + bold_color.END)
-        graphTools(nbToolsPerWf)
+        if part == 'stub':
+            histx = ["1", "2","3","4","5", '>6'] 
+        else:
+            histx = ["1", "2","3","4","5", '6', "7-9", "10-24", '25-49', "50-99", ">=100"]
+        graphTools(nbToolsPerWf, len(dico), histx)
 
         print(bold_color.BLUE + "Preparation Annotations" + bold_color.END)
         annotations = extractAnnotations(dico, part)
@@ -397,6 +647,15 @@ if __name__ == "__main__":
     startTime = time.time()
     print(bold_color.YELLOW + "--------------------------Start----------------------"+bold_color.END)
     currentPath = os.getcwd()
+
+    #Create folders if don't exist
+    try:
+        os.chdir("../Workflows/bddFiles/")
+    except:
+        os.chdir("../")
+        os.makedirs("Workflows/bddFiles", exist_ok=True)
+    os.chdir(currentPath)
+
     #Browse the crawler result
     crawler = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow.json"
     with open(crawler) as mon_fichier:
@@ -415,22 +674,40 @@ if __name__ == "__main__":
     print(bold_color.BOLD + "FINAL : ", str(percent2) , "% of all the Worflows would be analyse !" + bold_color.END)
 
     #ANALYSE
+    #Create folders if don't exist
+    folder = ['stub', 'script', 'InfoWfNextflow', 'Networks', 'Topics']
     try:
         os.chdir("../Analyse")
-    except: 
+    except:
         os.chdir("../")
         os.makedirs("Analyse/stub", exist_ok=True)
         os.makedirs("Analyse/script", exist_ok=True)
         os.makedirs("Analyse/InfoWfNextflow", exist_ok=True)
+        os.makedirs("Analyse/Networks", exist_ok=True)
+        os.makedirs("Analyse/Topics", exist_ok=True)
         os.chdir("Analyse")
+    analyse = os.getcwd()
 
+    for f in folder:
+        try:
+            os.chdir(f)
+        except:
+            os.makedirs(f, exist_ok=True)	
+        os.chdir(analyse)
+    
     print(bold_color.BOLD + bold_color.RED + "ANALYSE GLOBAL ON " + str(len(newDicoWf)) + bold_color.END)
     #Analyse the Process of the different Workflows
     analysePartProcess(newDicoWf)
+    #Stat language
+    allLanguage(dicoWf)
+    #Create Networks
+    graphNetwork(newDicoWf,[1,2,3,5])
     #Analyse the tools most used in the workflows
     analysePart('script', newDicoWf)
     analysePart('stub', newDicoWf)
-    
+    #Analyse Topic
+    graphTopics(newDicoWf)
+
     finalTime = str((time.time() - startTime)/60)
     print(bold_color.BOLD + "Execution Time :" + bold_color.END + finalTime +" min")
     print(bold_color.YELLOW +"--------------------------End----------------------"+bold_color.END)

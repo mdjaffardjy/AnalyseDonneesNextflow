@@ -60,7 +60,6 @@ SCRIPT - STUB
 """
 Analyse Language
 """
-import os
 def whichLanguage(txt):
     fileLanguage = open("../../../../Scripts/language.txt", "r")
     fileLines = fileLanguage.readlines()
@@ -107,6 +106,12 @@ def whichLanguage(txt):
             fileLanguage = open("../../../../Scripts/language.txt", "a")
             fileLanguage.write("\n" + language)
             fileLanguage.close()
+            fileLanguage = open("language.txt", "a")
+            fileLanguage.write("\n" + language)
+            fileLanguage.close()
+    language = language.lstrip().rstrip()
+    if language == 'sh' or language == 'ksh' or language == 'bashlog':
+        language = 'bash'
     return language
 
 """
@@ -131,9 +136,10 @@ def justScript(txt):
         tabIdx.sort(reverse=True)
         for idx in tabIdx:
             work = work.replace(work[idx[0]:idx[1]].strip(), "\n")
-                
-        patLong = [r"(\n+\s*'''\n*)", r'(\n+\s*"""\n*)']
-        tabIdx = []
+
+        study = work                
+        #patLong = [r"(\n+\s*'''\n*)", r'(\n+\s*"""\n*)']
+        '''tabIdx = []
         for pat in patLong:
             for match in re.finditer(pat, work):
                 tabIdx.append([match.span()[0], match.span()[1]])
@@ -151,5 +157,5 @@ def justScript(txt):
             for match in re.finditer(pat,work):
                 #del les " " ou ' '                
                 temp = work[match.span()[0]: match.span()[1]].lstrip().rstrip()
-                study += "\n" + temp[1:-1]
+                study += "\n" + temp[1:-1]'''
     return study
