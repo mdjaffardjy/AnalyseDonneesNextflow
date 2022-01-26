@@ -328,6 +328,9 @@ class Process:
   def get_string(self):
     return self.process_string
 
+  def getListTools(self):
+    return self.script.getListTools()
+
   #Do everything to extract the informations
   def extractProcess(self):
     """

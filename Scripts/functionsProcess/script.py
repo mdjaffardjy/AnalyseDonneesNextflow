@@ -7,6 +7,7 @@ class Script:
             self.language = None
             self.tools = []
             self.annotations = {}
+            self.listTools  = []
 
     def printString(self):
         print(self.script_string)  
@@ -26,6 +27,9 @@ class Script:
     def getAnnotations(self):
         return self.annotations
     
+    def getListTools(self):
+        return self.listTools
+
     def whichLanguage(self):
         self.language = whichLanguage(self.script_string)
 
@@ -34,6 +38,12 @@ class Script:
             #work = justScript(self.script_string)
             self.tools = get_toolnames(self.script_string)  #a revoir
             self.annotations = get_info_biotools_set_of_tools_dump(self.tools)
+
+            #Add in a list - the tool name
+            for a in self.annotations:
+                bioId = self.annotations[a]['name']
+                if not bioId in self.listTools:
+                    self.listTools.append(bioId)
 
     def extractS(self):
         self.whichLanguage()
