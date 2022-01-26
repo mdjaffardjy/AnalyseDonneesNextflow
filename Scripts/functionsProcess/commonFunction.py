@@ -10,6 +10,9 @@ DIRECTIVE - INPUT - OUTPUT
 """
 Clean an element : no \n and no \
 """
+
+adresse_language= __file__[:-len("functionsProcess/commonFunction.py")]+"/language.txt"
+
 def clean(txt):
     antiSlash = []
     for match in re.finditer(r"(\\)", txt):
@@ -61,7 +64,9 @@ SCRIPT - STUB
 Analyse Language
 """
 def whichLanguage(txt):
-    fileLanguage = open("../../../../Scripts/language.txt", "r")
+    #fileLanguage = open("../../../../Scripts/language.txt", "r")
+    fileLanguage = open(adresse_language, "r")
+    
     fileLines = fileLanguage.readlines()
     languageKnown = []
     for lines in fileLines:
@@ -103,7 +108,8 @@ def whichLanguage(txt):
                 test2 = work.split('/')
                 language = test2[-1]
         
-            fileLanguage = open("../../../../Scripts/language.txt", "a")
+            #fileLanguage = open("../../../../Scripts/language.txt", "a")
+            fileLanguage = open(adresse_language, "a")
             fileLanguage.write("\n" + language)
             fileLanguage.close()
     language = language.lstrip().rstrip()

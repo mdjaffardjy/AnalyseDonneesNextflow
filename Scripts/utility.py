@@ -1,13 +1,20 @@
 import re
 
 
+
+#For all functions use test_utilities.py to see examples of how they work 
+
+def print_in_red(text):
+    print('\x1b[0;37;41m' + text + '\x1b[0m')
+
+#Function that checks if element is in list
 def check_containing(ele, tab):
     index   = tab.count(ele)
     if(index==0):
         return False
     return True
 
-#Function that returns an empty string
+#Function that returns an empty string of the same forme as the string[start:end]
 def create_empty(string, start, end):
     empty=''
     for i in range(start, end):
@@ -17,6 +24,7 @@ def create_empty(string, start, end):
             empty+=' '
     return empty
 
+#Function that returns the next character (+ it's index)
 def get_next_element_caracter(string, i):
     while(i+1<len(string)):
         i+=1
@@ -24,7 +32,7 @@ def get_next_element_caracter(string, i):
             return string[i], i
     return -1, -1
 
-#Since it's a word, like a word word not '{};'
+#Function that returns the next word (+ it's index)
 def get_next_element_word(string, i, inclusive=False):
     while(i+1<len(string)):
         i+=1
@@ -37,19 +45,31 @@ def get_next_element_word(string, i, inclusive=False):
             return string[start:len(string)], start
     return -1, -1
 
+#Get the end of a curly declaration +1
+#We add the +1 to simplify later on when we use string[start:end]
+#End refering to the value given by this function
 def extract_curly(string, start):
-        count_curly = 1
-        end = start
-        work= string
-        while(count_curly != 0):
+    #Since we can never have "{{" in a workflow
+    #We add this just so the function is more robust
+    if(string[start]=='{'):
+        start+=1
+    count_curly = 1
+    end = start
+    work= string
+    while(count_curly != 0):
+        try:
             if(work[end] == "{"):
                 count_curly += 1
             elif(work[end] == "}"):
                 count_curly -= 1
             end += 1
-        return end
+        except Exception as e:
+            print_in_red( f"In extract_curly out of range at index {end} and the curly count was at {count_curly}" )
+            print_in_red( f"Started looking at : {string[start-20: start]}" )
+            raise e
+    return end
 
-def put_on_one_line(string):
+"""def put_on_one_line(string):
     index=-1
     while(True):
         index+=1
@@ -60,9 +80,9 @@ def put_on_one_line(string):
             if(next_element[0]=='.'):
                 string= string[:index]+string[next_element[1]:]
                 index=-1
-    return string
+    return string"""
  
-
+#Returns the string corresponding to the next line + start and end index
 def get_next_line(string, i):
     start, end= i, i+1
     reading=False
@@ -75,33 +95,34 @@ def get_next_line(string, i):
         elif(reading and string[end]=='\n'):
             return string[start:end].strip(), start, end-1
         end+=1
-    raise Exception("Exited the string!!!: out of range")
+    return string[start:end].strip(), start, end-1
 
-
-#Should work for else if => but need to check
+#Function that returns the condition of the first if in the string 
 def extract_condition_2(string):
     pattern= r'if *\(([^\n]*)\)'
     for match in re.finditer(pattern, string):
         return match.group(1)
 
-#This could create a problem if there is something like this: "..'.." but since there shoudn't be any bash that shoudn't be a problem
+#Function that returns of the next curly opening 
+#check_string allows the user to ignore the curlies in string such as 'some_adresse/text{1,2}.txt'
 def get_index_next_curly(string, i, check_string=False):
     in_string=False
     while(i<len(string)):
         if(not check_string):
             if(string[i]=='{'):
                 return i
-        if(check_string):
-            if(string[i]=="'" or string[i]=='"' and not in_string):
+        else:
+            if((string[i]=="'" or string[i]=='"') and not in_string):
                 in_string=True
-            elif (string[i]=="'" or string[i]=='"' and in_string):
+            elif ((string[i]=="'" or string[i]=='"') and in_string):
                 in_string= False
             elif(string[i]=='{' and not in_string):
                 return i
         i+=1
+    print_in_red( f"In get_index_next_curly a curly (open) was excepted but never found" )
     raise Exception("Curly never opened!!!")
 
-
+#Same as get_index_next_curly but with closing curly
 def get_index_next_curly_close(string, i, check_string=False):
     in_string=False
     while(i<len(string)):
@@ -109,78 +130,78 @@ def get_index_next_curly_close(string, i, check_string=False):
             if(string[i]=='}'):
                 return i
         if(check_string):
-            if(string[i]=="'" or string[i]=='"' and not in_string):
+            if((string[i]=="'" or string[i]=='"') and not in_string):
                 in_string=True
-            elif (string[i]=="'" or string[i]=='"' and in_string):
+            elif ((string[i]=="'" or string[i]=='"') and in_string):
                 in_string= False
             elif(string[i]=='}' and not in_string):
                 return i
         i+=1
+    print_in_red( f"In get_index_next_curly_close a curly (close) was excepted but never found" )
     raise Exception("Curly never closed!!!")
 
-
+#Function that links the different conditions together with an '&&'
+#There is also a negative mode that sets the condition to negatives
 def link_conditions(conditions, negative=False):
-    #print('conditions: ', conditions)
     temp=''
     if(len(conditions)==0):
-        #Might need to change this later on
         return temp
     elif(len(conditions)==1):
-        #Might need to change this later on
          negative*'!('+conditions[0]+negative*')'
     for i in range(len(conditions)-1):
         temp+= negative*'!('+conditions[i]+negative*')'+' && '
     temp+= negative*'!('+conditions[-1]+negative*')'
     return temp
 
-
+#Function that adds spaces inbetween ifs and elses and the parenthesis or curly 
+#And returns the modified string
 def add_spaces(string):
-    """i=0
-    while(True):
-        if i>=len(string):
-            break
-
-        if(string[i:i+2]=='if'):
-            string= string[:i]+' '+string[i:i+2]+' '+string[i+2:]
-            i+=4
-        elif(string[i:i+4]=='else'):
-            string= string[:i]+' '+string[i:i+4]+' '+string[i+4:]
-            i+=6
-
-        i+=1"""
     tab_replace=[]
     #============================
-    # simple if
+    # if(c) { => if (c) {
     #============================
-    pattern = r'[^\w](if)\s*\('
+    pattern = r'(if)(\([^\n]+\))\s+{'
     for match in re.finditer(pattern, string):
-        #print('here')
         start, end= match.span(0)[0], match.span(0)[1]
         start_if, end_if= match.span(1)[0], match.span(1)[1]
-        new= string[start:start_if]+' '+string[start_if:end_if]+' '+string[end_if:end]
-        #print('replace: ', match.group(0), new)
+        new= string[start:end_if]+' '+string[end_if:end]
         tab_replace.append([match.group(0), new])
-        #string= string.replace(match.group(0), new , 1)
+    
+    #============================
+    # if (c){ => if (c) {
+    #============================
+    pattern = r'(if) +(\([^\n]+\)){'
+    for match in re.finditer(pattern, string):
+        start, end= match.span(0)[0], match.span(0)[1]
+        start_condition, end_conditon= match.span(2)[0], match.span(2)[1]
+        new= string[start:end_conditon]+' '+string[end_conditon:end]
+        tab_replace.append([match.group(0), new])
+    #============================
+    # if(c){ => if (c) {
+    #============================
+    pattern = r'(if)(\([^\n]+\)){'
+    for match in re.finditer(pattern, string):
+        start, end= match.span(0)[0], match.span(0)[1]
+        start_if, end_if= match.span(1)[0], match.span(1)[1]
+        start_condition, end_conditon= match.span(2)[0], match.span(2)[1]
+        new= string[start:end_if]+' '+string[start_condition:end_conditon]+' '+string[end_conditon:end]
+        tab_replace.append([match.group(0), new])
 
     #============================
     # simple else
     #============================
     pattern = r'[^\w](else)[^\w]'
     for match in re.finditer(pattern, string):
-        #print('here')
         start, end= match.span(0)[0], match.span(0)[1]
         start_else, end_else= match.span(1)[0], match.span(1)[1]
         new= string[start:start_else]+' '+string[start_else:end_else]+' '+string[end_else:end]
-        #string= string.replace(match.group(0), new , 1)
         tab_replace.append([match.group(0), new])
     
     for r in tab_replace:
         string= string.replace(r[0], r[1], 1)
-    
-
     return string
 
-def link_conditions_2(conditions, negative=False):
+"""def link_conditions_2(conditions, negative=False):
     #print('conditions: ', conditions)
     temp=''
     if(len(conditions)==0):
@@ -193,13 +214,13 @@ def link_conditions_2(conditions, negative=False):
         if(conditions[i]!=' '):
             temp+= negative*'!('+conditions[i]+negative*')'+' && '
     temp+= negative*'!('+conditions[-1]+negative*')'
-    return temp
+    return temp"""
 
+#TODO add comments to this function
 #Supposing that all the ifs and elses have curlies and the start is the begining of the if we want to analyse
-#need to return the last condition in the case of a following else
+#Supposing the spaces have also been added thanks to add_spaces
 #tabs are references 
 def format_if_recursif_3(string, start, end, conditions, last_conditon, new_string):
-    #print('working')
     #Gettig the if or else
     next= get_next_element_word(string, start, True)
     #in the case of else, we check if it's just a simple else or else if 
@@ -268,7 +289,26 @@ def format_if_recursif_3(string, start, end, conditions, last_conditon, new_stri
     return condition, new_string, get_index_next_curly_close(string, i)+1
     
     
-def extract_para(string, start):
+#TODO => add comments
+#Function that adds the curly to the ifs and elses one line
+def add_curly(string):
+    #We add this just to avoid some errors since we are looking at the '\n' => we remove the added '\n' at the end
+    string+='\n'
+    #Since we are using next_word and second_word we have to add a space inbetween the if and the condition, to be able to defferiante the 2
+    #=======================
+    #if(c) => if (c)
+    #=======================
+    pattern= r'if(\()'
+    tab_replace=[]
+    for match in re.finditer(pattern, string):
+        start, end= match.span(0)[0], match.span(0)[1]
+        start_condition, end_condition= match.span(1)[0], match.span(1)[1]
+        new= string[start:start_condition]+' '+string[start_condition:end]
+        tab_replace.append([match.group(0), new])
+    for r in tab_replace:
+        string= string.replace(r[0], r[1], 1)
+    
+    def extract_para(string, start):
         count_curly = 1
         end = start
         work= string
@@ -280,7 +320,6 @@ def extract_para(string, start):
             end += 1
         return end
 
-def add_curly(string):
     pattern_global= r'((if|else +if) *\([^\n]*\)|else)\s*[^\w]*'
     pattern_precise=r'((if|else +if) *\([^\n]*\)|else)\s*{[^\w]*'
     tab_pattern= [m.start(0) for m in re.finditer(pattern_global, string)]
@@ -324,8 +363,8 @@ def add_curly(string):
                 next_index+=1
             replacement= string[first_index:end]+' { \n '+string[end:next_index]+' \n }'
             new_string= new_string.replace(string[first_index:next_index], replacement)
-        
-    return new_string
+    #Removing the added '\n' at the beggining 
+    return new_string[:-1]
 
 
 def format_conditions(string):
@@ -433,3 +472,4 @@ if __name__ == "__main__":
     #print(format_conditions(add_curly(add_spaces(test))))
     a=[1, 2,3, 4, 5, 6]
     print(check_containing(743, a))
+

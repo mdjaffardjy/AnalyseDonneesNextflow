@@ -91,7 +91,7 @@ class Process:
   # ------------------------- NAME --------------------------#
   #Extract the name of the process
   def extractName(self):
-    #Pattern "Start" 
+    """#Pattern "Start" 
     patternStart = r'(process\s)'
     #Pattern "End"
     patternEnd = r'({)'
@@ -109,7 +109,11 @@ class Process:
 
     #The name is between the pattern start and end 
     #And we delete the " " at the beginning and at the end
-    self.name = self.process_string[start:end].lstrip().rstrip()
+    self.name = self.process_string[start:end].lstrip().rstrip()"""
+    pattern= r'process\s+(\w+)\s*{'
+    for match in re.finditer(pattern, self.process_string):
+      name = match.group(1)
+      self.name= name
 
   #Change the name of the process (if the process if defined in a if else)
   def changeName(self, newName):

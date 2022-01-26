@@ -138,7 +138,7 @@ class Channel:
         #================================
         #into VERSION 1
         #================================
-        pattern= r'\.\s*(into)\s*\{(\s*\w+\s*\;\s*(\w+\s*\;\s*)*\w+\s*|\s*(\w+)\s*)\}'
+        pattern= r'\.\s*(into)\s*\{(\s*\w+\s*\;\s*(\w+\s*\;\s*)*\w*\s*|\s*(\w+)\s*)\}'
         for match in re.finditer(pattern, self.string):
             temp=match.group(2)
             temp= temp.split(';')

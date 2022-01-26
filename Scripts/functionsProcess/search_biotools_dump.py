@@ -10,8 +10,8 @@ oboInOwl = Namespace('http://www.geneontology.org/formats/oboInOwl#')
 
 #loading the edam data
 kg = ConjunctiveGraph()
-kg.load("./data/bioschemas-dump.ttl", format="turtle")
-kg.load("./data/EDAM_1.25.owl")
+kg.load(__file__[:-len("functionsProcess/search_biotools_dump.py")]+"/data/bioschemas-dump.ttl", format="turtle")
+kg.load(__file__[:-len("functionsProcess/search_biotools_dump.py")]+"/data/EDAM_1.25.owl")
 
 def get_sorted_matches(toolname):
     #input : string tool name

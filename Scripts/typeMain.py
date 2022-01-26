@@ -2,8 +2,9 @@
 from file import *
 
 class TypeMain(File):
-    def __init__(self, address):
+    def __init__(self, address, root):
         super().__init__(address)
+        self.root= root
         
 
     #Initialise the basic stuff for a mains type

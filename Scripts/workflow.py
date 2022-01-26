@@ -10,7 +10,7 @@ from typeMainDSL2 import *
 
 
 class Workflow:
-    def __init__(self, root):
+    def __init__(self, root, address=''):
         #Name of the Project
         self.name = None
         #Root address
@@ -21,6 +21,8 @@ class Workflow:
         self.address_main = None
         #The main of the Project
         self.main = None
+        #Adress to save files created during execution
+        self.address_to_save_files= address
 
     
     #Get the last word the path
@@ -33,7 +35,7 @@ class Workflow:
         while(self.root[indice]!='/'):
             indice-=1
         end= indice+len(self.root)+1
-        print(start, end)
+        #print(start, end)
         self.name = self.root[end:start]
         
 
@@ -61,7 +63,7 @@ class Workflow:
         pattern= r'(nextflow\.(preview|enable)\.dsl\s*=\s*2)'
         #Checks if the pattern is found in the main file
         #So we create a temporary main type
-        temp_main= TypeMain(self.address_main)
+        temp_main= TypeMain(self.address_main, self.root)
         temp_main.initialise_basic_main()
         code= temp_main.get_string()
         self.is_DSL2 = bool(re.compile(pattern).search(code))
@@ -74,11 +76,20 @@ class Workflow:
     def initialise_main(self):
         #Case DSL=1
         if(not self.get_DSL2()):
-            self.main= TypeMainDSL1(self.address_main)
+            print(self.address_main)
+            self.main= TypeMainDSL1(self.address_main, self.root)
+            self.main.initialise()
+            nb_process, nb_links= self.main.get_structure_4(self.name, self.address_to_save_files)
+            return nb_process, nb_links
+            #self.main.save_file()
+            #self.main.save_channels()
+            #self.main.save_processes()
         #Case DSL=2
         elif(self.get_DSL2()):
-            self.main= TypeMainDSL2(self.address_main)
-        self.main.initialise()
+            self.main= TypeMainDSL2(self.address_main, self.root)
+            self.main.initialise()
+            return -1
+        
 
     
     #Initialise the workflow
@@ -86,17 +97,31 @@ class Workflow:
         self.set_name()
         self.set_address_main()
         self.check_DSL2()
-        self.initialise_main()
-        print(self.main)
+        return self.initialise_main()
+        #print(self.main)
 
 #=================
 #IF USED AS A MAIN
 #=================
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
-    w= Workflow("/home/george/Bureau/TER/Workflow_Database/samba-master")
-    w.initialise()
+    #DSL1
+    w= Workflow("/home/george/Bureau/TER/Workflow_Database/samba-master", '/home/george/Bureau/TER/DSL1 Stats/')
+    #w= Workflow("/home/george/Bureau/TER/Workflow_Database/eager-master")
+    #DSL2
+    #w= Workflow("/home/george/Bureau/TER/Workflow_Database/rnaseq-master")
+    a, b= w.initialise()
+    print(a,b)
     print(w.get_DSL2())
+
+def test_func(name, root, dirc):
+    w= Workflow(root, dirc)
+    #w.initialise()
+    w.name = name
+    w.address_main= root
+    nb_process, nb_links = w.initialise_main()
+    return nb_process, nb_links
     
 #TODO list 
+
 
