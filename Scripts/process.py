@@ -61,7 +61,7 @@ class Process:
     #String of the process
     self.process_string = process
     #We are going to extract the informations from this variable and clean it when we finish to study a part
-    self.process_work = prepare(process)
+    self.process_work = process
     self.name = None
     self.directive = None
     self.input = None
@@ -91,7 +91,7 @@ class Process:
   # ------------------------- NAME --------------------------#
   #Extract the name of the process
   def extractName(self):
-    """#Pattern "Start" 
+    #Pattern "Start" 
     patternStart = r'(process\s)'
     #Pattern "End"
     patternEnd = r'({)'
@@ -109,11 +109,7 @@ class Process:
 
     #The name is between the pattern start and end 
     #And we delete the " " at the beginning and at the end
-    self.name = self.process_string[start:end].lstrip().rstrip()"""
-    pattern= r'process\s+(\w+)\s*{'
-    for match in re.finditer(pattern, self.process_string):
-      name = match.group(1)
-      self.name= name
+    self.name = self.process_string[start:end].lstrip().rstrip()
 
   #Change the name of the process (if the process if defined in a if else)
   def changeName(self, newName):
@@ -332,41 +328,47 @@ class Process:
   def get_string(self):
     return self.process_string
 
+  def getListTools(self):
+    return self.script.getListTools()
+
   #Do everything to extract the informations
-  def extractProcess(self):
+  def extractProcess(self, analyse_tools= True):
     """
     Extract the different parts of a process
     Begin with Name and directives (always at the beginning)
     After : work on the other which need key words like input, output ...
     Finish with Script which can have different forms
     """
+    if(analyse_tools):
+        self.process_work= prepare(self.process_work)
     self.extractName()
     self.extractDirective()
     self.extract('Input', r'(input\s*:\n)')
     self.extract('Output', r'(output\s*:\n)')
     self.extract('When', r'(when\s*:\n)')
-    self.extractStub()
-    self.extractScript()
+    if(analyse_tools):
+        self.extractStub()
+        self.extractScript()
 
-    """
-    Verify if all the things were analysed - if self.process_work est empty
-    """
-    firstLine = "process" + self.name 
-    self.process_work = self.process_work.lstrip().rstrip()
+        """
+        Verify if all the things were analysed - if self.process_work est empty
+        """
+        firstLine = "process" + self.name 
+        self.process_work = self.process_work.lstrip().rstrip()
 
-    temp = self.process_work.split("\n")
-    tempBis = temp[0].split()
-    tempLine = "".join(tempBis)
-    self.process_work = self.process_work.replace(temp[0], tempLine)
+        temp = self.process_work.split("\n")
+        tempBis = temp[0].split()
+        tempLine = "".join(tempBis)
+        self.process_work = self.process_work.replace(temp[0], tempLine)
 
-    self.process_work = self.process_work.replace(firstLine, "")
-    self.process_work = self.process_work.replace("{", "")
-    self.process_work = self.process_work.replace("}", "")
-    self.process_work = self.process_work.lstrip().rstrip()
+        self.process_work = self.process_work.replace(firstLine, "")
+        self.process_work = self.process_work.replace("{", "")
+        self.process_work = self.process_work.replace("}", "")
+        self.process_work = self.process_work.lstrip().rstrip()
 
-    if len(self.process_work) != 0:
-      print("ERROR in ", self.name , " - Something is wrong ! - self.process_work is not empty : ", self.process_work)
-      self.allAnalyse = False
+        if len(self.process_work) != 0:
+            print("ERROR in ", self.name , " - Something is wrong ! - self.process_work is not empty : ", self.process_work)
+            self.allAnalyse = False
 
   def goodForAnalyse(self):
     return self.allAnalyse

@@ -50,7 +50,7 @@ class TypeMainDSL1(TypeMain):
             start= match.span()[0]
             end= self.extract_curly(match.span()[1])
             process= Process(self.string[start:end])
-            process.extractProcess()
+            process.extractProcess(False)
             self.processes.append(process)   
     
     #Print the names of the different processes
@@ -436,7 +436,7 @@ class TypeMainDSL1(TypeMain):
         #Start by adding all the inputs and outputs of the processes 
         #to the different lists => since there is no (~or very little) false positives
         for p in self.processes:
-            print(p.getAll())
+            #print(p.getAll())
             input, output, emit= p.extractAll()
             for i in input:
                 id, name= i[0], i[1]
