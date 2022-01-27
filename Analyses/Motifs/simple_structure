@@ -1,0 +1,116 @@
+// George and the Penguin
+digraph {
+	node [colorscheme=pastel19 style=filled]
+	get_test_data [label=get_test_data color=2 shape=box]
+	get_test_data -> q2_import
+	q2_import [label=q2_import color=2 shape=box]
+	get_test_data -> lr_mapping
+	lr_mapping [label=lr_mapping color=2 shape=box]
+	get_test_data -> data_integrity
+	data_integrity [label=data_integrity color=2 shape=box]
+	get_test_data -> prepare_data_for_stats
+	prepare_data_for_stats [label=prepare_data_for_stats color=2 shape=box]
+	get_test_data -> lr_getfasta
+	lr_getfasta [label=lr_getfasta color=2 shape=box]
+	get_test_data -> q2_filtering_tax
+	q2_filtering_tax [label=q2_filtering_tax color=2 shape=box]
+	get_test_data -> q2_dada2
+	q2_dada2 [label=q2_dada2 color=2 shape=box]
+	get_test_data -> q2_ancom
+	q2_ancom [label=q2_ancom color=2 shape=box]
+	get_test_data -> q2_picrust2_stats
+	q2_picrust2_stats [label=q2_picrust2_stats color=2 shape=box]
+	get_test_data -> q2_dbotu3
+	q2_dbotu3 [label=q2_dbotu3 color=2 shape=box]
+	data_integrity -> q2_import
+	data_integrity -> q2_dada2
+	data_integrity -> q2_ancom
+	data_integrity -> q2_picrust2_stats
+	data_integrity -> q2_dbotu3
+	data_integrity -> prepare_data_for_stats
+	data_integrity -> lr_mapping
+	data_integrity -> lr_getfasta
+	q2_import -> q2_cutadapt
+	q2_cutadapt [label=q2_cutadapt color=2 shape=box]
+	q2_cutadapt -> q2_dada2
+	q2_dada2 -> q2_dbotu3
+	q2_dada2 -> q2_filtering_tax
+	q2_dada2 -> q2_taxonomy
+	q2_taxonomy [label=q2_taxonomy color=2 shape=box]
+	q2_dada2 -> microDecon_step3
+	microDecon_step3 [label=microDecon_step3 color=2 shape=box]
+	q2_dada2 -> q2_picrust2_analysis
+	q2_picrust2_analysis [label=q2_picrust2_analysis color=2 shape=box]
+	q2_dada2 -> q2_phylogeny
+	q2_phylogeny [label=q2_phylogeny color=2 shape=box]
+	q2_dada2 -> q2_ancom
+	q2_dada2 -> report
+	report [label=report color=2 shape=box]
+	q2_dbotu3 -> q2_filtering_tax
+	q2_dbotu3 -> q2_taxonomy
+	q2_dbotu3 -> microDecon_step3
+	q2_dbotu3 -> q2_picrust2_analysis
+	q2_dbotu3 -> q2_ancom
+	q2_dbotu3 -> q2_phylogeny
+	q2_dbotu3 -> report
+	q2_dada2_merge [label=q2_dada2_merge color=2 shape=box]
+	q2_dada2_merge -> q2_taxonomy
+	q2_dada2_merge -> microDecon_step3
+	q2_dada2_merge -> q2_phylogeny
+	q2_dada2_merge -> q2_picrust2_analysis
+	q2_dada2_merge -> q2_ancom
+	q2_dada2_merge -> report
+	q2_taxonomy -> q2_ancom
+	q2_taxonomy -> q2_filtering_tax
+	q2_taxonomy -> microDecon_step1
+	microDecon_step1 [label=microDecon_step1 color=2 shape=box]
+	q2_taxonomy -> prepare_data_for_stats
+	q2_filtering_tax -> microDecon_step1
+	q2_filtering_tax -> q2_picrust2_analysis
+	q2_filtering_tax -> q2_phylogeny
+	q2_filtering_tax -> q2_ancom
+	q2_filtering_tax -> prepare_data_for_stats
+	q2_filtering_tax -> report
+	microDecon_step1 -> microDecon_step3
+	microDecon_step1 -> microDecon_step2
+	microDecon_step2 [label=microDecon_step2 color=2 shape=box]
+	microDecon_step1 -> prepare_data_for_stats
+	microDecon_step2 -> q2_ancom
+	microDecon_step2 -> q2_picrust2_analysis
+	microDecon_step3 -> microDecon_step4
+	microDecon_step4 [label=microDecon_step4 color=2 shape=box]
+	microDecon_step4 -> q2_picrust2_analysis
+	microDecon_step4 -> q2_phylogeny
+	lr_mapping -> lr_get_taxonomy
+	lr_get_taxonomy [label=lr_get_taxonomy color=2 shape=box]
+	lr_get_taxonomy -> prepare_data_for_stats
+	q2_phylogeny -> prepare_data_for_stats
+	q2_picrust2_analysis -> q2_picrust2_stats
+	q2_picrust2_stats -> report
+	q2_ancom -> report
+	prepare_data_for_stats -> stats_alpha
+	stats_alpha [label=stats_alpha color=2 shape=box]
+	prepare_data_for_stats -> stats_desc_comp
+	stats_desc_comp [label=stats_desc_comp color=2 shape=box]
+	prepare_data_for_stats -> stats_beta_rarefied
+	stats_beta_rarefied [label=stats_beta_rarefied color=2 shape=box]
+	prepare_data_for_stats -> stats_beta_css
+	stats_beta_css [label=stats_beta_css color=2 shape=box]
+	prepare_data_for_stats -> stats_beta_deseq2
+	stats_beta_deseq2 [label=stats_beta_deseq2 color=2 shape=box]
+	prepare_data_for_stats -> report
+	prepare_data_for_stats -> stats_beta
+	stats_beta [label=stats_beta color=2 shape=box]
+	stats_alpha -> report
+	stats_beta -> q2_picrust2_analysis
+	stats_beta -> report
+	stats_beta_rarefied -> q2_picrust2_analysis
+	stats_beta_rarefied -> report
+	stats_beta_deseq2 -> q2_picrust2_analysis
+	stats_beta_deseq2 -> report
+	stats_beta_css -> q2_picrust2_analysis
+	stats_beta_css -> report
+	stats_desc_comp -> report
+	report -> compress_result
+	compress_result [label=compress_result color=2 shape=box]
+}
