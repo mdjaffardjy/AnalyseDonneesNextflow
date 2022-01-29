@@ -18,6 +18,7 @@ class Channel:
         self.origin = [] #Nothing, other channel, path
         #The channel 
         self.gives= []
+        self.intia = False
 
     def not_normal(self):
         self.normal = False
@@ -117,10 +118,20 @@ class Channel:
         #================================
         #Bind VERSION2 myChannel << 'Hello world'
         #================================    
-        pattern= r'<<\s*([^\n]*)'
+        pattern= r'(<<)\s*([^\n]*)'
+        #We do this in cas a '<<' is in a mapor another operator
         for match in re.finditer(pattern, self.string):
-            #print('test',match.group(1))
-            self.origin.append([match.group(1).strip(), 'V'])
+            i= match.span(1)[0]
+            curly, para=0, 0
+            while(i<len(self.string)):
+                if(self.string[i]=='{' or self.string[i]=='}'):
+                    curly+=1
+                elif(self.string[i]=='(' or self.string[i]==')'):
+                    para+=1
+                i+=1
+            if(curly%2==0 and para%2==0):
+                #print('test',match.group(1))
+                self.origin.append([match.group(2).strip(), 'V'])
 
             
     
@@ -196,21 +207,34 @@ class Channel:
             self.gives.append([match.group(1), 'P'])
             self.origin.append([match.group(2), 'P'])
 
+    def check_same_value(self):
+        tab_to_remove=[]
+        for o in self.origin:
+            for g in self.gives:
+                if(o[0]==g[0]):
+                    tab_to_remove.append(o)
+        print(self.origin)
+        for t in tab_to_remove:
+            self.origin= self.origin.remove(t)
+        print(self.origin)
     
 
     def initialise_channel(self):
-        self.string= self.string.strip()
-        if(self.full_string==None):
-            self.set_full_string(self.string)
-        if(self.normal):
-            self.check_first_word()
-            self.check_set()
-            #print(self.get_first_word())
-            self.check_join()
-            self.check_fork()
-            self.check_factory()
-        else:
-            self.extract_affectation()
+        if(not self.intia):
+            self.string= self.string.strip()
+            if(self.full_string==None):
+                self.set_full_string(self.string)
+            if(self.normal):
+                self.check_first_word()
+                self.check_set()
+                #print(self.get_first_word())
+                self.check_join()
+                self.check_fork()
+                self.check_factory()
+            else:
+                self.extract_affectation()
+            self.intia=True
+        #self.check_same_value()
 
         #DO_STUFF
 

@@ -2,6 +2,13 @@ import re
 
 
 
+def is_in(tab, ele):
+    for e in tab:
+        if (e==ele):
+            return True
+    return False
+
+
 #For all functions use test_utilities.py to see examples of how they work 
 
 def print_in_red(text):
