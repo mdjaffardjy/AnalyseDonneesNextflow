@@ -14,9 +14,9 @@ for words in keyWordsO:
 
 listPatternOb = []
 for words in keyWordsO:
-    string = "(" + words + "(\s|\(|\{|\[)\w+)"
+    string = "(" + words + "(\s+|\(|\{|\[)+\w+)"
     listPatternOb.append(string)
-
+    
 """
 SECOND PART - Class
 """
@@ -113,6 +113,7 @@ class Outputs:
                             else:
                                 self.list_words_workflow.append([idx,string[1:]])
                             break
+
 
 
     def extractEmit(self):

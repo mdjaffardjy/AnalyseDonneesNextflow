@@ -99,62 +99,134 @@ if __name__ == "__main__":
     f = open(adress,"r")
     lines = f.read()"""
     lines = '''
-process INTERPROSCAN {
-    tag "$meta.id"
-    label 'process_medium'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:['id']) }
-
+   process trimReads {
+    tag "$pair_id"
+    afterScript 'mv *-trimmed-pair1* `echo *-trimmed-pair1* | sed s/\\-trimmed\\-pair1/_1_filt/g`; mv *-trimmed-pair2* `echo *-trimmed-pair2* | sed s/\\-trimmed\\-pair2/_2_filt/g`'
     
-    container "annotater/interproscan:5.36-0.9"
-
     input:
-    tuple val(meta), path(fasta)
+    set pair_id, file(reads) from (read_files_for_trimming)
 
     output:
-    tuple val(meta), path("*.{tsv,xml,gff,json,html,svg}"), emit: outfiles
-    path "versions.yml"           , emit: version
+    set pair_id, file("*_filt.fastq.gz") into filtered_reads_for_assembly
+    file("*_filt.fastq.gz") into filtered_read_for_QC
+    file("*trimmed.log") into logTrimming_for_QC
+
+    script: 
+    def trimmer = new Trimmer(reads:reads, extrapars:"-Q ${params.meanquality} -q ${params.trimquality} -x ${params.adapter}", id:pair_id, min_read_size:params.minsize, cpus:task.cpus)
+    trimmer.trimWithSkewer()
+    }
+
+    '''
+
+    lines = '''
+process runBwaAln {
+
+    tag { sampleName + ' - BWA-aln' }
+
+    publishDir "${params.outDir}/BWA-aln/${sampleName}_${experimentName}", mode: 'copy'
+
+    input:
+    set experimentName, 
+    sampleName, 
+    libraryName, 
+    unitName, 
+    platformName, 
+    runName, 
+    file(fastqCollapsed) from result_FastP
+    val ref_fasta_basename from params.genome
+    file ref_fasta from referenceMap.genomeFile
+    file ref_idx from Channel.fromPath.collect() // Copies index files to wd
+
+
+    output:
+    set experimentName, 
+        sampleName, 
+        libraryName, 
+        unitName, 
+        platformName, 
+        runName, 
+        file("${sampleName}_${experimentName}_${libraryName}_${runName}_${ref_fasta_basename}_collapsed_bwaALN_sorted.bam"), 
+        file("${sampleName}_${experimentName}_${libraryName}_${runName}_${ref_fasta_basename}_collapsed_bwaALN_sorted.bam.bai") into results_bwa
+
+    // Loading Phoenix modules - separate with colon
+    module 'BWA/0.7.15-foss-2017a:SAMtools/1.9-foss-2016b'
 
     script:
-    def software = getSoftwareName(task.process)
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}_interpro"
     """
-    /usr/local/interproscan/interproscan.sh \\
-          --input $fasta \\
-          --cpu $task.cpus \\
-          --output-file-base ${prefix} \\
-          $options.args
+    bwa aln \
+    -t 8 \
+    ${ref_fasta} \
+    ${fastqCollapsed} \
+    -n 0.04 \
+    -l 1024 \
+    -k 2 \
+    -f ${sampleName}_${experimentName}_${libraryName}_${runName}.sai
 
-    cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(/usr/local/interproscan/interproscan.sh -version 2>&1 | head -n 1 | sed 's/^InterProScan version //')
-    END_VERSIONS
-    """
+    bwa samse \
+    -r "@RG\tID:${runName}\tPL:${platformName}\tPU:${unitName}\tSM:${sampleName}" \
+    ${ref_fasta} \
+    ${sampleName}_${experimentName}_${libraryName}_${runName}.sai \
+    ${fastqCollapsed} | \
+    samblaster | \
+    samtools sort \
+        -@ ${task.cpus} \
+        -O BAM  \
+        -o ${sampleName}_${experimentName}_${libraryName}_${runName}_${ref_fasta_basename}_collapsed_bwaALN_sorted.bam \
+        -
+
+    samtools index \
+    ${sampleName}_${experimentName}_${libraryName}_${runName}_${ref_fasta_basename}_collapsed_bwaALN_sorted.bam
+"""
 }
-    '''
+'''
 
     p = Process(lines) 
     p.extractProcess()
     inputs, outputs, emit = p.extractAll()
-    #print(p.get_name())
-    #print(p.output.list_output)
-    """print("Inputs: ", inputs)
+    """print(p.get_name())
+    print("Inputs: ", inputs)
     print("Outputs: ",outputs)
-    print("Emit : ", emit)"""
-    """print("Script : ", p.script.script_string)
-    print(p.script.language)
-    print("")
-    print("TOOLS : ", p.script.tools)
+    print("Emit : ", emit)
+    print("Directives :", p.printDirectives())
+    print("Script : ", p.script.script_string)
+    print("Script Language : ", p.script.language)
+    print("")"""
     dico = p.script.getAnnotations()
     #print("ANNOTATIONS in bio.tools : ", dico.keys())
-    print("ANNOTATIONS in bio.tools : ", dico)"""
-    #printInformations(p)
-    print(p.printDirectives())
-    print(p.numberDirectives())
+    """printInformations(p)
+    for t in dico:
+        print("ANNOTATIONS in bio.tools : ", dico[t])"""
+    print("Inputs: ", inputs)
+    print("Outputs: ",outputs)
+    print("Emit : ", emit)
+    #print(p.printDirectives())
+    #print(p.numberDirectives())
     #printNameInWorkflow(p)
     #printLanguage(p)
     #printQualifier(p)
     #f.close()
     #"""
     print("-----------------------------END-----------------------------")
+
+
+
+
+
+    """
+    process trimReads {
+    tag "$pair_id"
+    afterScript 'mv *-trimmed-pair1* `echo *-trimmed-pair1* | sed s/\\-trimmed\\-pair1/_1_filt/g`; mv *-trimmed-pair2* `echo *-trimmed-pair2* | sed s/\\-trimmed\\-pair2/_2_filt/g`'
+    
+    input:
+    set pair_id, file(reads) from (read_files_for_trimming)
+
+    output:
+    set pair_id, file("*_filt.fastq.gz") into filtered_reads_for_assembly
+    file("*_filt.fastq.gz") into filtered_read_for_QC
+    file("*trimmed.log") into logTrimming_for_QC
+
+    script: 
+    def trimmer = new Trimmer(reads:reads, extrapars:"-Q ${params.meanquality} -q ${params.trimquality} -x ${params.adapter}", id:pair_id, min_read_size:params.minsize, cpus:task.cpus)
+    trimmer.trimWithSkewer()
+    }
+    """

@@ -30,6 +30,18 @@ Separate a text into different elements
 def splits(lists, txt):
     listEnd = []
     work = "a \n" + txt
+    workb = "a \n" + txt
+    #1ere etape: 
+    #mettre sur une meme ligne tous les trucs avec une virgule
+    pat = r'(,\s*\n)'
+    tabIdx = []
+    for match in re.finditer(pat, work):
+            tabIdx.append([match.span()[0],match.span()[1]])
+    tabIdx.sort(reverse=True)
+    for i in range (len(tabIdx)):
+        workb = work.replace(work[tabIdx[i][0]:tabIdx[i][1]], " , ")
+
+    work = workb
     index = []
     for pattern in lists:
         for match in re.finditer(pattern, work):

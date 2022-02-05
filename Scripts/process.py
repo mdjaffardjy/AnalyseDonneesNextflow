@@ -13,8 +13,8 @@ Declaration of global variable
 """
 
 #List de pattern
-listPattern = [r'(input\s*:\n)', r'(output\s*:\n)', r'(when\s*:\n)', r'(script\s*:\n)', r'(shell\s*:\n)', 
-                      r'(exec\s*:\n)',r'(""")', r"(''')", r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)", r'(stub\s*:)']
+listPattern = [r'(input\s*:\s*\n)', r'(output\s*:\s*\n)', r'(when\s*:\s*\n)', r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', 
+                      r'(exec\s*:\s*\n)',r'(""")', r"(''')", r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)", r'(stub\s*:)']
 
 def endPairs(txt,idx,s):
     count_curly = 1
@@ -51,6 +51,32 @@ def prepare(txt):
           change = " ".join(change)
           work = work.replace(txt[start:end], change)
     return "\n" + work    
+
+def prepareBis(txt):
+    #Clean the first part 
+    pattern = [r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', r'(exec\s*:\s*\n)',r'(""")', r"(''')", r'(stub\s*:)']
+    stop = [len(txt),len(txt)]
+    for p in pattern:
+        for match in re.finditer(p, txt):
+            if match.span()[0] < stop[0]:
+                stop = [match.span()[0], match.span()[1]]
+    work = txt
+    workbis = txt[:stop[0]] + "\n}" #add the last } (end of the process)
+    symbole = [['{', '}'], ['(', ')']]
+    for s in symbole:
+        tab = findPairs(workbis, s)
+        for i in range (len(tab)):
+            if s[0] == '{' and i ==0:
+                None
+            else:
+                start = tab[i][0]
+                end = tab[i][1]
+                change = txt[start:end].replace("\n", " ")
+                change = change.split()
+                change = " ".join(change)
+                work = work.replace(txt[start:end], change)
+    return work  
+                
 
 """
 SECOND PART - Class
@@ -186,7 +212,7 @@ class Process:
   #Always at then end - finish a process
   def extractScript(self):
     #Start 
-    patternStart = [r'(script\s*:\n)', r'(shell\s*:\n)', r'(exec\s*:\n)', r'(""")', r"(''')",r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)"]
+    patternStart = [r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', r'(exec\s*:\s*\n)', r'(""")', r"(''')",r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)"]
     start = [-1,self.endProcess()]
     patternMatch = ""
     for pattern in patternStart:
@@ -194,7 +220,7 @@ class Process:
         if match.span()[1] <= start[1]:
           start = match.span()
           patternMatch = pattern
-
+ 
     #Little script
     if patternMatch == r'(\n+\s*".*"\n)' or patternMatch ==  r"(\n+\s*'.*'\n)":
         string =  self.process_work[start[0]:start[1]].lstrip().rstrip()
@@ -340,12 +366,12 @@ class Process:
     Finish with Script which can have different forms
     """
     if(analyse_tools):
-        self.process_work= prepare(self.process_work)
+        self.process_work= prepareBis(self.process_work)
     self.extractName()
     self.extractDirective()
-    self.extract('Input', r'(input\s*:\n)')
-    self.extract('Output', r'(output\s*:\n)')
-    self.extract('When', r'(when\s*:\n)')
+    self.extract('Input', r'(input\s*:\s*\n)')
+    self.extract('Output', r'(output\s*:\s*\n)')
+    self.extract('When', r'(when\s*:\s*\n)')
     if(analyse_tools):
         self.extractStub()
         self.extractScript()

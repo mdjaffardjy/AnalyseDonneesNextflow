@@ -100,14 +100,14 @@ class Nextflow_WF:
                             p = os.getcwd() + "/" + nameFile
                             fileSize = Path(p).stat().st_size
                             increment = 0
-                            while fileSize == 0 and increment != 10:
+                            """while fileSize == 0 and increment != 2:
                                 increment += 1
-                                os.system('wget -q "' + urlfile + '" -O ' + nameFile)
+                                os.system('wget -q "' + urlfile + '" -O ' + nameFile)"""
                     except Exception as exc:
                         os.system('wget -q "' + urlfile + '" -O ' + nameFile)
 
                     #Extract and Analyse Process
-                    file = TypeMainDSL1(nameFile)  #for the moment typeMainDSL1
+                    file = TypeMainDSL1(nameFile, "")  #for the moment typeMainDSL1
                     file.initialise_basic_main()
                     file.find_processes()
                     process = file.get_process()
