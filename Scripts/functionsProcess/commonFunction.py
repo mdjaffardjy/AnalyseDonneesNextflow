@@ -31,8 +31,8 @@ def splits(lists, txt):
     listEnd = []
     work = "a \n" + txt
     workb = "a \n" + txt
-    #1ere etape: 
-    #mettre sur une meme ligne tous les trucs avec une virgule
+    
+    #mettre sur une meme ligne si un element sur plusieurs lignes (fin de phrase avec virgule)
     pat = r'(,\s*\n)'
     tabIdx = []
     for match in re.finditer(pat, work):

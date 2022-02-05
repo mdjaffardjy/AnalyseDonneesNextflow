@@ -1,4 +1,3 @@
-from locale import normalize
 from wfNextflow import *
 import os
 import matplotlib.pyplot as plt
