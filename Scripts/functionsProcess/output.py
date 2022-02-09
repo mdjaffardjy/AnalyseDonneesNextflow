@@ -89,10 +89,6 @@ class Outputs:
                         for i in range (len(placeComma)):
                             if i == 0:
                                 string = work[0:placeComma[i][0]].lstrip().rstrip()
-                            elif i == len(placeComma)-1:
-                                string = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
-                                self.list_words_workflow.append([idx,string])
-                                string = work[placeComma[i][1]:].lstrip().rstrip()
                             else:
                                 string = work[placeComma[i-1][1]:placeComma[i][0]].lstrip().rstrip()
                             self.list_words_workflow.append([idx,string])

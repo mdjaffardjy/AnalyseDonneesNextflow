@@ -1,3 +1,4 @@
+from os import listdir
 from functionsProcess.commonFunction import *
 import re
 """
@@ -207,12 +208,12 @@ class Inputs:
                                     listEND.append([i,string[1:]])
                                 pass                
         #Clean
-        name = []
+
         for t in listEND:
-            n = t[1]
-            if not n in name:
+            if not t in self.list_words_workflow:
                 self.list_words_workflow.append(t)
-                name.append(n)
+        """for t in listEND:
+            self.list_words_workflow.append(t)"""
 
     def extractI(self):
         self.splitInput()
