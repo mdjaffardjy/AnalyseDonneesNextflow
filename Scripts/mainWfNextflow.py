@@ -85,7 +85,7 @@ def extractTools(dicoWf, part):
     nbTools = {}
     for wfn in dicoWf:
         wf = dicoWf[wfn]
-        #A tool is only counted once in a worflow even if it used several times in different processes
+        #A tool is only counted once in a workflow even if it used several times in different processes
         dejaVu = []
         if part == 'script':
             tools = wf.getAnnotationsScript()
@@ -138,7 +138,7 @@ def allLanguage(dico):
                     languageStub[l] +=1
                 else:
                     languageStub.update({l: 1})
-    string = "Numbers of process : " + str(sumTotal) + "\n\n"
+    string = "Number of process : " + str(sumTotal) + "\n\n"
     file.write(string)
     file.write("Language Script : \n")
     for l in languageScript:
@@ -159,7 +159,7 @@ def analysePartProcess(dicoWf):
     One file for each workflow : a 'little' summary
     """
     fileInfo = open("InfoWfNextflow/statPartsAll.csv", "w")
-    txt = "Database worflow size : {}\n".format(len(dicoWf))
+    txt = "Database workflow size : {}\n".format(len(dicoWf))
     fileInfo.write(txt)
     txt = "\tPresent\tNot Present\n"
     fileInfo.write(txt)
@@ -659,7 +659,7 @@ def whichWithTools(dicoWf):
     return newDicoWf
 
 """
-Main Part - Analyse All the Worflow in the json file
+Main Part - Analyse All the Workflow in the json file
 """
 if __name__ == "__main__":
     startTime = time.time()
@@ -678,7 +678,6 @@ if __name__ == "__main__":
     crawler = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow.json"
     with open(crawler) as mon_fichier:
         data = json.load(mon_fichier)
-
     #Creation of the first dictionary with all the workflows we can analyse for the moment 
     print(bold_color.BOLD + bold_color.RED+"CREATE DICO"+bold_color.END)
     dicoWf = createDicoWfN(data)
