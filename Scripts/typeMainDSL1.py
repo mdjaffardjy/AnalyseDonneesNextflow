@@ -118,6 +118,10 @@ class TypeMainDSL1(TypeMain):
             myText.write('Inputs : '+  str(input)+'\n')
             myText.write('Outputs : '+  str(output)+'\n')
             myText.write('Emits : '+  str(emit)+'\n\n\n')
+    
+    #Return the processes found
+    def get_processes(self):
+        return self.processes
 
     
     
@@ -341,7 +345,7 @@ class TypeMainDSL1(TypeMain):
         #FOURTH PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = ...
         #=================================================================
         #Get all the occurence of word = word
-        pattern= r'\w+ *= *\w+'
+        pattern= r'\w+ *= *\w+\s'
         all, dots=[], []
         for match in re.finditer(pattern, self.string):
             all.append(match.group(0))
@@ -603,6 +607,7 @@ class TypeMainDSL1(TypeMain):
     def create_node_type(self, dot, id, name, type):
         #id = 'CHANNEL_\d+' 
         name=id[8:]
+
         if(type=='A'):
             dot.node(id, name, color= '4', shape='doublecircle')
         elif(type=='V'):
@@ -945,6 +950,8 @@ if __name__ == "__main__":
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq/main.nf", "")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf", "")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf", "")
+    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/vipr-master/main.nf", "")
+    
 
 
     #YOU can delete this it's just to tests the channels
