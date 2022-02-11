@@ -58,7 +58,6 @@ class Outputs:
         self.list_qualifier = extractQ(self.list_output)
     
     def extractName(self):
-        print(self.list_output)
         """
         Extract the global name of each outputs (name in all the workflows)
         """
