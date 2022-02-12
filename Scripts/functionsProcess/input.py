@@ -142,7 +142,7 @@ class Inputs:
                     for wt in wb:
                         ok = False
                         for s in wt:
-                            if s == '.':
+                            if s == '.' and not ok:
                                 channel = Channel('',wt)
                                 channel.initialise_channel()
                                 if len(channel.get_gives()) != 0:
