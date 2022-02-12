@@ -105,9 +105,11 @@ class Outputs:
                         if startb >=0:
                             string = self.temp[idx][startb:endb].lstrip().rstrip()
                             if string[0].isalpha():
-                                self.list_words_workflow.append([idx,string])
+                                if not string in keyWordsO:
+                                    self.list_words_workflow.append([idx,string])
                             else:
-                                self.list_words_workflow.append([idx,string[1:]])
+                                if not string[1:] in keyWordsO:
+                                    self.list_words_workflow.append([idx,string[1:]])
                             break
 
 

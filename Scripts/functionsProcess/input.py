@@ -1,6 +1,8 @@
 from os import listdir
 from functionsProcess.commonFunction import *
 import re
+from channel import *
+
 """
 FIRST PART
 """ 
@@ -39,6 +41,16 @@ def prepare(txt):
           change = " ".join(change)
           work = work.replace(txt[start:end], change)
     return "\n" + work  
+
+def function(tabPa, tabPo, tabA):
+    for i in range (len(tabPa)):
+        for p in tabPo:
+            if p < tabPa[i][0] or tabPa[i][1]<p:
+                return False
+        for a in tabA:
+            if a < tabPa[i][0] or tabPa[i][1]<a:
+                return False
+    return True
 
 #List created from https://www.nextflow.io/docs/latest/process.html#inputs
 keyWordsI = ['val', 'env', 'file', 'path', 'stdin', 'tuple', 'each', 'set']
@@ -90,108 +102,73 @@ class Inputs:
         self.list_qualifier = extractQ(self.list_input)
 
     def extractName(self):
-        listEND = []
         pattern = r'(\sfrom\s.*$)'
         for i in range (len(self.list_input)):
             w = prepare(self.list_input[i])
+            w = w.strip()
             start = -1
             #Find if we have the word 'from'
             for match in re.finditer(pattern, w):
                 start = match.span()[0] + len("from")+2
                 end = match.span()[1]
-            if start > -1:
-                #we have from
+            
+            #If we have the word from
+            if start != -1:
                 string = w[start:end].lstrip().rstrip()
                 
-                patE = r'( )'
-                s1 = 0
-                e1 = end
-                for match in re.finditer(patE,string):
-                    pat = [r'(\(.*\))', r'(\[.*\])', r'({.*\})']
-                    tabNo = []
-                    for p in pat:
-                        for m in re.finditer(p, string):
-                            tabNo.append([m.span()[0], m.span()[1]])
-        
-                    if e1 > match.span()[0]:
-                        e1 = match.span()[0]
-                string = string[s1:e1]
-                nbPoints = 0
-                nbParenthesis = 0
-                nbAccolade = 0
-                for l in string:
-                    if l == '.':
-                        nbPoints +=1
-                    elif l == '(':
-                        nbParenthesis +=1
-                    elif l == '{':
-                        nbAccolade += 1
-                if nbPoints == 0 and nbParenthesis == 0 and nbAccolade == 0:
-                    listEND.append([i, string])
+                patParenthesis = r'(\(.*\))'
+                tabP = []
+                for match in re.finditer(patParenthesis,string):
+                    tabP.append([match.span()[0],match.span()[1]])
+                    
+                tabIdxPoints = []
+                tabIdxAccolade = []
+                for s in range (len(string)):
+                    if string[s] == '.':
+                        tabIdxPoints.append(s)
+                    if string[s] == '{':
+                        tabIdxAccolade.append(s)
+                
+                #Just One word
+                if len(tabP) == 0 and len(tabIdxPoints) == 0 and len(tabIdxAccolade) == 0:
+                    inputs = string.split()[0]
+                    self.list_words_workflow.append([i, inputs])
                     pass
                 
-                elif nbParenthesis > 0 and nbPoints == 0 and nbAccolade == 0:
-                    s = ""
-                    patPa = r'(\([^.]*\))'
-                    for match in re.finditer(patPa, string):
-                        s0 = match.span()[0]+1
-                        e0 = match.span()[1]-1
-                    listEND.append([i, string[s0:e0]])
-                    pass
-                
-                elif nbPoints > 0 and nbParenthesis > 0:
-                
-                    patPa = r'(\([^.]*\))'
-                    for match in re.finditer(patPa, string):
-                        s0 = match.span()[0]
-                        s1 = match.span()[1]
-                        wordSplit = string[s0:s1].split(",")
-                        for word in wordSplit:
-                            sf = ""
-                            add = False
-                            for s in word:
-                                if s.isalpha() or s == "_" or s=="-":
-                                    sf += s
-                            if len(sf) == 0:
-                                #prendre le premier mot
-                                end = ""
-                                for s in string:
-                                    if s != '.':
-                                        end += s
-                                    elif s == '.':
-                                        add = True
-                                        listEND.append([i,end])
-                                        pass
-                                if not add:
-                                    listEND.append([i,end])
-                                    pass
+                #Function
+                elif len(tabP) > 0 and function(tabP,tabIdxPoints,tabIdxAccolade):
+                    work = string[tabP[0][0]+1:-1]
+                    wb = work.split(',')
+                    for wt in wb:
+                        ok = False
+                        for s in wt:
+                            if s == '.':
+                                channel = Channel('',wt)
+                                channel.initialise_channel()
+                                if len(channel.get_gives()) != 0:
+                                    print("Channel bizarre dans extraction nameInputs")
                                 
-                            else:
-                                #prendre le mot entre ()
-                                listEND.append([i,sf])
-                                pass
-                
-                elif nbPoints > 0 and nbAccolade > 0:
-                    end = ""
-                    for s in string:
-                        if s != '.':
-                            end += s
-                        if s == '.':
-                            listEND.append([i,end])
-                            pass
+                                tabOrigin = channel.get_origin()
+                                for j in range(len(tabOrigin)):
+                                    if tabOrigin[j][1] == 'P':
+                                        self.list_words_workflow.append([i,tabOrigin[j][0]])
+                                        ok = True
+                        if not ok:
+                            self.list_words_workflow.append([i,wt])
+                #Channel
+                else :
+                    channel = Channel('',string)
+                    channel.initialise_channel()
+                    if len(channel.get_gives()) != 0:
+                        print("Channel bizarre dans extraction nameInputs")
+                    tabOrigin = channel.get_origin()
+                    for j in range(len(tabOrigin)):
+                        if tabOrigin[j][1] == 'P':
+                            self.list_words_workflow.append([i,tabOrigin[j][0]])
                     pass
                 
-                elif nbPoints > 0 and nbParenthesis == 0 and nbAccolade == 0:
-                    listEND.append([i,string])
-                    """end = ""
-                    for s in string:
-                        if s != '.':
-                            end += s
-                        elif s == '.':
-                            listEND.append([i,end])
-                            pass"""
-                
-            else:
+            #No key word "from"
+            else: 
                 for j in range (len(listPatternIb)):
                     pat = listPatternIb[j]
                     for match in re.finditer(pat,w):
@@ -201,19 +178,12 @@ class Inputs:
                             string = w[startb:endb].lstrip().rstrip()
                             if string[0].isalpha():
                                 if not string in keyWordsI:
-                                    listEND.append([i,string])
+                                    self.list_words_workflow.append([i,string])
                                 pass
                             else:
                                 if not string[1:] in keyWordsI:
-                                    listEND.append([i,string[1:]])
-                                pass                
-        #Clean
-
-        for t in listEND:
-            if not t in self.list_words_workflow:
-                self.list_words_workflow.append(t)
-        """for t in listEND:
-            self.list_words_workflow.append(t)"""
+                                    self.list_words_workflow.append([i,string[1:]])
+                                pass 
 
     def extractI(self):
         self.splitInput()

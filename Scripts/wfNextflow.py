@@ -110,12 +110,12 @@ class Nextflow_WF:
                     file = TypeMainDSL1(nameFile, "")  #for the moment typeMainDSL1
                     file.initialise_basic_main()
                     file.find_processes()
-                    process = file.get_process()
+                    process = file.get_processes()
                     for p in process:
                         if not p.goodForAnalyse():
                             ok = False
                     if ok:
-                        self.processAnalyse.append(file.get_process()) #already do extractProcess
+                        self.processAnalyse.append(file.get_processes()) #already do extractProcess
 
                 except Exception as exc:
                     nbErrors +=1
