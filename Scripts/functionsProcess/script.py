@@ -28,7 +28,9 @@ class Script:
         return self.annotations
     
     def getListTools(self):
-        return self.listTools
+        if(self.listTools!=None):
+            return self.listTools
+        return []
 
     def whichLanguage(self):
         self.language = whichLanguage(self.script_string)

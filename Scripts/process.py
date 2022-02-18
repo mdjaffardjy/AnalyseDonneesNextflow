@@ -356,8 +356,17 @@ class Process:
   def get_string(self):
     return self.process_string
 
+  def get_string_script(self):
+    if(self.script!=None):
+        return self.script.getString()
+    else:
+        return ''
+      
+
   def getListTools(self):
-    return self.script.getListTools()
+    if(self.script!=None): 
+        return self.script.getListTools()
+    return []
 
   #Do everything to extract the informations
   def extractProcess(self, analyse_tools= True):

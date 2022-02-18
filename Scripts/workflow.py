@@ -77,7 +77,7 @@ class Workflow:
         #Case DSL=1
         if(not self.get_DSL2()):
             print(self.address_main)
-            self.main= TypeMainDSL1(self.address_main, self.root)
+            self.main= TypeMainDSL1(self.address_main, self.root, name= self.name, analyse = True)
             self.main.initialise()
             nb_process, nb_links= self.main.get_structure_4(self.name, self.address_to_save_files)
             return nb_process, nb_links

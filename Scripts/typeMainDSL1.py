@@ -6,10 +6,11 @@ from function import *
 from channel import *
 from utility import *
 import graphviz
+import json
 
 
 class TypeMainDSL1(TypeMain):
-    def __init__(self, address, root):
+    def __init__(self, address, root, analyse= False, name='Temp'):
         super().__init__(address, root)
         self.processes=[]
         self.functions=[]
@@ -20,6 +21,8 @@ class TypeMainDSL1(TypeMain):
         self.onComplete=[]
         self.onError= []
         self.can_analyse=True
+        self.analyse_processes = analyse
+        self.name_workflow = name
         
 
 
@@ -78,7 +81,7 @@ class TypeMainDSL1(TypeMain):
             start= match.span()[0]
             end= self.extract_curly(match.span()[1])
             process= Process(self.string[start:end])
-            process.extractProcess(False)
+            process.extractProcess(analyse_tools=self.analyse_processes)
             self.processes.append(process)   
     
     #Print the names of the different processes
@@ -118,10 +121,50 @@ class TypeMainDSL1(TypeMain):
             myText.write('Inputs : '+  str(input)+'\n')
             myText.write('Outputs : '+  str(output)+'\n')
             myText.write('Emits : '+  str(emit)+'\n\n\n')
+        myText.close()
     
     #Return the processes found
     def get_processes(self):
         return self.processes
+
+    
+    def get_info_processes(self, address= "/home/george/Bureau/TER/", name='processes_info'):
+        if(self.analyse_processes):
+            dict={}
+            #For each process we get it's corresponding data
+            for p in self.processes:
+                dict[p.getName()] = {}
+                def get_number_lignes(string):
+                    nb=0
+                    for s in string:
+                        if(s=='\n'):
+                            nb+=1
+                    return nb 
+                dict[p.getName()]['string_process']= p.get_string()
+                #We remove one since we do not want the definition ligne to count : not really really important
+                dict[p.getName()]['nb_lignes_process']= get_number_lignes(p.get_string())-1
+                dict[p.getName()]['string_script']= p.get_string_script()
+                #In this case we leave the ligne corresponding to """ since they all have it => it doesn't matter
+                dict[p.getName()]['nb_lignes_script']= get_number_lignes(p.get_string_script())
+                dict[p.getName()]['tools']= p.getListTools()
+                inputs, outputs, emits=p.extractAll()
+                def simplify(tab):
+                    temp=[]
+                    for t in tab:
+                        temp.append(t[1])
+                    return temp
+
+                dict[p.getName()]['inputs']= simplify(inputs)
+                dict[p.getName()]['nb_inputs']= len(inputs)
+                dict[p.getName()]['outputs']= simplify(outputs)
+                dict[p.getName()]['nb_outputs']= len(outputs)
+
+                dict[p.getName()]['name_workflow']= self.name_workflow
+                
+
+            with open(address+name+'.json', "w") as outfile:
+                json.dump(dict, outfile, indent=4)
+        
 
     
     
@@ -944,13 +987,13 @@ if __name__ == "__main__":
 
     #These are the list of Workflows found in nf-core that we know are written in DSL1 => not difficult to identify 
          
-    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf", "")
+    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf", "", analyse=True, name= 'Samba')
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf", "")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf", "")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq/main.nf", "")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf", "")
     #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf", "")
-    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/vipr-master/main.nf", "")
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/vipr-master/main.nf", "")
     
 
 
@@ -966,6 +1009,7 @@ if __name__ == "__main__":
     m.save_file()
     m.save_channels()
     m.save_processes()
+    m.get_info_processes()
 
 
 #TODO List
