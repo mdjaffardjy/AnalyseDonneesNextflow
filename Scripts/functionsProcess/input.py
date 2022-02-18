@@ -139,22 +139,24 @@ class Inputs:
                 elif len(tabP) > 0 and function(tabP,tabIdxPoints,tabIdxAccolade):
                     work = string[tabP[0][0]+1:-1]
                     wb = work.split(',')
-                    for wt in wb:
-                        ok = False
-                        for s in wt:
-                            if s == '.' and not ok:
-                                channel = Channel('',wt)
-                                channel.initialise_channel()
-                                if len(channel.get_gives()) != 0:
-                                    print("Channel bizarre dans extraction nameInputs")
-                                
-                                tabOrigin = channel.get_origin()
-                                for j in range(len(tabOrigin)):
-                                    if tabOrigin[j][1] == 'P':
-                                        self.list_words_workflow.append([i,tabOrigin[j][0]])
-                                        ok = True
-                        if not ok:
-                            self.list_words_workflow.append([i,wt])
+                    types = string[:tabP[0][0]]
+                    if not types in keyWordsI:
+                        for wt in wb:
+                            ok = False
+                            for s in wt:
+                                if s == '.' and not ok:
+                                    channel = Channel('',wt)
+                                    channel.initialise_channel()
+                                    if len(channel.get_gives()) != 0:
+                                        print("Channel bizarre dans extraction nameInputs")
+                                    
+                                    tabOrigin = channel.get_origin()
+                                    for j in range(len(tabOrigin)):
+                                        if tabOrigin[j][1] == 'P':
+                                            self.list_words_workflow.append([i,tabOrigin[j][0]])
+                                            ok = True
+                            if not ok:
+                                self.list_words_workflow.append([i,wt])
                 #Channel
                 else :
                     channel = Channel('',string)

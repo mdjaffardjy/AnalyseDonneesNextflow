@@ -36,7 +36,7 @@ class Script:
     def extractTools(self):
         if self.language == 'bash':
             #work = justScript(self.script_string)
-            self.tools = get_toolnames(self.script_string)  #a revoir
+            self.tools = get_toolnames(self.script_string)
             self.annotations = get_info_biotools_set_of_tools_dump(self.tools)
 
             #Add in a list - the tool name

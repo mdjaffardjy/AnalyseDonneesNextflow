@@ -62,6 +62,7 @@ def prepareBis(txt):
                 stop = [match.span()[0], match.span()[1]]
     work = txt
     workbis = txt[:stop[0]] + "\n}" #add the last } (end of the process)
+
     symbole = [['{', '}'], ['(', ')']]
     for s in symbole:
         tab = findPairs(workbis, s)
@@ -75,6 +76,7 @@ def prepareBis(txt):
                 change = change.split()
                 change = " ".join(change)
                 work = work.replace(txt[start:end], change)
+
     return work  
                 
 

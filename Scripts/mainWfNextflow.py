@@ -226,7 +226,7 @@ def analysePartProcess(dicoWf):
             fileInfoWf.write(txt)
         fileInfoWf.close()
 
-    fileInfo.write("Numbers of process : {}\n".format(nbTotProcess))
+    fileInfo.write("Number of process : {}\n".format(nbTotProcess))
     for k in keywordAll:
         nb = keywordAll[k]
         nb2 = nbTotProcess - keywordAll[k]
@@ -720,7 +720,7 @@ if __name__ == "__main__":
     allLanguage(dicoWf)
     #Create Networks
     print(bold_color.BOLD + bold_color.RED + "Network Graphs" + bold_color.END)
-    graphNetwork(newDicoWf,[1,2,3,5])
+    graphNetwork(newDicoWf,[1,2,3,5,10])
     #Analyse the tools most used in the workflows
     analysePart('script', newDicoWf)
     analysePart('stub', newDicoWf)

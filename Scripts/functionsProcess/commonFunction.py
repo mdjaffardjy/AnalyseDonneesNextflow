@@ -144,7 +144,7 @@ def justScript(txt):
             empty = False
     if not empty:
         #First delete comment : 
-        patComment =  r'(s*\t*#.*\n)'
+        patComment =  r'(\n\s*#.*\n)'
         tabIdx = []
         for match in re.finditer(patComment, work):
             tabIdx.append([match.span()[0],match.span()[1]])
