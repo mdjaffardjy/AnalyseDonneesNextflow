@@ -92,7 +92,6 @@ def prepareBis(txt):
 
       return work  
     else:
-      print("here")
       return txt 
                 
 
