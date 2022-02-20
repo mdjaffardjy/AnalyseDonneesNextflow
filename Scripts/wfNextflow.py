@@ -143,6 +143,7 @@ class Nextflow_WF:
                         for t in nameCommands:
                             if not t in self.script_toolsName:
                                 self.script_toolsName.append(t)
+                                
                         
                         for t in nameCommands:
                             string = ""
