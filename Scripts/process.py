@@ -54,30 +54,42 @@ def prepare(txt):
 
 def prepareBis(txt):
     #Clean the first part 
-    pattern = [r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', r'(exec\s*:\s*\n)',r'(""")', r"(''')", r'(stub\s*:)']
-    stop = [len(txt),len(txt)]
-    for p in pattern:
-        for match in re.finditer(p, txt):
-            if match.span()[0] < stop[0]:
-                stop = [match.span()[0], match.span()[1]]
-    work = txt
-    workbis = txt[:stop[0]] + "\n}" #add the last } (end of the process)
+    #Verify that we don't have 2 same key words
+    oneKeyWord = True
+    for l in listPattern:
+      nb = 0
+      for match in re.finditer(l, txt):
+        nb +=1
+      if nb > 1:
+        oneKeyWord = False
 
-    symbole = [['{', '}'], ['(', ')']]
-    for s in symbole:
-        tab = findPairs(workbis, s)
-        for i in range (len(tab)):
-            if s[0] == '{' and i ==0:
-                None
-            else:
-                start = tab[i][0]
-                end = tab[i][1]
-                change = txt[start:end].replace("\n", " ")
-                change = change.split()
-                change = " ".join(change)
-                work = work.replace(txt[start:end], change)
+    if oneKeyWord:
+      pattern = [r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', r'(exec\s*:\s*\n)',r'(""")', r"(''')", r'(stub\s*:)']
+      stop = [len(txt),len(txt)]
+      for p in pattern:
+          for match in re.finditer(p, txt):
+              if match.span()[0] < stop[0]:
+                  stop = [match.span()[0], match.span()[1]]
+      work = txt
+      workbis = txt[:stop[0]] + "\n}" #add the last } (end of the process)
 
-    return work  
+      symbole = [['{', '}'], ['(', ')']]
+      for s in symbole:
+          tab = findPairs(workbis, s)
+          for i in range (len(tab)):
+              if s[0] == '{' and i ==0:
+                  None
+              else:
+                  start = tab[i][0]
+                  end = tab[i][1]
+                  change = txt[start:end].replace("\n", " ")
+                  change = change.split()
+                  change = " ".join(change)
+                  work = work.replace(txt[start:end], change)
+
+      return work  
+    else:
+      return txt 
                 
 
 """

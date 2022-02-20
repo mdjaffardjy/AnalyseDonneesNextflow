@@ -15,7 +15,7 @@ EXCEPTIONS = ["export", 'awk', 'sed', 'grep', "cmd", "module", "cat", "elif", "s
               "read", "do","else","cut", "wc", "tar", "gzip", "cool", "if", "turn", "git", "checkm", "cp", "make", "pour",
               "NR", "melt" , "read", "tail", "genes", "add", "bc", "scp", "scif", "uniq", "ln", "set", "zip", "time", "ls",
               "print","make", "pour", "source", "melt", "paste", "split", "layer", "touch" , "google-chrome", "query"
-              "curl", "snps"]
+              "curl", "snps", "def"]
 
 def path_leaf(path):
     """

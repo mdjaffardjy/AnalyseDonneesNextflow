@@ -71,6 +71,7 @@ def createDicoWfN(data):
             #If no problem : add to the dictionnary
             if ok:
                 dicoWf.update({bigNames : wfN})
+        
             #Else can't analyse it
             else:
                 print("Can't study for the moment")
@@ -675,9 +676,10 @@ if __name__ == "__main__":
     os.chdir(currentPath)
 
     #Browse the crawler result
-    crawler = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow.json"
+    crawler = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow_petit.json"
     with open(crawler) as mon_fichier:
         data = json.load(mon_fichier)
+        
     #Creation of the first dictionary with all the workflows we can analyse for the moment 
     print(bold_color.BOLD + bold_color.RED+"CREATE DICO"+bold_color.END)
     dicoWf = createDicoWfN(data)
