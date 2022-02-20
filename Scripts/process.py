@@ -16,6 +16,9 @@ Declaration of global variable
 listPattern = [r'(input\s*:\s*\n)', r'(output\s*:\s*\n)', r'(when\s*:\s*\n)', r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', 
                       r'(exec\s*:\s*\n)',r'(""")', r"(''')", r'(\n+\s*".*"\n)', r"(\n+\s*'.*'\n)", r'(stub\s*:)']
 
+listPattern2 = [r'(input\s*:\s*\n)', r'(output\s*:\s*\n)', r'(when\s*:\s*\n)', r'(script\s*:\s*\n)', r'(shell\s*:\s*\n)', 
+                      r'(exec\s*:\s*\n)', r'(stub\s*:)']
+
 def endPairs(txt,idx,s):
     count_curly = 1
     end = idx
@@ -56,7 +59,7 @@ def prepareBis(txt):
     #Clean the first part 
     #Verify that we don't have 2 same key words
     oneKeyWord = True
-    for l in listPattern:
+    for l in listPattern2:
       nb = 0
       for match in re.finditer(l, txt):
         nb +=1
@@ -89,6 +92,7 @@ def prepareBis(txt):
 
       return work  
     else:
+      print("here")
       return txt 
                 
 
