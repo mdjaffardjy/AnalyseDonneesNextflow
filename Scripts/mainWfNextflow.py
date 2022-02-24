@@ -71,6 +71,7 @@ def createDicoWfN(data):
             #If no problem : add to the dictionnary
             if ok:
                 dicoWf.update({bigNames : wfN})
+        
             #Else can't analyse it
             else:
                 print("Can't study for the moment")
@@ -640,15 +641,15 @@ def whichWithTools(dicoWf):
                 if len(stubTools) > 0: 
                     npProcessStubWithAnnotations += 1
 
-        if script != None and stub != None:
-            if npProcessScriptWithAnnotations != 0 or npProcessStubWithAnnotations != 0: #or or and ??
+        if nbProcessScript != 0 and nbProcessStub != 0:
+            if npProcessScriptWithAnnotations != 0 or npProcessStubWithAnnotations != 0:
                 perfect += 1
                 newDicoWf.update({wfn: wf})
-        elif script != None and stub == None:
+        elif nbProcessScript != 0 and nbProcessStub == 0:
             if npProcessScriptWithAnnotations != 0:
                 perfect += 1
                 newDicoWf.update({wfn: wf})
-        elif script == None and stub != None:
+        elif nbProcessScript == 0 and nbProcessStub != 0:
             if npProcessStubWithAnnotations != 0:
                 perfect += 1
                 newDicoWf.update({wfn: wf})
@@ -678,6 +679,7 @@ if __name__ == "__main__":
     crawler = "/home/clemence/FAC/Master/M1/TER/AnalyseDonneesNextflow/Scripts/wf_crawl_nextflow.json"
     with open(crawler) as mon_fichier:
         data = json.load(mon_fichier)
+        
     #Creation of the first dictionary with all the workflows we can analyse for the moment 
     print(bold_color.BOLD + bold_color.RED+"CREATE DICO"+bold_color.END)
     dicoWf = createDicoWfN(data)

@@ -107,7 +107,7 @@ class Nextflow_WF:
                         os.system('wget -q "' + urlfile + '" -O ' + nameFile)
 
                     #Extract and Analyse Process
-                    file = TypeMainDSL1(nameFile, "")  #for the moment typeMainDSL1
+                    file = TypeMainDSL1(nameFile, "", analyse=True)  #for the moment typeMainDSL1
                     file.initialise_basic_main()
                     file.find_processes()
                     process = file.get_processes()
@@ -143,6 +143,7 @@ class Nextflow_WF:
                         for t in nameCommands:
                             if not t in self.script_toolsName:
                                 self.script_toolsName.append(t)
+                                
                         
                         for t in nameCommands:
                             string = ""
