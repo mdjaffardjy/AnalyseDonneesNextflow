@@ -1,5 +1,5 @@
-from functionsProcess.commonFunction import * 
-from functionsProcess.toolFunction import *
+from .commonFunction import * 
+from .toolFunction import *
 
 class Stub:
     def __init__(self, strStub):

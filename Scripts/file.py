@@ -1,6 +1,6 @@
 import re
 
-from process import *
+from .process import *
 
 #Function that returns an empty string
 def create_empty(string, start, end):

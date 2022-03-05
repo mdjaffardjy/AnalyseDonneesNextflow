@@ -11,7 +11,7 @@ DIRECTIVE - INPUT - OUTPUT
 Clean an element : no \n and no \
 """
 
-adresse_language= __file__[:-len("functionsProcess/commonFunction.py")]+"/language.txt"
+#adresse_language= __file__[:-len("functionsProcess/commonFunction.py")]+"/language.txt"
 
 def clean(txt):
     antiSlash = []
@@ -77,15 +77,16 @@ Analyse Language
 """
 def whichLanguage(txt):
     #fileLanguage = open("../../../../Scripts/language.txt", "r")
-    fileLanguage = open(adresse_language, "r")
+    #fileLanguage = open(adresse_language, "r")
     
-    fileLines = fileLanguage.readlines()
+    fileLines =[]
+    #fileLines = fileLanguage.readlines()
     languageKnown = []
     for lines in fileLines:
         l = lines.split()
         if len(l) != 0:
             languageKnown.append(l[0])
-    fileLanguage.close()
+    #fileLanguage.close()
 
     language =""
     pattern = r'(#!)'
@@ -121,9 +122,9 @@ def whichLanguage(txt):
                 language = test2[-1]
         
             #fileLanguage = open("../../../../Scripts/language.txt", "a")
-            fileLanguage = open(adresse_language, "a")
-            fileLanguage.write("\n" + language)
-            fileLanguage.close()
+            #fileLanguage = open(adresse_language, "a")
+            #fileLanguage.write("\n" + language)
+            #fileLanguage.close()
     language = language.lstrip().rstrip()
     if language == 'sh' or language == 'ksh' or language == 'bashlog':
         language = 'bash'

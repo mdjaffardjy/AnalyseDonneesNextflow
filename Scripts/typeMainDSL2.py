@@ -1,14 +1,14 @@
 
 from logging import error
-from typeMain import * 
+from .typeMain import * 
 import re
 import graphviz
 import random
 
 
 class TypeMainDSL2(TypeMain):
-    def __init__(self, address, root):
-        super().__init__(address, root)
+    def __init__(self, address):
+        super().__init__(address)
         self.processes=[]
         self.functions=[]
         self.channels=[]

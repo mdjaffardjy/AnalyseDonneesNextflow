@@ -1,4 +1,4 @@
-from wfNextflow import *
+from .wfNextflow import *
 import os
 import matplotlib.pyplot as plt
 import networkx as nx

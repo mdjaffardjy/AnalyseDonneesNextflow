@@ -1,4 +1,4 @@
-from functionsProcess.commonFunction import *
+from .commonFunction import *
 
 """
 FIRST PART

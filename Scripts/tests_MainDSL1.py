@@ -1,4 +1,4 @@
-from typeMainDSL1 import *
+from .typeMainDSL1 import *
 import os
 
 #============

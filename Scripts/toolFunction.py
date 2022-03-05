@@ -7,7 +7,7 @@ import re
 import requests
 from ratelimiter import RateLimiter
 import json
-import functionsProcess.search_biotools_dump as sb
+from .search_biotools_dump import *
 
 EXCEPTIONS = ["export", 'awk', 'sed', 'grep', "cmd", "module", "cat", "elif", "sort", "cd", "zcat",
               "rm", "for", "find", "java", "forgi", "sleep", "tabix", "zgrep", "wget", "mv", "mkdir", "echo",
@@ -138,7 +138,7 @@ def get_info_biotools_set_of_tools_dump(set_tools, treshold = 5):
             if (tool[0] not in ["module", "cat", "elif", "sort", "cd", "zcat", "rm", "zgrep", "wget", "mv", "mkdir",
                              "echo", "dot", "gunzip", "pandoc", "pdflatex", "python", "sleep", "done", "perl", "egrep", "tr", "rev", "jekyll", "rsync"]):
                 # print('tool ' + str(tool))
-                tool_info = sb.get_annotations_tool_dump(tool, treshold)
+                tool_info = get_annotations_tool_dump(tool, treshold)
                 if tool_info is not None:
                     # print('uri ' + tool_info['uri'])
                     if len(tool)==1:

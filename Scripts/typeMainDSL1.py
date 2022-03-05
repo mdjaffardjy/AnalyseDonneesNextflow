@@ -1,17 +1,18 @@
 from distutils.command.install_egg_info import to_filename
 import re
-from typeMain import * 
-from process import *
-from function import *
-from channel import *
-from utility import *
+from .typeMain import * 
+from .process import *
+from .function import *
+from .channel import *
+from .utility import *
 import graphviz
 import json
+import os
 
 
 class TypeMainDSL1(TypeMain):
-    def __init__(self, address, root, analyse= False, name='Temp'):
-        super().__init__(address, root)
+    def __init__(self, address):
+        super().__init__(address)
         self.processes=[]
         self.functions=[]
         self.channels=[]
@@ -21,8 +22,12 @@ class TypeMainDSL1(TypeMain):
         self.onComplete=[]
         self.onError= []
         self.can_analyse=True
-        self.analyse_processes = analyse
-        self.name_workflow = name
+        self.analyse_processes = True
+        self.name_workflow = ''
+        #TODO => set these attributes and save in a file
+        self.nb_edges = 0
+        self.nb_nodes_process = 0
+        self.nb_nodes_operation = 0
         
 
 
@@ -49,6 +54,14 @@ class TypeMainDSL1(TypeMain):
         if(self.string.count('{')==self.string.count('}')):
             return True
         return False
+
+    def get_name_workflow(self):
+        t = os.getcwd()
+        i=-1
+        while(t[i] != '/'):
+            i-=1
+        self.name_workflow = t[(i+1):len(t)]
+        return self.name_workflow
 
 
 
@@ -112,8 +125,8 @@ class TypeMainDSL1(TypeMain):
         for i in range(len(self.processes)):
             self.string= self.string.replace(self.processes[i].get_string(), 'PROCESS DEF '+self.processes[i].get_name(), 1)
     
-    def save_processes(self, address= "/home/george/Bureau/TER/", name='processes'):
-        myText = open(address+name+'.nf','w')
+    def save_processes(self, name='processes_extracted'):
+        myText = open(name+'.nf','w')
         for p in self.processes:
             #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
             myText.write('Name : '+p.getName()+'\n')
@@ -128,12 +141,13 @@ class TypeMainDSL1(TypeMain):
         return self.processes
 
     
-    def get_info_processes(self, address= "/home/george/Bureau/TER/", name='processes_info'):
+    def get_info_processes(self, name='processes_info'):
         if(self.analyse_processes):
             dict={}
             #For each process we get it's corresponding data
             for p in self.processes:
                 dict[p.getName()] = {}
+                dict[p.getName()]['name_process']= p.getName()
                 def get_number_lignes(string):
                     nb=0
                     for s in string:
@@ -146,6 +160,7 @@ class TypeMainDSL1(TypeMain):
                 dict[p.getName()]['string_script']= p.get_string_script()
                 #In this case we leave the ligne corresponding to """ since they all have it => it doesn't matter
                 dict[p.getName()]['nb_lignes_script']= get_number_lignes(p.get_string_script())
+                dict[p.getName()]['language_script']= p.getScriptLanguage()
                 dict[p.getName()]['tools']= p.getListTools()
                 inputs, outputs, emits=p.extractAll()
                 def simplify(tab):
@@ -159,10 +174,14 @@ class TypeMainDSL1(TypeMain):
                 dict[p.getName()]['outputs']= simplify(outputs)
                 dict[p.getName()]['nb_outputs']= len(outputs)
 
-                dict[p.getName()]['name_workflow']= self.name_workflow
+                dict[p.getName()]['name_workflow']= self.get_name_workflow()
                 
+                
+                dict[p.getName()]['directive']= p.getDirectiveList()
+                dict[p.getName()]['when']= p.getWhen()
+                dict[p.getName()]['stub']= p.getStub()
 
-            with open(address+name+'.json', "w") as outfile:
+            with open(name+'.json', "w") as outfile:
                 json.dump(dict, outfile, indent=4)
         
 
@@ -273,6 +292,10 @@ class TypeMainDSL1(TypeMain):
     def initialise_channels(self):
         for c in self.channels:
             c.initialise_channel()
+    
+    def get_number_channels(self):
+        return len(self.channels)
+            
 
     def get_all_defined_channels(self):
         tab=[]
@@ -437,8 +460,8 @@ class TypeMainDSL1(TypeMain):
             print(c.get_id(), 'origin :',  c.get_origin())
             print(c.get_id(), 'gives  :',  c.get_gives())
 
-    def save_channels(self, address= "/home/george/Bureau/TER/", name='channels'):
-        myText = open(address+name+'.nf','w')
+    def save_channels(self, name='channels_extracted'):
+        myText = open(name+'.nf','w')
         for c in self.channels:
             #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
             myText.write(c.get_id()+ ' string : '+c.get_full_string()+'\n')
@@ -650,7 +673,7 @@ class TypeMainDSL1(TypeMain):
     def create_node_type(self, dot, id, name, type):
         #id = 'CHANNEL_\d+' 
         name=id[8:]
-
+        self.nb_nodes_operation+=1
         if(type=='A'):
             dot.node(id, name, color= '4', shape='doublecircle')
         elif(type=='V'):
@@ -662,7 +685,7 @@ class TypeMainDSL1(TypeMain):
         elif(type=='F'):
             dot.node(id, name, color= '6', shape='doublecircle')
 
-    def get_structure_4(self,name='structure_worklow_4',  address= "/home/george/Bureau/TER/"):
+    def get_structure_4(self,name='structure_worklow_4'):
         if(self.can_analyse):
             #nb_links correspond aux nombre de lien de flux de données
             nb_process, nb_links= 0, 0
@@ -885,11 +908,13 @@ class TypeMainDSL1(TypeMain):
                             tab_gives.append([g[0], c.get_id()]) 
                                 
             #print(address)
-            dot.render(directory=address)
-            dot.save(directory=address)
-            return nb_process, nb_links
+            dot.render()
+            dot.save()
+            self.nb_edges = nb_links
+            self.nb_nodes_process= nb_process
         else:
-            return -1, -1
+            self.nb_edges = -1
+            self.nb_nodes= -1
 
 
 
@@ -907,9 +932,16 @@ class TypeMainDSL1(TypeMain):
     #GENERAL METHODS
     #===========================================
 
+    def save_nb_nodes_edges(self):
+        myText = open('nb_nodes_edges'+'.txt','w')
+        myText.write(f'{self.nb_nodes_process} node_processes\n')
+        myText.write(f'{self.nb_nodes_operation} node_operations\n')
+        myText.write(f'{self.nb_edges} edges\n')
+        myText.close()
+
     #Saves the the worklfow string in a given address as a nextflow file
-    def save_file(self, address= "/home/george/Bureau/TER/", name='formated_workflow'):
-        myText = open(address+name+'.nf','w')
+    def save_file(self, name='formated_workflow'):
+        myText = open(name+'.nf','w')
         myText.write(self.string)
         myText.close()
 
@@ -924,6 +956,7 @@ class TypeMainDSL1(TypeMain):
             #STEP2
             #Finds and adds the proccesses to the list of processes + analysing them
             self.find_processes()
+            print(f'Extracted {self.get_nb_processes()} processes')
             self.format_processes()
 
             #STEP3
@@ -940,6 +973,16 @@ class TypeMainDSL1(TypeMain):
             #Find and analyse every channel and add them to the list of channels
             self.extract_analyse_channels()
             
+            print(f'Extracted {self.get_number_channels()} channels')
+            
+            self.get_structure_4()
+            print(f'Structure reconstructed')
+            print(f'With {self.nb_nodes_process} processes, {self.nb_nodes_operation} operations and {self.nb_edges} edges')
+            self.save_channels()
+            self.save_processes()
+            self.get_info_processes()
+            self.save_nb_nodes_edges()
+
             #self.clean_up_if_one_line()
             #print('self.clean_up_if_one_line()')
             
@@ -947,9 +990,7 @@ class TypeMainDSL1(TypeMain):
             #self.workflow_onComplete()
             #self.workflow_onError()
         else:
-            print_in_red('WHEN A CURLY OPENS IT NEEDS TO BE CLOSED!')
-            print_in_red("Didn't find the same number of open curlies then closing curlies")
-            print_in_red("I CAN NOT ANALYSE THIS")
+            raise Exception("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies")
             self.can_analyse= False
 
         #self.format_ifs()
@@ -988,12 +1029,12 @@ if __name__ == "__main__":
     #These are the list of Workflows found in nf-core that we know are written in DSL1 => not difficult to identify 
          
     m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf", "", analyse=True, name= 'Samba')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf", "")
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf", "")
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq/main.nf", "")
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf", "")
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf", "")
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/vipr-master/main.nf", "")
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf", "", name= 'Eager')
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf", "", name= 'Hic')
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq/main.nf", "", name= 'Smrnaseq')
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf", "", name= 'Sarek')
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf", "", name= 'Metaboigniter')
+    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/vipr-master/main.nf", "", name= 'Vipr')
     
 
 

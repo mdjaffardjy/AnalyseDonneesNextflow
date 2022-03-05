@@ -1,4 +1,4 @@
-from utility import *
+from .utility import *
 
 #==========================================================
 #Test check_containing

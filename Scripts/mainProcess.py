@@ -1,5 +1,5 @@
-from process import *
-from functionsProcess.helpPrint import *
+from .process import *
+from .functionsProcess.helpPrint import *
 import matplotlib.pyplot as plt
 import os
 import glob

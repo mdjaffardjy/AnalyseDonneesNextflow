@@ -1,7 +1,7 @@
 from os import listdir
-from functionsProcess.commonFunction import *
+from .commonFunction import *
 import re
-from channel import *
+from .channel import *
 
 """
 FIRST PART

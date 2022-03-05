@@ -1,9 +1,9 @@
-from functionsProcess.directive import *
-from functionsProcess.input import *
-from functionsProcess.output import * 
-from functionsProcess.when import * 
-from functionsProcess.script import *
-from functionsProcess.stub import *
+from .directive import *
+from .input import *
+from .output import * 
+from .when import * 
+from .script import *
+from .stub import *
 
 import re
 """
@@ -347,16 +347,36 @@ class Process:
     return self.name
   def getDirective(self):
     return self.directive
+
+  def getDirectiveList(self):
+    if(self.directive != None):
+      return self.directive.getDirectives()
+    else:
+      return []
+
   def getInput(self):
     return self.input
   def getOutput(self):
     return self.output 
   def getWhen(self):
-    return self.when
+    if(self.when != None):
+      return self.when.getWhen()
+    else:
+      return ''
   def getScript(self):
     return self.script
+
+  def getScriptLanguage(self):
+    if (self.script!=None):
+        return self.script.getLanguage()
+    else:
+        return ''
+
   def getStub(self):
-    return self.stub
+    if(self.stub != None):
+      return self.stub.getString()
+    else:
+      return ''
 
   def getAll(self):
     return [self.getName(), self.getDirective(), self.getInput(), self.getOutput(), 

@@ -1,4 +1,4 @@
-from file import *
+from .file import *
 import re
 import graphviz
 

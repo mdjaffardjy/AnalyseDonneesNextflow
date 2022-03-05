@@ -3,6 +3,29 @@ from rdflib import ConjunctiveGraph
 from rdflib.namespace import Namespace, RDF, RDFS
 import jellyfish
 
+import glob
+import os
+
+from threading import Thread
+from queue import Queue
+import time
+import sys
+
+import functools
+
+printf = functools.partial(print, end="")
+
+current_adress = os.getcwd()
+os.chdir(".")
+root = os.getcwd()
+bioschemas_dump = glob.glob( "**/data/bioschemas-dump.ttl", recursive = True)
+EDAM = glob.glob( "**/data/EDAM_1.25.owl", recursive = True)
+os.chdir(current_adress)
+
+bioschemas_dump = root+'/'+bioschemas_dump[0]
+EDAM = root+'/'+EDAM[0]
+
+
 #setting the namespaces as constants
 sc = Namespace('http://schema.org/')
 edam = Namespace('http://edamontology.org/')
@@ -10,8 +33,49 @@ oboInOwl = Namespace('http://www.geneontology.org/formats/oboInOwl#')
 
 #loading the edam data
 kg = ConjunctiveGraph()
-kg.load(__file__[:-len("functionsProcess/search_biotools_dump.py")]+"/data/bioschemas-dump.ttl", format="turtle")
-kg.load(__file__[:-len("functionsProcess/search_biotools_dump.py")]+"/data/EDAM_1.25.owl")
+
+def thread1(threadname, q):
+    i=0
+    a = q.get()
+    while True:
+        a = q.get()
+        if a is None: 
+            sys.stdout.flush()
+            sys.stdout.write("\r{0}".format("Loading Biotools and EDAM libraries. Status : COMPLETED \n"))
+            return # Poison pill
+        q.put(True)
+        if(int(i)%2==0):
+            sys.stdout.write("\r{0}".format("Loading Biotools and EDAM libraries. Status : Working   "))
+        if(int(i)%4==1):
+            sys.stdout.write("\r{0}".format("Loading Biotools and EDAM libraries. Status : Working.  "))
+        if(int(i)%4==2):
+            sys.stdout.write("\r{0}".format("Loading Biotools and EDAM libraries. Status : Working.. "))
+        if(int(i)%4==3):
+            sys.stdout.write("\r{0}".format("Loading Biotools and EDAM libraries. Status : Working..."))
+        sys.stdout.flush()
+        time.sleep(0.3)
+        i+=1
+    
+
+
+
+def thread2(threadname, q):
+    a = 0
+    q.put(True)
+    q.put(True)
+    kg.load(bioschemas_dump, format="turtle")
+    kg.load(EDAM)
+    q.put(None) # Poison pill
+
+queue = Queue()
+thread1 = Thread( target=thread1, args=("Thread-1", queue) )
+thread2 = Thread( target=thread2, args=("Thread-2", queue) )
+
+thread1.start()
+thread2.start()
+thread1.join()
+thread2.join()
+
 
 def get_sorted_matches(toolname):
     #input : string tool name

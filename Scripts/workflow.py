@@ -2,27 +2,24 @@ import re
 import glob
 import os
 
-#from process import *
-from file import *
-from typeMain import *
-from typeMainDSL1 import *
-from typeMainDSL2 import *
+from .process import *
+from .file import *
+from .typeMain import *
+from .typeMainDSL1 import *
+from .typeMainDSL2 import *
 
 
 class Workflow:
-    def __init__(self, root, address=''):
+    def __init__(self, address):
         #Name of the Project
         self.name = None
-        #Root address
-        self.root = root
         #Bool if the workflow is using the syntax extension or not
         self.is_DSL2 = None
         #Address of the main
-        self.address_main = None
+        self.address_main = address
         #The main of the Project
         self.main = None
-        #Adress to save files created during execution
-        self.address_to_save_files= address
+
 
     
     #Get the last word the path
@@ -63,7 +60,7 @@ class Workflow:
         pattern= r'(nextflow\.(preview|enable)\.dsl\s*=\s*2)'
         #Checks if the pattern is found in the main file
         #So we create a temporary main type
-        temp_main= TypeMain(self.address_main, self.root)
+        temp_main= TypeMain(self.address_main)
         temp_main.initialise_basic_main()
         code= temp_main.get_string()
         self.is_DSL2 = bool(re.compile(pattern).search(code))
@@ -76,28 +73,30 @@ class Workflow:
     def initialise_main(self):
         #Case DSL=1
         if(not self.get_DSL2()):
-            print(self.address_main)
-            self.main= TypeMainDSL1(self.address_main, self.root, name= self.name, analyse = True)
+            print('Workflow written in DSL1')
+            self.main= TypeMainDSL1(self.address_main)
             self.main.initialise()
-            nb_process, nb_links= self.main.get_structure_4(self.name, self.address_to_save_files)
-            return nb_process, nb_links
+            #nb_process, nb_links= self.main.get_structure_4(self.name, self.address_to_save_files)
+            #return nb_process, nb_links
             #self.main.save_file()
             #self.main.save_channels()
             #self.main.save_processes()
         #Case DSL=2
         elif(self.get_DSL2()):
-            self.main= TypeMainDSL2(self.address_main, self.root)
+            raise Exception("Workflow written in DSL2 : I don't know how to analyze the workflow yet")
+            #print('\x1b[1;37;41m' + f"Workflow written in DSL2 : I don't know how to analyze the workflow yet"+ '\x1b[0m')
+            """self.main= TypeMainDSL2(self.address_main)
             self.main.initialise()
-            return -1
+            return -1"""
         
 
     
     #Initialise the workflow
     def initialise(self):
-        self.set_name()
-        self.set_address_main()
+        #self.set_name()
+        #self.set_address_main()
         self.check_DSL2()
-        return self.initialise_main()
+        self.initialise_main()
         #print(self.main)
 
 #=================
@@ -106,7 +105,7 @@ class Workflow:
 if __name__ == "__main__":
     #print("I shoudn't be executed as a main")
     #DSL1
-    w= Workflow("/home/george/Bureau/TER/Workflow_Database/samba-master", '/home/george/Bureau/TER/DSL1 Stats/')
+    w= Workflow("/home/george/Bureau/TER/Workflow_Database/samba-master", '/home/george/Bureau/')
     #w= Workflow("/home/george/Bureau/TER/Workflow_Database/eager-master")
     #DSL2
     #w= Workflow("/home/george/Bureau/TER/Workflow_Database/rnaseq-master")

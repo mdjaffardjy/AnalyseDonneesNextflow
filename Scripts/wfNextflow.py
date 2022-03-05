@@ -1,7 +1,7 @@
 import os
-from process import *
-from typeMainDSL1 import *
-from functionsProcess.toolFunction import *
+from .process import *
+from .typeMainDSL1 import *
+from .toolFunction import *
 import re
 from pathlib import Path
 
