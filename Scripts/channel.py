@@ -44,6 +44,17 @@ class Channel:
     def get_origin(self):
         return self.origin
 
+    def set_total_gives(self, li):
+        self.gives= li
+    
+    def set_total_origin(self, li):
+        self.origin= li
+
+    def set_initia(self):
+        self.intia = True
+        self.full_string= self.string
+
+
 
     def get_first_word(self):
         for i in range(len(self.string)):

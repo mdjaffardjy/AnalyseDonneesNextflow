@@ -1,3 +1,4 @@
+#from ast import pattern
 from distutils.command.install_egg_info import to_filename
 import re
 from .typeMain import * 
@@ -24,7 +25,7 @@ class TypeMainDSL1(TypeMain):
         self.can_analyse=True
         self.analyse_processes = True
         self.name_workflow = ''
-        #TODO => set these attributes and save in a file
+        
         self.nb_edges = 0
         self.nb_nodes_process = 0
         self.nb_nodes_operation = 0
@@ -288,6 +289,101 @@ class TypeMainDSL1(TypeMain):
 
     def get_added_operators(self):
         return self.added_operators
+    
+    def find_problematic_channels(self):
+        index=-1
+        problematic_channels = []
+        pattern = r'(\w+) *= *(\w+)'
+        for c in self.channels:
+            if c.get_full_string() != None :
+                for match in re.finditer(pattern, c.get_full_string()):
+                    if(match.group(1) == match.group(2)):
+                        problematic_channels.append(match.group(1))
+        
+        def is_in(string, word):
+            for i in range(0, len(string)-len(word)):
+                if(string[i:i+len(word)]==word):
+                    return True
+            return False
+
+        def containg(tab, word):
+            for t in tab:
+                if(t==word):
+                    return True
+            return False
+
+        def remove_duplicates(list):
+            ino=[]
+            for l in list :
+                if(not containg(ino, l)):
+                    ino.append(l)
+            return ino
+
+        for ch in problematic_channels:
+            channels_containing = []
+            for c in self.channels:
+                string=''
+                if c.get_full_string() != None :
+                    string = c.get_full_string()
+                else:
+                    string = c.get_string()
+                if(is_in(string, ch)):
+                    channels_containing.append(c)
+            
+            for c in channels_containing:
+                c.initialise_channel()
+                
+            operations_with_ch_gives = []
+            for c in channels_containing:
+                gives = c.get_gives()
+                for g in gives :
+                    if(containg(g, ch)):
+                        operations_with_ch_gives.append(c)
+
+            new= ''
+            for c in operations_with_ch_gives:
+                string=''
+                if c.get_full_string() != None :
+                    string = c.get_full_string()
+                else:
+                    string = c.get_string()
+                new += string+' + '
+                self.channels.remove(c)            
+            
+            name= 'CHANNEL_'+str(index)
+            print(name)
+            index-=1
+            channel= Channel(name, new)
+            print(new)
+            origins_total, gives_total = [], []
+            for c in operations_with_ch_gives:
+                origins= c.get_origin()
+                for o in origins:
+                    origins_total.append(o)
+                gives= c.get_gives()
+                for g in gives:
+                    gives_total.append(g)
+
+            
+                
+            origins_total = remove_duplicates(origins_total)
+            gives_total = remove_duplicates(gives_total)
+            try:
+                origins_total.remove([ch, 'P'])
+            except:
+                None
+            #print(origins_total, gives_total)
+
+            channel.set_total_gives(gives_total)
+            channel.set_total_origin(origins_total)
+            channel.set_initia()
+
+            self.channels.append(channel)
+
+            print(self.channels[-1].get_id())
+
+        
+
 
     def initialise_channels(self):
         for c in self.channels:
@@ -403,7 +499,7 @@ class TypeMainDSL1(TypeMain):
         #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = CHANNEL_ID
         #=================================================================
         self.link_channels_set()
-
+        self.find_problematic_channels()
         self.initialise_channels()
 
 
@@ -439,15 +535,16 @@ class TypeMainDSL1(TypeMain):
             for match in re.finditer(pattern, c):
                 right= match.group(2)
                 left= match.group(1)
-            if (is_in(tab_all_definied_channels, right) or is_in(tab_all_definied_inputs_outputs, right)):
-                #print('her')
-                name= 'CHANNEL_'+str(index)
-                code= c
-                temp_channel= Channel(name, code)
-                temp_channel.not_normal()
-                self.channels.append(temp_channel)
-                index+=1
-                tab_all_definied_channels.append(left)
+            if(right != left):
+                if (is_in(tab_all_definied_channels, right) or is_in(tab_all_definied_inputs_outputs, right)):
+                    #print('her')
+                    name= 'CHANNEL_'+str(index)
+                    code= c
+                    temp_channel= Channel(name, code)
+                    temp_channel.not_normal()
+                    self.channels.append(temp_channel)
+                    index+=1
+                    tab_all_definied_channels.append(left)
         for c in self.channels:
             self.string= self.string.replace(c.get_string(), c.get_id(), 1)
 
@@ -634,8 +731,8 @@ class TypeMainDSL1(TypeMain):
                     curly_count-=1
 
                 elif(para_count==0 and curly_count ==0 and s[i]==':'):
-                    condition_true= s[start:i]
-                    condition_false= s[i+1:end]
+                    condition_true= s[start:i].strip()
+                    condition_false= s[i+1:end].strip()
                     break
                 i+=1
         
@@ -914,7 +1011,8 @@ class TypeMainDSL1(TypeMain):
             self.nb_nodes_process= nb_process
         else:
             self.nb_edges = -1
-            self.nb_nodes= -1
+            self.nb_nodes_process= -1
+            self.nb_nodes_operation = -1
 
 
 
