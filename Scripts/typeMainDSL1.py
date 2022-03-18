@@ -351,10 +351,10 @@ class TypeMainDSL1(TypeMain):
                 self.channels.remove(c)            
             
             name= 'CHANNEL_'+str(index)
-            print(name)
+            #print(name)
             index-=1
             channel= Channel(name, new)
-            print(new)
+            #print(new)
             origins_total, gives_total = [], []
             for c in operations_with_ch_gives:
                 origins= c.get_origin()
@@ -380,7 +380,7 @@ class TypeMainDSL1(TypeMain):
 
             self.channels.append(channel)
 
-            print(self.channels[-1].get_id())
+            #print(self.channels[-1].get_id())
 
         
 
@@ -898,11 +898,11 @@ class TypeMainDSL1(TypeMain):
                                             if(len(list(set(types)))!=1):
                                                 if(is_in(types, 'P') or list(set(types))== []):
                                                     t='P'
-                                                else:
-                                                    #TODO find better way than this 
-                                                    t=types[0]
-                                                    print(f'WARNING!!! : Multiple origin types for {c_name}')
-                                                    print(f'The code is {c.get_string()}')
+                                                else: 
+                                                    if(is_in(types, 'V')):
+                                                        t='V'
+                                                    else :
+                                                        t=types[0]
                                             else:
                                                 t= list(set(types))[0]
                                                 #if(self.check_name_is_function(c_origin[0])):

@@ -64,7 +64,8 @@ def thread2(threadname, q):
     q.put(True)
     q.put(True)
     kg.load(bioschemas_dump, format="turtle")
-    kg.load(EDAM)
+    #kg.load(EDAM)
+    kg.load('http://edamontology.org/EDAM_dev.owl')
     q.put(None) # Poison pill
 
 queue = Queue()
