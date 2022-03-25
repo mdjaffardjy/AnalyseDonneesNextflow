@@ -1,9 +1,11 @@
-
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
 
 class Function:
     def __init__(self, function):
         #For now we are only defining the string and name atrributes
-        #If we need to analyse functions later on, obsiously come here
+        #If we need to analyse functions later on, come here
         self.string = function
         self.name = None
         
@@ -39,15 +41,4 @@ class Function:
     #Initialise the basic stuff for a function type
     def initialise_function(self):
         self.extract_name()
-        #Do stuff
 
-#=================
-#IF USED AS A MAIN
-#=================
-if __name__ == "__main__":
-    print("I shoudn't be executed as a main")
-
-
-#TODO list:
-#   - Comment the code
-#   - do extract name!

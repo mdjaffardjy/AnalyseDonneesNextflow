@@ -1,14 +1,17 @@
-#from ast import pattern
-from distutils.command.install_egg_info import to_filename
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 import re
+import os
+import graphviz
+import json
+
 from .typeMain import * 
 from .process import *
 from .function import *
 from .channel import *
 from .utility import *
-import graphviz
-import json
-import os
 
 
 class TypeMainDSL1(TypeMain):
@@ -18,12 +21,9 @@ class TypeMainDSL1(TypeMain):
         self.functions=[]
         self.channels=[]
         self.added_operators= []
-        #TODO
-        #This attribute is temporary
-        self.onComplete=[]
-        self.onError= []
+
         self.can_analyse=True
-        self.analyse_processes = True
+        self.analyze_processes = True
         self.name_workflow = ''
         
         self.nb_edges = 0
@@ -35,7 +35,6 @@ class TypeMainDSL1(TypeMain):
     #===========================================
     #UTILITY METHODS
     #===========================================
-
     #Intermediate method that 'finds' the end of the process or functions, when we give the start position
     #So it follows the pattern 'process name {....}' or def name(..){...}
     def extract_curly(self, start):
@@ -67,35 +66,17 @@ class TypeMainDSL1(TypeMain):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     #===========================================
     #METHODS FOR MANIPULATING PROCESSES
     #===========================================
-
-    #Finds and adds the processes to the list of processes
-    #Plus analyse the processes 
+    #Finds and adds the processes to the list of processes + analyses them
     def find_processes(self):
         pattern=  r'([^\w]?process\s+\w+\s*{)'
         for match in re.finditer(pattern, self.string):
             start= match.span()[0]
             end= self.extract_curly(match.span()[1])
             process= Process(self.string[start:end])
-            process.extractProcess(analyse_tools=self.analyse_processes)
+            process.extractProcess(analyse_tools=self.analyze_processes)
             self.processes.append(process)   
     
     #Print the names of the different processes
@@ -112,7 +93,7 @@ class TypeMainDSL1(TypeMain):
         for i in range(len(self.processes)):
             print(self.processes[i].get_string())
 
-    #Removes the proesses from the workflow string: this isn't really usefull outside the prototyping/developpement stage
+    #Removes the processes from the workflow string (this simplifies the analysis)
     def format_processes(self):
         for p1 in self.processes:
             i=-1
@@ -121,8 +102,6 @@ class TypeMainDSL1(TypeMain):
                     i+=1
             if(i>0):
                 p1.change_name(p1.get_name()+'_'+str(i))
-
-
         for i in range(len(self.processes)):
             self.string= self.string.replace(self.processes[i].get_string(), 'PROCESS DEF '+self.processes[i].get_name(), 1)
     
@@ -143,7 +122,7 @@ class TypeMainDSL1(TypeMain):
 
     
     def get_info_processes(self, name='processes_info'):
-        if(self.analyse_processes):
+        if(self.analyze_processes):
             dict={}
             #For each process we get it's corresponding data
             for p in self.processes:
@@ -169,7 +148,6 @@ class TypeMainDSL1(TypeMain):
                     for t in tab:
                         temp.append(t[1])
                     return temp
-
                 dict[p.getName()]['inputs']= simplify(inputs)
                 dict[p.getName()]['nb_inputs']= len(inputs)
                 dict[p.getName()]['outputs']= simplify(outputs)
@@ -181,7 +159,6 @@ class TypeMainDSL1(TypeMain):
                 dict[p.getName()]['directive']= p.getDirectiveList()
                 dict[p.getName()]['when']= p.getWhen()
                 dict[p.getName()]['stub']= p.getStub()
-
             with open(name+'.json', "w") as outfile:
                 json.dump(dict, outfile, indent=4)
         
@@ -190,21 +167,9 @@ class TypeMainDSL1(TypeMain):
     
 
 
-
-
-
-
-
-
-
-
-
-
-
     #===========================================
     #METHODS FOR MANIPULATING CHANNELS
     #===========================================
-    
     #Method that extratcs the channel => finds the end of the channel
     def get_end_channel(self, start, curly_count=0, parenthesis_count=0):
         index= start
@@ -224,7 +189,6 @@ class TypeMainDSL1(TypeMain):
                 if(self.string[index]==':'):
                     return index
                 elif(self.string[index]=='\n' and get_next_element_caracter(self.string, index)[0]!='.'):
-                    print(get_next_element_caracter(self.string, index))
                     return index
             
             index+=1
@@ -589,12 +553,10 @@ class TypeMainDSL1(TypeMain):
     #===========================================
     #METHODS FOR MANIPULATING FUNCTIONS
     #===========================================
-
     #Finds and adds the functions to the list of functions
     def find_functions(self):
         pattern= r'def +\w+ *\([^\)]*\)\s*{'
         for match in re.finditer(pattern, self.string):
-            #print(self.string[match.span()[0]:match.span()[1]])
             start= match.span()[0]
             end= self.extract_curly(match.span()[1])
             fun = Function(self.string[start:end])
@@ -640,66 +602,6 @@ class TypeMainDSL1(TypeMain):
         self.find_functions()
         self.format_functions()
     
-
-
-
-
-
-
-
-
-
-    #For know we are just gonna put the string in an attribute (string) and not analyse it YET
-    #My intuition right now is to create a subworkflow with the workflow.onComplete in it
-    #Or maybe create a new class 
-    #===========================================
-    #METHODS FOR workflow.onComplete
-    #===========================================
-    def workflow_onComplete(self):
-        pattern= r'(workflow.onComplete\s*{)'
-        for match in re.finditer(pattern, self.string):
-            #Finding the pattern
-            start= match.span()[0]
-            print(self.string[start:match.span()[1]])
-            end= self.extract_curly(match.span()[1])
-            self.onComplete.append( self.string[start:end])
-            #Replacing the declaration by a marker
-            self.string= self.string.replace(self.string[start:end], 'WORKFLOW ON_COMPLETE', 1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #===========================================
-    #METHODS FOR workflow.onError
-    #===========================================
-    def workflow_onError(self):
-        pattern= r'(workflow.onError\s*{)'
-
-        for match in re.finditer(pattern, self.string):
-            #This is just to test the fact that there isn't over one declaration
-            #Finding the pattern
-            start= match.span()[0]
-            end= self.extract_curly(match.span()[1])
-            self.onError.append( self.string[start:end])
-            #Replacing the declaration by a marker
-            self.string= self.string.replace(self.string[start:end], 'WORKFLOW ON_ERROR', 1)
-            
-
-
-
-
-
-
-
 
 
     #===========================================
@@ -1030,7 +932,6 @@ class TypeMainDSL1(TypeMain):
     #===========================================
     #GENERAL METHODS
     #===========================================
-
     def save_nb_nodes_edges(self):
         myText = open('nb_nodes_edges'+'.txt','w')
         myText.write(f'{self.nb_nodes_process} node_processes\n')
@@ -1044,116 +945,46 @@ class TypeMainDSL1(TypeMain):
         myText.write(self.string)
         myText.close()
 
-    #Supposing that remove comment works correctly
+
+
     #Initialise the basic stuff for a mainDSL1 type
     def initialise(self):
         #STEP1
-        #In this mrthod just initialise the basic stuff (set string + remove comments)
         self.initialise_basic_main()
-
+        #Check that there is the same number of open curlies than closing curlies
         if(self.right_nb_curly()):
             #STEP2
-            #Finds and adds the proccesses to the list of processes + analysing them
+            #Finds and adds the proccesses to the list of processes + analyses them
             self.find_processes()
             print(f'Extracted {self.get_nb_processes()} processes')
             self.format_processes()
 
             #STEP3
-            #Finds and formats the function => In DSL1 functions are not important to the structure to we 'remove' (format) them
-            #to simply the analysis of the workflow
+            #Finds and formats the function -> In DSL1 functions are not important to the structure to we 'remove' (format) them to simply the analysis
             self.clean_function()
 
             #STEP4
-            #We have to do this to update the channels which are in the double dots => otherwise the analyseur won't recongise them later on 
+            #We have to do this to update the channels which are in the double dots -> otherwise the analyseur won't recongise them later on 
             self.clean_up_if_double_dots_question_2()
 
 
             #STEP5 
             #Find and analyse every channel and add them to the list of channels
             self.extract_analyse_channels()
-            
             print(f'Extracted {self.get_number_channels()} channels')
             
             self.get_structure_4()
             print(f'Structure reconstructed')
             print(f'With {self.nb_nodes_process} processes, {self.nb_nodes_operation} operations and {self.nb_edges} edges')
+            
             self.save_channels()
             self.save_processes()
             self.get_info_processes()
             self.save_nb_nodes_edges()
 
-            #self.clean_up_if_one_line()
-            #print('self.clean_up_if_one_line()')
-            
-            
-            #self.workflow_onComplete()
-            #self.workflow_onError()
+
         else:
             raise Exception("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies")
-            self.can_analyse= False
-
-        #self.format_ifs()
-        #print('self.format_ifs()')
         
-        
-#===========================================
-#TESTS
-#===========================================
-
-def tests():
-    m= TypeMainDSL1("/home/george/Bureau/TER/test.nf")
-    m.initialise()
-    m.save_file()
-    m.save_channels()
-    m.save_processes()
-    m.get_structure_4()
-
-def test_structure(adresse= "/home/george/Bureau/TER/Workflow_Database/Tests/Test2/main.nf"):
-    m= TypeMainDSL1(adresse)
-    m.initialise()
-    m.get_structure_4()
 
 
-
-
-
-
-
-#=================
-#IF USED AS A MAIN
-#=================
-if __name__ == "__main__":
-    #print("I shoudn't be executed as a main")
-
-    #These are the list of Workflows found in nf-core that we know are written in DSL1 => not difficult to identify 
-         
-    m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/samba-master/main.nf", "", analyse=True, name= 'Samba')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/eager-master/main.nf", "", name= 'Eager')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/hic-master/main.nf", "", name= 'Hic')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/smrnaseq/main.nf", "", name= 'Smrnaseq')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/sarek-master/main.nf", "", name= 'Sarek')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/metaboigniter-master/main.nf", "", name= 'Metaboigniter')
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Workflow_Database/vipr-master/main.nf", "", name= 'Vipr')
-    
-
-
-    #YOU can delete this it's just to tests the channels
-    #m= TypeMainDSL1("/home/george/Bureau/TER/Prototypes/extract_channels/temp.nf", "")
-
-    
-    #m= TypeMainDSL1("/home/george/Bureau/TER/test.nf", "")
-    m.initialise()
-    nb_processes, nb_links= m.get_structure_4()
-    print(nb_processes, nb_links)
- 
-    m.save_file()
-    m.save_channels()
-    m.save_processes()
-    m.get_info_processes()
-
-
-#TODO List
-# - Remove comments is still not perfect=> see metaboigniter
-# - workflow.onError
-# - CONDITIONS!!!!
-    

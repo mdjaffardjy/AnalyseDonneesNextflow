@@ -45,7 +45,8 @@ class File:
         strings, scripts = [], []
         string= self.string
 
-        #Removing script parts => the scripts that are in the processes
+        #REMOVING THE SCRIPTS
+        #--------------------
         #=======================
         in_script=False
         start, end=0, 0
@@ -72,10 +73,10 @@ class File:
         for s in scripts:
             word, start, end=s[0], s[1], s[2]
             string= string=string[:start]+create_empty(string, start, end)+string[end:]
+        #--------------------
 
-
-
-        #Removing the strings with ambiguities
+        #REMOVING THE STRINGS WITH AMBIGUITIES
+        #-------------------------------------
         pattern_close = r'(\'.*(\*\/).*\'|\".*(\*\/).*\")'
         pattern_open = r'(\'.*(\/\*).*\'|\".*(\/\*).*\")'
         pattern_double = r'(\'.*(\/\/).*\'|\".*(\/\/).*\")'
@@ -85,8 +86,11 @@ class File:
                 end= match.span()[1]
                 strings.append([string[start:end], start, end])
                 string=string[:start]+create_empty(string, start, end)+string[end:]
+        #-------------------------------------
         
 
+        #REMOVE MULTI LINE COMMENTS /* ... */. without checking since there is no longer ambuity
+        #-------------------------------------------------------------------------------------
         def remove_big_comments(text):
             text= list(text)
             i=0
@@ -108,8 +112,9 @@ class File:
                     i+=1
             return ''.join(text)
         string= remove_big_comments(string)
+        #-------------------------------------------------------------------------------------
 
-        #REMOVE COMMENTS //... without checking since there is no longer ambuity
+        #REMOVE SINGLE LINE COMMENTS //... without checking since there is no longer ambuity
         #-------------------------------------------------------------------------------------
         pattern =r'(\/\/[^\n]*)'
         for match in re.finditer(pattern, string): 
@@ -118,7 +123,7 @@ class File:
                 string=string[:start]+create_empty(string, start, end)+string[end:]
         #-------------------------------------------------------------------------------------
 
-        #PUT THE STRINGS BACK
+        #PUT THE STRINGS AND SCRIPTS BACK
         #-------------------------------------------------------------------------------------
         for s in strings:
             word, start, end=s[0], s[1], s[2]
