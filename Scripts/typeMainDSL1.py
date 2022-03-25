@@ -224,6 +224,7 @@ class TypeMainDSL1(TypeMain):
                 if(self.string[index]==':'):
                     return index
                 elif(self.string[index]=='\n' and get_next_element_caracter(self.string, index)[0]!='.'):
+                    print(get_next_element_caracter(self.string, index))
                     return index
             
             index+=1

@@ -36,6 +36,7 @@ def main():
     #Facultative
     parser.add_argument('--name', default='Workflow_Analysis')
     parser.add_argument('--mode', default='single') #single mode is the default
+    parser.add_argument('--dev', default='F') #For developpeur mode or not
     args = parser.parse_args() 
     
     #Setting the current directory to where the extracted data will be saved
@@ -61,6 +62,10 @@ def main():
             w = Workflow(args.input)
             w.initialise()
             print(f'Results saved in : {res}')
+            #Delete developper files if not in dev mode
+            if(args.dev == 'F'):
+                os.system('rm channels_extracted.nf')
+                os.system('rm processes_extracted.nf')
         else:
             raise Exception('\x1b[1;37;41m' + f"Either '{args.input}' is not a file or doesn't exist!!"+ '\x1b[0m')
     
@@ -99,6 +104,10 @@ def main():
                     w.initialise()
                     DSL1_analyzed+=1
                     analyzed_tab.append(names[i])
+                    #Delete developper files if in dev mode
+                    if(args.dev != 'F'):
+                        os.system('rm channels_extracted.nf')
+                        os.system('rm processes_extracted.nf')
                 except Exception as inst:
                     #Error DSL2
                     if (str(inst) == "Workflow written in DSL2 : I don't know how to analyze the workflow yet"):
@@ -112,7 +121,7 @@ def main():
                         curlies_tab.append(names[i])
                     #Error with a process
                     elif (str(inst)[:28] == "Couldn't analyze the process"):
-                        print('\x1b[1;37;44m' +str(inst)+ '\x1b[0m')
+                        print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
                         problem_process+=1
                         process_tab.append(names[i])
                     #Unknown Error 

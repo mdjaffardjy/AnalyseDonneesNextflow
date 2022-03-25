@@ -35,7 +35,7 @@ def create_empty(string, start, end):
 def get_next_element_caracter(string, i):
     while(i+1<len(string)):
         i+=1
-        if(string[i]!=' ' and string[i]!='\n'):
+        if(string[i]!=' ' and string[i]!='\n'and string[i]!='\t'):
             return string[i], i
     return -1, -1
 
