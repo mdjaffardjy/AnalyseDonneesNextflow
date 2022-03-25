@@ -1,0 +1,439 @@
+{
+    "get_software_versions": {
+        "string_process": "\nprocess get_software_versions {\n   publishDir \"${params.outdir}/pipeline_info\", mode: params.publish_dir_mode,\n   saveAs: {filename ->\n       if (filename.indexOf(\".csv\") > 0) filename\n       else null\n   }\n\n   output:\n   file 'software_versions_mqc.yaml' into software_versions_yaml\n   file \"software_versions.csv\"\n\n   script:\n   java_mem = ''\n   if(task.memory){\n       tmem = task.memory.toBytes()\n       java_mem = \"-Xms${tmem} -Xmx${tmem}\"\n   }\n   \"\"\"\n   export mirtracejar=\\$(dirname \\$(which mirtrace))\n   echo $workflow.manifest.version > v_pipeline.txt\n   echo $workflow.nextflow.version > v_nextflow.txt\n   echo \\$(R --version 2>&1) > v_R.txt\n   fastqc --version > v_fastqc.txt\n   trim_galore --version > v_trim_galore.txt\n   bowtie --version > v_bowtie.txt\n   samtools --version > v_samtools.txt\n   htseq-count -h > v_htseq.txt\n   fasta_formatter -h > v_fastx.txt\n   java $java_mem -jar \\$mirtracejar/mirtrace.jar --mirtrace-wrapper-name mirtrace --version > v_mirtrace.txt\n   multiqc --version > v_multiqc.txt\n   miRDeep2.pl -h > v_mirdeep2.txt\n\n   scrape_software_versions.py > software_versions_mqc.yaml\n   \"\"\"\n}",
+        "nb_lignes_process": 34,
+        "string_script": "   java_mem = ''\n   if(task.memory){\n       tmem = task.memory.toBytes()\n       java_mem = \"-Xms${tmem} -Xmx${tmem}\"\n   }\n   \"\"\"\n   export mirtracejar=\\$(dirname \\$(which mirtrace))\n   echo $workflow.manifest.version > v_pipeline.txt\n   echo $workflow.nextflow.version > v_nextflow.txt\n   echo \\$(R --version 2>&1) > v_R.txt\n   fastqc --version > v_fastqc.txt\n   trim_galore --version > v_trim_galore.txt\n   bowtie --version > v_bowtie.txt\n   samtools --version > v_samtools.txt\n   htseq-count -h > v_htseq.txt\n   fasta_formatter -h > v_fastx.txt\n   java $java_mem -jar \\$mirtracejar/mirtrace.jar --mirtrace-wrapper-name mirtrace --version > v_mirtrace.txt\n   multiqc --version > v_multiqc.txt\n   miRDeep2.pl -h > v_mirdeep2.txt\n\n   scrape_software_versions.py > software_versions_mqc.yaml\n   \"\"\"",
+        "nb_lignes_script": 21,
+        "tools": [
+            "SplitMEM",
+            "FastQC",
+            "Bowtie",
+            "SAMtools",
+            "htseqcount",
+            "MultiQC"
+        ],
+        "inputs": [],
+        "nb_inputs": 0,
+        "outputs": [
+            "software_versions_yaml"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "bowtie_indices": {
+        "string_process": " process bowtie_indices {\n    label 'process_medium'\n    publishDir path: { params.save_reference ? \"${params.outdir}/references_parsed\" : params.outdir },\n               saveAs: { params.save_reference ? it : null }, mode: 'copy'\n\n    input:\n    file refgenome from reference_genome\n    file mature from reference_mature\n    file hairpin from reference_hairpin\n\n    output:\n    file 'genome.edited.fa' into fasta\n    file 'genome.*.ebwt' into indices_mirdeep2\n    file 'hairpin.fa' into hairpin\n    file 'mature.fa' into mature\n\n    script:\n    \"\"\"\n    # Uncompress FASTA reference files if necessary\n    MATURE=\"$mature\"\n    HAIRPIN=\"$hairpin\"\n    if [ \\${MATURE: -3} == \".gz\" ]; then\n        gunzip -f \\$MATURE\n        MATURE=\\${MATURE%%.gz}\n    fi\n    if [ \\${HAIRPIN: -3} == \".gz\" ]; then\n        gunzip -f \\$HAIRPIN\n        HAIRPIN=\\${HAIRPIN%%.gz}\n    fi\n\n    # Remove any special base characters from reference genome FASTA file\n    sed '/^[^>]/s/[^ATGCatgc]/N/g' $refgenome > genome.edited.fa\n\n    # Remove spaces from miRBase FASTA files\n    sed -i 's, ,_,g' \\$HAIRPIN\n    sed -i 's, ,_,g' \\$MATURE\n\n    # Build bowtie index\n    bowtie-build genome.edited.fa genome --threads ${task.cpus}\n    \"\"\"\n  }",
+        "nb_lignes_process": 39,
+        "string_script": "    \"\"\"\n    # Uncompress FASTA reference files if necessary\n    MATURE=\"$mature\"\n    HAIRPIN=\"$hairpin\"\n    if [ \\${MATURE: -3} == \".gz\" ]; then\n        gunzip -f \\$MATURE\n        MATURE=\\${MATURE%%.gz}\n    fi\n    if [ \\${HAIRPIN: -3} == \".gz\" ]; then\n        gunzip -f \\$HAIRPIN\n        HAIRPIN=\\${HAIRPIN%%.gz}\n    fi\n\n    # Remove any special base characters from reference genome FASTA file\n    sed '/^[^>]/s/[^ATGCatgc]/N/g' $refgenome > genome.edited.fa\n\n    # Remove spaces from miRBase FASTA files\n    sed -i 's, ,_,g' \\$HAIRPIN\n    sed -i 's, ,_,g' \\$MATURE\n\n    # Build bowtie index\n    bowtie-build genome.edited.fa genome --threads ${task.cpus}\n    \"\"\"",
+        "nb_lignes_script": 22,
+        "tools": [
+            "Bowtie"
+        ],
+        "inputs": [
+            "reference_genome",
+            "reference_mature",
+            "reference_hairpin"
+        ],
+        "nb_inputs": 3,
+        "outputs": [
+            "fasta",
+            "indices_mirdeep2",
+            "hairpin",
+            "mature"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "Smrnaseq"
+    },
+    "make_bowtie_index": {
+        "string_process": "\nprocess make_bowtie_index {\n    label 'process_medium'\n    publishDir path: { params.save_reference ? \"${params.outdir}/bowtie/reference\" : params.outdir },\n               saveAs: { params.save_reference ? it : null }, mode: 'copy'\n\n    input:\n    file mature from mature\n    file hairpin from hairpin\n\n    output:\n    file 'mature_idx.*' into mature_index_bowtie\n    file 'hairpin_idx.*' into hairpin_index_bowtie, hairpin_index_bowtie_2\n    file 'hairpin_idx.fa' into hairpin_mirtop\n\n    script:\n    \"\"\"\n    seqkit grep -r --pattern \\\".*${params.mirtrace_species}-.*\\\" $mature > mature_sps.fa\n    seqkit seq --rna2dna mature_sps.fa > mature_igenome.fa\n    fasta_formatter -w 0 -i mature_igenome.fa -o mature_idx.fa\n    # fasta_nucleotide_changer -d -i mature_igenome.fa -o mature_idx.fa\n    bowtie-build mature_idx.fa mature_idx --threads ${task.cpus}\n\n    seqkit grep -r --pattern \\\".*${params.mirtrace_species}-.*\\\" $hairpin > hairpin_sps.fa\n    seqkit seq --rna2dna hairpin_sps.fa > hairpin_igenome.fa\n    # fasta_nucleotide_changer -d -i hairpin_igenome.fa -o hairpin_idx.fa\n    fasta_formatter -w 0 -i hairpin_igenome.fa -o hairpin_idx.fa\n    bowtie-build hairpin_idx.fa hairpin_idx --threads ${task.cpus}\n    \"\"\"\n}",
+        "nb_lignes_process": 28,
+        "string_script": "    \"\"\"\n    seqkit grep -r --pattern \\\".*${params.mirtrace_species}-.*\\\" $mature > mature_sps.fa\n    seqkit seq --rna2dna mature_sps.fa > mature_igenome.fa\n    fasta_formatter -w 0 -i mature_igenome.fa -o mature_idx.fa\n    # fasta_nucleotide_changer -d -i mature_igenome.fa -o mature_idx.fa\n    bowtie-build mature_idx.fa mature_idx --threads ${task.cpus}\n\n    seqkit grep -r --pattern \\\".*${params.mirtrace_species}-.*\\\" $hairpin > hairpin_sps.fa\n    seqkit seq --rna2dna hairpin_sps.fa > hairpin_igenome.fa\n    # fasta_nucleotide_changer -d -i hairpin_igenome.fa -o hairpin_idx.fa\n    fasta_formatter -w 0 -i hairpin_igenome.fa -o hairpin_idx.fa\n    bowtie-build hairpin_idx.fa hairpin_idx --threads ${task.cpus}\n    \"\"\"",
+        "nb_lignes_script": 12,
+        "tools": [
+            "Bowtie"
+        ],
+        "inputs": [
+            "mature",
+            "hairpin"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "mature_index_bowtie",
+            "hairpin_index_bowtie",
+            "hairpin_index_bowtie_2",
+            "hairpin_mirtop"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "Smrnaseq"
+    },
+    "fastqc": {
+        "string_process": "\nprocess fastqc {\n    label 'process_low'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/fastqc\", mode: params.publish_dir_mode,\n        saveAs: { filename ->\n                      filename.indexOf(\".zip\") > 0 ? \"zips/$filename\" : \"$filename\"\n                }\n    when:\n    !params.skip_qc && !params.skip_fastqc\n\n    input:\n    file reads from raw_reads_fastqc\n\n    output:\n    file '*_fastqc.{zip,html}' into fastqc_results\n\n    script:\n    \"\"\"\n    fastqc --quiet --threads $task.cpus $reads\n    \"\"\"\n}",
+        "nb_lignes_process": 20,
+        "string_script": "    \"\"\"\n    fastqc --quiet --threads $task.cpus $reads\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [
+            "FastQC"
+        ],
+        "inputs": [
+            "raw_reads_fastqc"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "fastqc_results"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "trim_galore": {
+        "string_process": "\nprocess trim_galore {\n    label 'process_low'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/trim_galore\", mode: 'copy'\n\n    input:\n    file reads from raw_reads_trimgalore\n\n    output:\n    file '*.gz' into trimmed_reads_bowtie, trimmed_reads_collapse, trimmed_reads_bowtie_ref, trimmed_reads_insertsize, trimmed_zipped_reads_mirdeep2\n    file '*trimming_report.txt' into trimgalore_results\n    file \"*_fastqc.{zip,html}\" into trimgalore_fastqc_reports\n\n    script:\n    tg_length = \"--length ${params.min_length}\"\n    c_r1 = clip_r1 > 0 ? \"--clip_r1 ${clip_r1}\" : ''\n    tpc_r1 = three_prime_clip_r1 > 0 ? \"--three_prime_clip_r1 ${three_prime_clip_r1}\" : ''\n    tpa = (protocol == \"qiaseq\" | protocol == \"cats\") ? \"--adapter ${three_prime_adapter}\" : '--small_rna'\n    \"\"\"\n    trim_galore --adapter ${three_prime_adapter} $tg_length $c_r1 $tpc_r1 --max_length ${params.trim_galore_max_length} --gzip $reads --fastqc\n    \"\"\"\n}",
+        "nb_lignes_process": 21,
+        "string_script": "    tg_length = \"--length ${params.min_length}\"\n    c_r1 = clip_r1 > 0 ? \"--clip_r1 ${clip_r1}\" : ''\n    tpc_r1 = three_prime_clip_r1 > 0 ? \"--three_prime_clip_r1 ${three_prime_clip_r1}\" : ''\n    tpa = (protocol == \"qiaseq\" | protocol == \"cats\") ? \"--adapter ${three_prime_adapter}\" : '--small_rna'\n    \"\"\"\n    trim_galore --adapter ${three_prime_adapter} $tg_length $c_r1 $tpc_r1 --max_length ${params.trim_galore_max_length} --gzip $reads --fastqc\n    \"\"\"",
+        "nb_lignes_script": 6,
+        "tools": [
+            "BitPAI"
+        ],
+        "inputs": [
+            "raw_reads_trimgalore"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "trimmed_reads_bowtie",
+            "trimmed_reads_collapse",
+            "trimmed_reads_bowtie_ref",
+            "trimmed_reads_insertsize",
+            "trimmed_zipped_reads_mirdeep2",
+            "trimgalore_results",
+            "trimgalore_fastqc_reports"
+        ],
+        "nb_outputs": 7,
+        "name_workflow": "Smrnaseq"
+    },
+    "insertsize": {
+        "string_process": "\nprocess insertsize {\n    label 'process_low'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/trim_galore/insertsize\", mode: 'copy'\n\n    input:\n    file reads from trimmed_reads_insertsize\n\n    output:\n    file '*.insertsize' into insertsize_results\n\n    script:\n    prefix = reads.toString() - ~/(.R1)?(_R1)?(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n    \"\"\"\n    awk 'NR%4 == 2 {lengths[length(\\$0)]++} END {for (l in lengths) {print l, lengths[l]}}' <(zcat $reads) >${prefix}.insertsize\n    \"\"\"\n}",
+        "nb_lignes_process": 16,
+        "string_script": "    prefix = reads.toString() - ~/(.R1)?(_R1)?(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n    \"\"\"\n    awk 'NR%4 == 2 {lengths[length(\\$0)]++} END {for (l in lengths) {print l, lengths[l]}}' <(zcat $reads) >${prefix}.insertsize\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "tools": [],
+        "inputs": [
+            "trimmed_reads_insertsize"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "insertsize_results"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "collapse": {
+        "string_process": "\nprocess collapse {\n    label 'process_medium'\n    tag \"$reads\"\n\n    input:\n    file reads from trimmed_reads_collapse\n\n    output:\n    file 'final/*.fastq' into collapsed_fasta\n\n    script:\n    prefix = reads.toString() - '_trimmed.fq.gz'\n    \"\"\"\n    seqcluster collapse -f $reads -m 1 --min_size 15 -o collapsed\n    mkdir final\n    mv collapsed/${prefix}_trimmed_trimmed.fastq final/${prefix}.fastq\n    \"\"\"\n}",
+        "nb_lignes_process": 17,
+        "string_script": "    prefix = reads.toString() - '_trimmed.fq.gz'\n    \"\"\"\n    seqcluster collapse -f $reads -m 1 --min_size 15 -o collapsed\n    mkdir final\n    mv collapsed/${prefix}_trimmed_trimmed.fastq final/${prefix}.fastq\n    \"\"\"",
+        "nb_lignes_script": 5,
+        "tools": [
+            "seqcluster"
+        ],
+        "inputs": [
+            "trimmed_reads_collapse"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "collapsed_fasta"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "bowtie_miRBase_mature": {
+        "string_process": "\nprocess bowtie_miRBase_mature {\n    label 'process_medium'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/bowtie/miRBase_mature\", mode: params.publish_dir_mode, pattern: '*.mature_unmapped.fq.gz'\n\n    input:\n    file reads from trimmed_reads_bowtie\n    file index from mature_index_bowtie\n\n    output:\n    file '*.mature.bam' into miRBase_mature_bam\n    file '*.mature_unmapped.fq.gz' into mature_unmapped_reads\n\n    script:\n    index_base = index.toString().tokenize(' ')[0].tokenize('.')[0]\n    prefix = reads.toString() - ~/(.R1)?(_R1)?(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n    seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n    \"\"\"\n    bowtie \\\\\n        $index_base \\\\\n        -q <(zcat $reads) \\\\\n        -p ${task.cpus} \\\\\n        -t \\\\\n        -k 50 \\\\\n        --best \\\\\n        --strata \\\\\n        -e 99999 \\\\\n        --chunkmbs 2048 \\\\\n        --un ${prefix}.mature_unmapped.fq \\\\\n        -S $seq_center \\\\\n        | samtools view -bS - > ${prefix}.mature.bam\n\n    gzip ${prefix}.mature_unmapped.fq\n    \"\"\"\n}",
+        "nb_lignes_process": 34,
+        "string_script": "    index_base = index.toString().tokenize(' ')[0].tokenize('.')[0]\n    prefix = reads.toString() - ~/(.R1)?(_R1)?(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n    seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n    \"\"\"\n    bowtie \\\\\n        $index_base \\\\\n        -q <(zcat $reads) \\\\\n        -p ${task.cpus} \\\\\n        -t \\\\\n        -k 50 \\\\\n        --best \\\\\n        --strata \\\\\n        -e 99999 \\\\\n        --chunkmbs 2048 \\\\\n        --un ${prefix}.mature_unmapped.fq \\\\\n        -S $seq_center \\\\\n        | samtools view -bS - > ${prefix}.mature.bam\n\n    gzip ${prefix}.mature_unmapped.fq\n    \"\"\"",
+        "nb_lignes_script": 19,
+        "tools": [
+            "Bowtie",
+            "SAMtools"
+        ],
+        "inputs": [
+            "trimmed_reads_bowtie",
+            "mature_index_bowtie"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "miRBase_mature_bam",
+            "mature_unmapped_reads"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Smrnaseq"
+    },
+    "bowtie_miRBase_hairpin": {
+        "string_process": "\nprocess bowtie_miRBase_hairpin {\n    label 'process_medium'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/bowtie/miRBase_hairpin\", mode: params.publish_dir_mode, pattern: '*.hairpin_unmapped.fq.gz'\n\n    input:\n    file reads from mature_unmapped_reads\n    file index from hairpin_index_bowtie\n\n    output:\n    file '*.hairpin.bam' into miRBase_hairpin_bam, miRBase_hairpin_bam_mirtop\n    file '*.hairpin_unmapped.fq.gz' into hairpin_unmapped_reads\n\n    script:\n    index_base = index.toString().tokenize(' ')[0].tokenize('.')[0]\n    prefix = reads.toString() - '.mature_unmapped.fq.gz'\n    seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n    \"\"\"\n    bowtie \\\\\n        $index_base \\\\\n        -p ${task.cpus} \\\\\n        -t \\\\\n        -a \\\\\n        --best \\\\\n        --strata \\\\\n        -e 99999 \\\\\n        --chunkmbs 2048 \\\\\n        -q <(zcat $reads) \\\\\n        --un ${prefix}.hairpin_unmapped.fq \\\\\n        -S $seq_center \\\\\n        | samtools view -bS - > ${prefix}.hairpin.bam\n\n    gzip ${prefix}.hairpin_unmapped.fq\n    \"\"\"\n}",
+        "nb_lignes_process": 34,
+        "string_script": "    index_base = index.toString().tokenize(' ')[0].tokenize('.')[0]\n    prefix = reads.toString() - '.mature_unmapped.fq.gz'\n    seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n    \"\"\"\n    bowtie \\\\\n        $index_base \\\\\n        -p ${task.cpus} \\\\\n        -t \\\\\n        -a \\\\\n        --best \\\\\n        --strata \\\\\n        -e 99999 \\\\\n        --chunkmbs 2048 \\\\\n        -q <(zcat $reads) \\\\\n        --un ${prefix}.hairpin_unmapped.fq \\\\\n        -S $seq_center \\\\\n        | samtools view -bS - > ${prefix}.hairpin.bam\n\n    gzip ${prefix}.hairpin_unmapped.fq\n    \"\"\"",
+        "nb_lignes_script": 19,
+        "tools": [
+            "Bowtie",
+            "SAMtools"
+        ],
+        "inputs": [
+            "mature_unmapped_reads",
+            "hairpin_index_bowtie"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "miRBase_hairpin_bam",
+            "miRBase_hairpin_bam_mirtop",
+            "hairpin_unmapped_reads"
+        ],
+        "nb_outputs": 3,
+        "name_workflow": "Smrnaseq"
+    },
+    "bowtie_miRBase_hairpin_collapsed": {
+        "string_process": "\nprocess bowtie_miRBase_hairpin_collapsed {\n    label 'process_medium'\n    tag \"$reads\"\n\n    input:\n    file reads from collapsed_fasta\n    file index from hairpin_index_bowtie_2\n\n    output:\n    file '*.bam' into miRBase_hairpin_collapse_bam\n\n    script:\n    index_base = index.toString().tokenize(' ')[0].tokenize('.')[0]\n    prefix = reads.baseName\n    seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n    \"\"\"\n    bowtie \\\\\n        $index_base \\\\\n        -p ${task.cpus} \\\\\n        -t \\\\\n        -k 50 \\\\\n        -a \\\\\n        --best \\\\\n        --strata \\\\\n        -e 99999 \\\\\n        --chunkmbs 2048 \\\\\n        -q <(cat $reads) \\\\\n        -S $seq_center \\\\\n        | samtools view -bS - > ${prefix}.bam\n    \"\"\"\n}",
+        "nb_lignes_process": 30,
+        "string_script": "    index_base = index.toString().tokenize(' ')[0].tokenize('.')[0]\n    prefix = reads.baseName\n    seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n    \"\"\"\n    bowtie \\\\\n        $index_base \\\\\n        -p ${task.cpus} \\\\\n        -t \\\\\n        -k 50 \\\\\n        -a \\\\\n        --best \\\\\n        --strata \\\\\n        -e 99999 \\\\\n        --chunkmbs 2048 \\\\\n        -q <(cat $reads) \\\\\n        -S $seq_center \\\\\n        | samtools view -bS - > ${prefix}.bam\n    \"\"\"",
+        "nb_lignes_script": 17,
+        "tools": [
+            "Bowtie",
+            "SAMtools"
+        ],
+        "inputs": [
+            "collapsed_fasta",
+            "hairpin_index_bowtie_2"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "miRBase_hairpin_collapse_bam"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "mirna_post_alignment": {
+        "string_process": "\nprocess mirna_post_alignment {\n    label 'process_medium'\n    tag \"$input\"\n    publishDir \"${params.outdir}/bowtie\", mode: params.publish_dir_mode, saveAs: wrap_mature_and_hairpin\n\n    input:\n    file input from miRBase_mature_bam.mix(miRBase_hairpin_bam)\n\n    output:\n    file \"${input.baseName}.stats\" into miRBase_counts\n    file \"*.{flagstat,idxstats,stats}\" into ch_sort_bam_flagstat_mqc\n    file \"${input.baseName}.sorted.bam\" into miRBase_bam\n    file \"${input.baseName}.sorted.bam.bai\" into miRBase_bai\n\n    script:\n    \"\"\"\n    samtools sort ${input.baseName}.bam -o ${input.baseName}.sorted.bam\n    samtools index ${input.baseName}.sorted.bam\n    samtools idxstats ${input.baseName}.sorted.bam > ${input.baseName}.stats\n    samtools flagstat ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.flagstat\n    samtools stats ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.stats\n    \"\"\"\n}",
+        "nb_lignes_process": 22,
+        "string_script": "    \"\"\"\n    samtools sort ${input.baseName}.bam -o ${input.baseName}.sorted.bam\n    samtools index ${input.baseName}.sorted.bam\n    samtools idxstats ${input.baseName}.sorted.bam > ${input.baseName}.stats\n    samtools flagstat ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.flagstat\n    samtools stats ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.stats\n    \"\"\"",
+        "nb_lignes_script": 6,
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "miRBase_mature_bam",
+            "miRBase_hairpin_bam"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "miRBase_counts",
+            "ch_sort_bam_flagstat_mqc",
+            "miRBase_bam",
+            "miRBase_bai"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "Smrnaseq"
+    },
+    "edgeR_mirna": {
+        "string_process": "\nprocess edgeR_mirna {\n    label 'process_low'\n    label 'process_ignore'\n    publishDir \"${params.outdir}/edgeR\", mode: params.publish_dir_mode, saveAs: wrap_mature_and_hairpin\n\n    input:\n    file input_files from miRBase_counts.toSortedList()\n\n    output:\n    file '*.{txt,pdf,csv}' into edgeR_miRBase_results\n\n    script:\n    \"\"\"\n    edgeR_miRBase.r $input_files\n    \"\"\"\n}",
+        "nb_lignes_process": 15,
+        "string_script": "    \"\"\"\n    edgeR_miRBase.r $input_files\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "miRBase_counts"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "edgeR_miRBase_results"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "mirtop_bam_hairpin": {
+        "string_process": "\nprocess mirtop_bam_hairpin {\n    label 'process_medium'\n    tag \"$input\"\n    publishDir \"${params.outdir}\", mode: 'copy'\n\n    when:\n    mirna_gtf\n\n    input:\n    file input from miRBase_hairpin_collapse_bam.collect()\n    file hairpin from hairpin_mirtop\n    file gtf from mirna_gtf\n\n    output:\n    file \"mirtop/mirtop.gff\" into mirtop_gff\n    file \"mirtop/mirtop.tsv\" into mirtop_tsv\n    file \"mirtop/mirna.tsv\" into mirna_tsv\n    file \"mirtop/mirtop_rawData.tsv\" into isomir_tsv\n\n    script:\n    \"\"\"\n    mirtop gff --hairpin $hairpin --gtf $gtf -o mirtop --sps $params.mirtrace_species $input\n    mirtop counts --hairpin $hairpin --gtf $gtf -o mirtop --sps $params.mirtrace_species --add-extra --gff mirtop/mirtop.gff\n    mirtop export --format isomir --hairpin $hairpin --gtf $gtf --sps $params.mirtrace_species -o mirtop mirtop/mirtop.gff\n    collapse_mirtop.r mirtop/mirtop.tsv\n    \"\"\"\n}",
+        "nb_lignes_process": 26,
+        "string_script": "    \"\"\"\n    mirtop gff --hairpin $hairpin --gtf $gtf -o mirtop --sps $params.mirtrace_species $input\n    mirtop counts --hairpin $hairpin --gtf $gtf -o mirtop --sps $params.mirtrace_species --add-extra --gff mirtop/mirtop.gff\n    mirtop export --format isomir --hairpin $hairpin --gtf $gtf --sps $params.mirtrace_species -o mirtop mirtop/mirtop.gff\n    collapse_mirtop.r mirtop/mirtop.tsv\n    \"\"\"",
+        "nb_lignes_script": 5,
+        "tools": [
+            "miRTop"
+        ],
+        "inputs": [
+            "miRBase_hairpin_collapse_bam",
+            "hairpin_mirtop",
+            "mirna_gtf"
+        ],
+        "nb_inputs": 3,
+        "outputs": [
+            "mirtop_gff",
+            "mirtop_tsv",
+            "mirna_tsv",
+            "isomir_tsv"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "Smrnaseq"
+    },
+    "bowtie_ref": {
+        "string_process": " process bowtie_ref {\n        label 'process_high'\n        tag \"$reads\"\n        publishDir \"${params.outdir}/bowtie_ref\", mode: 'copy'\n\n        input:\n        file reads from trimmed_reads_bowtie_ref\n        file indices from bt_indices.collect()\n\n        output:\n        file '*.genome.bam' into bowtie_bam, bowtie_bam_for_unmapped\n\n        script:\n        index_base = indices[0].toString() - ~/.rev.\\d.ebwt?/ - ~/.\\d.ebwt?/\n        prefix = reads.toString() - ~/(.R1)?(_R1)?(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n        seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n        \"\"\"\n        bowtie \\\\\n            $index_base \\\\\n            -q <(zcat $reads) \\\\\n            -p ${task.cpus} \\\\\n            -t \\\\\n            -k 50 \\\\\n            --best \\\\\n            --strata \\\\\n            -e 99999 \\\\\n            --chunkmbs 2048 \\\\\n            -S $seq_center \\\\\n            | samtools view -bS - > ${prefix}.genome.bam\n        \"\"\"\n    }",
+        "nb_lignes_process": 29,
+        "string_script": "        index_base = indices[0].toString() - ~/.rev.\\d.ebwt?/ - ~/.\\d.ebwt?/\n        prefix = reads.toString() - ~/(.R1)?(_R1)?(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n        seq_center = params.seq_center ? \"--sam-RG ID:${prefix} --sam-RG 'CN:${params.seq_center}'\" : ''\n        \"\"\"\n        bowtie \\\\\n            $index_base \\\\\n            -q <(zcat $reads) \\\\\n            -p ${task.cpus} \\\\\n            -t \\\\\n            -k 50 \\\\\n            --best \\\\\n            --strata \\\\\n            -e 99999 \\\\\n            --chunkmbs 2048 \\\\\n            -S $seq_center \\\\\n            | samtools view -bS - > ${prefix}.genome.bam\n        \"\"\"",
+        "nb_lignes_script": 16,
+        "tools": [
+            "Bowtie",
+            "SAMtools"
+        ],
+        "inputs": [
+            "trimmed_reads_bowtie_ref",
+            "bt_indices"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "bowtie_bam",
+            "bowtie_bam_for_unmapped"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Smrnaseq"
+    },
+    "genome_post_alignment": {
+        "string_process": " process genome_post_alignment  {\n        label 'process_low'\n        tag \"$input\"\n        publishDir \"${params.outdir}/bowtie_ref\", mode: 'copy'\n\n        input:\n        file input from bowtie_bam\n\n        output:\n        file \"*.{flagstat,idxstats,stats}\" into ch_genome_bam_flagstat_mqc\n\n        script:\n        \"\"\"\n        samtools sort ${input.baseName}.bam -o ${input.baseName}.sorted.bam\n        samtools index ${input.baseName}.sorted.bam\n        samtools idxstats ${input.baseName}.sorted.bam > ${input.baseName}.stats\n        samtools flagstat ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.flagstat\n        samtools stats ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.stats\n        \"\"\"\n    }",
+        "nb_lignes_process": 18,
+        "string_script": "        \"\"\"\n        samtools sort ${input.baseName}.bam -o ${input.baseName}.sorted.bam\n        samtools index ${input.baseName}.sorted.bam\n        samtools idxstats ${input.baseName}.sorted.bam > ${input.baseName}.stats\n        samtools flagstat ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.flagstat\n        samtools stats ${input.baseName}.sorted.bam > ${input.baseName}.sorted.bam.stats\n        \"\"\"",
+        "nb_lignes_script": 6,
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "bowtie_bam"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_genome_bam_flagstat_mqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "bowtie_unmapped": {
+        "string_process": " process bowtie_unmapped {\n        label 'process_ignore'\n        label 'process_medium'\n        tag \"${input_files[0].baseName}\"\n        publishDir \"${params.outdir}/bowtie_ref/unmapped\", mode: 'copy'\n\n        input:\n        file input_files from bowtie_bam_for_unmapped.toSortedList()\n\n        output:\n        file 'unmapped_refgenome.txt' into bowtie_unmapped\n\n        script:\n        \"\"\"\n        for i in $input_files\n        do\n          printf \"\\${i}\\t\"\n          samtools view -c -f0x4 \\${i}\n        done > unmapped_refgenome.txt\n        \"\"\"\n    }",
+        "nb_lignes_process": 19,
+        "string_script": "        \"\"\"\n        for i in $input_files\n        do\n          printf \"\\${i}\\t\"\n          samtools view -c -f0x4 \\${i}\n        done > unmapped_refgenome.txt\n        \"\"\"",
+        "nb_lignes_script": 6,
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "bowtie_bam_for_unmapped"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "bowtie_unmapped"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "uncompress_trimmed_reads": {
+        "string_process": "\nprocess uncompress_trimmed_reads{\n    label 'process_low'\n\n    when:\n    !params.skip_mirdeep\n\n    input:\n    path reads from trimmed_zipped_reads_mirdeep2\n\n    output:\n    path \"$unzip\" into trimmed_reads_mirdeep2\n\n    script:\n    unzip = reads.toString() - '.gz'\n    \"\"\"\n    pigz -f -d -p $task.cpus $reads\n    \"\"\"\n\n}",
+        "nb_lignes_process": 18,
+        "string_script": "    unzip = reads.toString() - '.gz'\n    \"\"\"\n    pigz -f -d -p $task.cpus $reads\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "tools": [],
+        "inputs": [
+            "trimmed_zipped_reads_mirdeep2"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "trimmed_reads_mirdeep2"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "mapper_mirdeep2": {
+        "string_process": "\nprocess mapper_mirdeep2 {\n    label 'process_medium'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/mirdeep2/mapper\", mode: 'copy'\n\n    when:\n    !params.skip_mirdeep\n\n    input:\n    file reads from trimmed_reads_mirdeep2\n    file indices from indices_mirdeep2.collect()\n\n\n    output:\n    file '*_collapsed.fa' into mirdeep_reads_collapsed\n    file '*reads_vs_refdb.arf' into reads_vs_refdb\n\n    script:\n    index_base = indices.toString().tokenize(' ')[0].tokenize('.')[0]\n\n    \"\"\"\n    mapper.pl \\\\\n    $reads \\\\\n    -e \\\\\n    -h \\\\\n    -i \\\\\n    -j \\\\\n    -m \\\\\n    -p $index_base \\\\\n    -s ${reads.baseName}_collapsed.fa \\\\\n    -t ${reads.baseName}_reads_vs_refdb.arf \\\\\n    -o 4\n    \"\"\"\n}",
+        "nb_lignes_process": 33,
+        "string_script": "    index_base = indices.toString().tokenize(' ')[0].tokenize('.')[0]\n\n    \"\"\"\n    mapper.pl \\\\\n    $reads \\\\\n    -e \\\\\n    -h \\\\\n    -i \\\\\n    -j \\\\\n    -m \\\\\n    -p $index_base \\\\\n    -s ${reads.baseName}_collapsed.fa \\\\\n    -t ${reads.baseName}_reads_vs_refdb.arf \\\\\n    -o 4\n    \"\"\"",
+        "nb_lignes_script": 14,
+        "tools": [],
+        "inputs": [
+            "trimmed_reads_mirdeep2",
+            "indices_mirdeep2"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "mirdeep_reads_collapsed",
+            "reads_vs_refdb"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Smrnaseq"
+    },
+    "mirdeep2": {
+        "string_process": "\nprocess mirdeep2 {\n    label 'process_medium'\n    publishDir \"${params.outdir}/mirdeep2/mirdeep\", mode: 'copy'\n\n    when:\n    !params.skip_mirdeep\n\n    input:\n    file refgenome from fasta\n    file reads_collapsed from mirdeep_reads_collapsed\n    file reads_vs_refdb from reads_vs_refdb\n    file mature from mature\n    file hairpin from hairpin\n\n    output:\n\n    file 'result*.{bed,csv,html}'\n\n\n    script:\n    \"\"\"\n    perl -ane 's/[ybkmrsw]/N/ig;print;' $hairpin > hairpin_ok.fa\n    sed 's/ .*//' $refgenome | awk '\\$1 ~ /^>/ {gsub(/_/,\"\",\\$1); print; next} {print}' > genome_nowhitespace.fa\n    \n    miRDeep2.pl \\\\\n    $reads_collapsed \\\\\n    genome_nowhitespace.fa \\\\\n    $reads_vs_refdb \\\\\n    $mature \\\\\n    none \\\\\n    hairpin_ok.fa \\\\\n    -d \\\\\n    -z _${reads_collapsed.simpleName}\n    \"\"\"\n}",
+        "nb_lignes_process": 34,
+        "string_script": "    \"\"\"\n    perl -ane 's/[ybkmrsw]/N/ig;print;' $hairpin > hairpin_ok.fa\n    sed 's/ .*//' $refgenome | awk '\\$1 ~ /^>/ {gsub(/_/,\"\",\\$1); print; next} {print}' > genome_nowhitespace.fa\n    \n    miRDeep2.pl \\\\\n    $reads_collapsed \\\\\n    genome_nowhitespace.fa \\\\\n    $reads_vs_refdb \\\\\n    $mature \\\\\n    none \\\\\n    hairpin_ok.fa \\\\\n    -d \\\\\n    -z _${reads_collapsed.simpleName}\n    \"\"\"",
+        "nb_lignes_script": 13,
+        "tools": [
+            "Genonets"
+        ],
+        "inputs": [
+            "fasta",
+            "mirdeep_reads_collapsed",
+            "reads_vs_refdb",
+            "mature",
+            "hairpin"
+        ],
+        "nb_inputs": 5,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "Smrnaseq"
+    },
+    "mirtrace": {
+        "string_process": "\nprocess mirtrace {\n    label 'process_medium'\n    tag \"$reads\"\n    publishDir \"${params.outdir}/miRTrace\", mode: 'copy'\n\n    input:\n    file reads from raw_reads_mirtrace.collect()\n\n    output:\n    file '*mirtrace' into mirtrace_results\n\n    script:\n    primer = (mirtrace_protocol==\"cats\") ? \" \" : \" --adapter $three_prime_adapter \"\n    java_mem = ''\n    if(task.memory){\n        tmem = task.memory.toBytes()\n        java_mem = \"-Xms${tmem} -Xmx${tmem}\"\n    }\n    \"\"\"\n    export mirtracejar=\\$(dirname \\$(which mirtrace))\n    for i in $reads\n    do\n        path=\\$(realpath \\${i})\n        prefix=\\$(echo \\${i} | sed -e 's/.gz//' -e 's/.fastq//' -e 's/.fq//' -e 's/_val_1//' -e 's/_trimmed//' -e 's/_R1//' -e 's/.R1//')\n        echo \\$path\",\"\\$prefix\n    done > mirtrace_config\n\n    java $java_mem -jar \\$mirtracejar/mirtrace.jar --mirtrace-wrapper-name mirtrace qc  \\\\\n        --species $params.mirtrace_species \\\\\n        $primer \\\\\n        --protocol $mirtrace_protocol \\\\\n        --config mirtrace_config \\\\\n        --write-fasta \\\\\n        --output-dir mirtrace \\\\\n        --force\n    \"\"\"\n}",
+        "nb_lignes_process": 36,
+        "string_script": "    primer = (mirtrace_protocol==\"cats\") ? \" \" : \" --adapter $three_prime_adapter \"\n    java_mem = ''\n    if(task.memory){\n        tmem = task.memory.toBytes()\n        java_mem = \"-Xms${tmem} -Xmx${tmem}\"\n    }\n    \"\"\"\n    export mirtracejar=\\$(dirname \\$(which mirtrace))\n    for i in $reads\n    do\n        path=\\$(realpath \\${i})\n        prefix=\\$(echo \\${i} | sed -e 's/.gz//' -e 's/.fastq//' -e 's/.fq//' -e 's/_val_1//' -e 's/_trimmed//' -e 's/_R1//' -e 's/.R1//')\n        echo \\$path\",\"\\$prefix\n    done > mirtrace_config\n\n    java $java_mem -jar \\$mirtracejar/mirtrace.jar --mirtrace-wrapper-name mirtrace qc  \\\\\n        --species $params.mirtrace_species \\\\\n        $primer \\\\\n        --protocol $mirtrace_protocol \\\\\n        --config mirtrace_config \\\\\n        --write-fasta \\\\\n        --output-dir mirtrace \\\\\n        --force\n    \"\"\"",
+        "nb_lignes_script": 23,
+        "tools": [
+            "Primer",
+            "SplitMEM"
+        ],
+        "inputs": [
+            "raw_reads_mirtrace"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "mirtrace_results"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "multiqc": {
+        "string_process": "\nprocess multiqc {\n    publishDir \"${params.outdir}/MultiQC\", mode: params.publish_dir_mode\n\n    when:\n    !params.skip_qc && !params.skip_multiqc\n\n    input:\n    file (multiqc_config) from ch_multiqc_config\n    file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])\n    file ('fastqc/*') from fastqc_results.collect()\n    file ('trim_galore/*') from trimgalore_results.collect()\n    file ('mirtrace/*') from mirtrace_results.collect()\n    file ('samtools/*') from ch_sort_bam_flagstat_mqc.collect()\n    file ('samtools_genome/*') from ch_genome_bam_flagstat_mqc.collect().ifEmpty([])\n    file ('software_versions/*') from software_versions_yaml.collect()\n    file workflow_summary from ch_workflow_summary.collectFile(name: \"workflow_summary_mqc.yaml\")\n\n    output:\n    file \"*multiqc_report.html\" into ch_multiqc_report\n    file \"*_data\"\n\n    script:\n    rtitle = ''\n    rfilename = ''\n    if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {\n        rtitle = \"--title \\\"${workflow.runName}\\\"\"\n        rfilename = \"--filename \" + workflow.runName.replaceAll('\\\\W','_').replaceAll('_+','_') + \"_multiqc_report\"\n    }\n    custom_config_file = params.multiqc_config ? \"--config $mqc_custom_config\" : ''\n    \"\"\"\n    multiqc . -f $rtitle $rfilename $custom_config_file -m bowtie1 -m samtools -m cutadapt -m fastqc -m custom_content\n    \"\"\"\n}",
+        "nb_lignes_process": 32,
+        "string_script": "    rtitle = ''\n    rfilename = ''\n    if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {\n        rtitle = \"--title \\\"${workflow.runName}\\\"\"\n        rfilename = \"--filename \" + workflow.runName.replaceAll('\\\\W','_').replaceAll('_+','_') + \"_multiqc_report\"\n    }\n    custom_config_file = params.multiqc_config ? \"--config $mqc_custom_config\" : ''\n    \"\"\"\n    multiqc . -f $rtitle $rfilename $custom_config_file -m bowtie1 -m samtools -m cutadapt -m fastqc -m custom_content\n    \"\"\"",
+        "nb_lignes_script": 9,
+        "tools": [
+            "MultiQC"
+        ],
+        "inputs": [
+            "ch_multiqc_config",
+            "ch_multiqc_custom_config",
+            "fastqc_results",
+            "trimgalore_results",
+            "mirtrace_results",
+            "ch_sort_bam_flagstat_mqc",
+            "ch_genome_bam_flagstat_mqc",
+            "software_versions_yaml",
+            "ch_workflow_summary"
+        ],
+        "nb_inputs": 9,
+        "outputs": [
+            "ch_multiqc_report"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Smrnaseq"
+    },
+    "output_documentation": {
+        "string_process": "\nprocess output_documentation {\n    publishDir \"${params.outdir}/pipeline_info\", mode: params.publish_dir_mode\n\n    input:\n    file output_docs from ch_output_docs\n    file images from ch_output_docs_images\n\n    output:\n    file 'results_description.html'\n\n    script:\n    \"\"\"\n    markdown_to_html.py $output_docs -o results_description.html\n    \"\"\"\n}",
+        "nb_lignes_process": 14,
+        "string_script": "    \"\"\"\n    markdown_to_html.py $output_docs -o results_description.html\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "ch_output_docs",
+            "ch_output_docs_images"
+        ],
+        "nb_inputs": 2,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "Smrnaseq"
+    }
+}

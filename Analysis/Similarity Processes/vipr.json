@@ -1,0 +1,192 @@
+{
+    "trim_and_combine": {
+        "string_process": "\nprocess trim_and_combine {\n    tag { \"Preprocessing of \" + reads.size()/2 + \"  read pairs for \" + sample_id }\n                                                                     \n\n    input:\n        set sample_id, file(reads) from fastq_ch\n    output:\n        set sample_id, file(\"${sample_id}_R1-trimmed.fastq.gz\"), file(\"${sample_id}_R2-trimmed.fastq.gz\") into trim_and_combine_ch\n    script:\n        \"\"\"\n        # loop over readunits in pairs per sample\n        pairno=0\n        echo ${reads.join(\" \")} | xargs -n2 | while read fq1 fq2; do\n            let pairno=pairno+1\n            # note: don't make reads smaller than assembler kmer length\n            skewer --quiet -t ${task.cpus} -m pe -q 3 -n -l 31 -z -o pair\\${pairno}-skewer-out \\$fq1 \\$fq2;\n            cat *-trimmed-pair1.fastq.gz >> ${sample_id}_R1-trimmed.fastq.gz;\n            cat *-trimmed-pair2.fastq.gz >> ${sample_id}_R2-trimmed.fastq.gz;\n            rm *-trimmed-pair[12].fastq.gz;\n        done\n        fastqc -t {task.cpus} ${sample_id}_R1-trimmed.fastq.gz ${sample_id}_R2-trimmed.fastq.gz;\n        \"\"\"\n}",
+        "nb_lignes_process": 22,
+        "string_script": "        \"\"\"\n        # loop over readunits in pairs per sample\n        pairno=0\n        echo ${reads.join(\" \")} | xargs -n2 | while read fq1 fq2; do\n            let pairno=pairno+1\n            # note: don't make reads smaller than assembler kmer length\n            skewer --quiet -t ${task.cpus} -m pe -q 3 -n -l 31 -z -o pair\\${pairno}-skewer-out \\$fq1 \\$fq2;\n            cat *-trimmed-pair1.fastq.gz >> ${sample_id}_R1-trimmed.fastq.gz;\n            cat *-trimmed-pair2.fastq.gz >> ${sample_id}_R2-trimmed.fastq.gz;\n            rm *-trimmed-pair[12].fastq.gz;\n        done\n        fastqc -t {task.cpus} ${sample_id}_R1-trimmed.fastq.gz ${sample_id}_R2-trimmed.fastq.gz;\n        \"\"\"",
+        "nb_lignes_script": 12,
+        "tools": [
+            "carlet",
+            "Skewer",
+            "FastQC"
+        ],
+        "inputs": [
+            "fastq_ch"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "trim_and_combine_ch"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    },
+    "decont": {
+        "string_process": "\nprocess decont {\n    tag { \"Decontaminating \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/reads/\", mode: 'copy'\n\n    input:\n        set sample_id, file(fq1), file(fq2) from trim_and_combine_ch\n        set file(cont_fasta), file(cont_amb), file(cont_ann), file(cont_bwt), \\\n            file(cont_pac), file(cont_sa) from cont_fasta_ch\n    output:\n        set sample_id, file(\"${sample_id}_trimmed_decont_1.fastq.gz\"), file(\"${sample_id}_trimmed_decont_2.fastq.gz\") into \\\n            fastq_for_tadpole, fastq_for_polish_assembly_ch, fastq_for_mapping_ch, fastq_for_kraken_ch\n        set file(\"${sample_id}_trimmed_decont_1_fastqc.zip\"), file(\"${sample_id}_trimmed_decont_2_fastqc.zip\"), \\\n            file(\"${sample_id}_trimmed_decont_1_fastqc.html\"), file(\"${sample_id}_trimmed_decont_2_fastqc.html\") into fastqc_ch\n    script:\n                                                                             \n        \"\"\"\n        decont.py -i ${fq1} ${fq2} -t ${task.cpus} -c 0.5 -r ${cont_fasta} -o ${sample_id}_trimmed_decont;\n        # since this is the last fastqc processing step, let's run fastqc here\n        fastqc -t {task.cpus} ${sample_id}_trimmed_decont_1.fastq.gz ${sample_id}_trimmed_decont_2.fastq.gz;\n        \"\"\"\n}",
+        "nb_lignes_process": 20,
+        "string_script": "        \"\"\"\n        decont.py -i ${fq1} ${fq2} -t ${task.cpus} -c 0.5 -r ${cont_fasta} -o ${sample_id}_trimmed_decont;\n        # since this is the last fastqc processing step, let's run fastqc here\n        fastqc -t {task.cpus} ${sample_id}_trimmed_decont_1.fastq.gz ${sample_id}_trimmed_decont_2.fastq.gz;\n        \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [
+            "FastQC"
+        ],
+        "inputs": [
+            "trim_and_combine_ch",
+            "cont_fasta",
+            "cont_amb",
+            "cont_ann",
+            "cont_bwt",
+            "cont_fasta_ch"
+        ],
+        "nb_inputs": 6,
+        "outputs": [
+            "fastq_for_tadpole",
+            "fastq_for_polish_assembly_ch",
+            "fastq_for_mapping_ch",
+            "fastq_for_kraken_ch",
+            "fastqc_ch"
+        ],
+        "nb_outputs": 5,
+        "name_workflow": "Vipr"
+    },
+    "kraken": {
+        "string_process": " process kraken {\n        tag { \"Running Kraken on \" + sample_id }\n        publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n        input:\n            set sample_id, file(fq1), file(fq2) from fastq_for_kraken_ch\n        output:\n            file(\"${sample_id}_kraken.report\")\n        script:\n            \"\"\"\n            kraken --threads ${task.cpus} --preload --db ${kraken_db} \\\n              -paired ${fq1} ${fq2} > kraken.out;\n            # do not gzip! otherwise kraken-report happily runs (with some warnings) and produces rubbish results\n            kraken-report --db ${kraken_db} kraken.out > ${sample_id}_kraken.report\n            \"\"\"\n    }",
+        "nb_lignes_process": 14,
+        "string_script": "            \"\"\"\n            kraken --threads ${task.cpus} --preload --db ${kraken_db} \\\n              -paired ${fq1} ${fq2} > kraken.out;\n            # do not gzip! otherwise kraken-report happily runs (with some warnings) and produces rubbish results\n            kraken-report --db ${kraken_db} kraken.out > ${sample_id}_kraken.report\n            \"\"\"",
+        "nb_lignes_script": 5,
+        "tools": [
+            "Kraken"
+        ],
+        "inputs": [
+            "fastq_for_kraken_ch"
+        ],
+        "nb_inputs": 1,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "Vipr"
+    },
+    "tadpole": {
+        "string_process": "\nprocess tadpole {\n    tag { \"Tadpole assembly of \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n    input:\n        set sample_id, file(fq1), file(fq2) from fastq_for_tadpole\n    output:\n        set sample_id, file(\"${sample_id}_contigs.fa\") into contigs_ch\n    script:\n        \"\"\"\n        tadpole.sh -Xmx10g threads=${task.cpus} in=${fq1} in2=${fq2} out=${sample_id}_contigs.fa,\n        \"\"\"\n}",
+        "nb_lignes_process": 12,
+        "string_script": "        \"\"\"\n        tadpole.sh -Xmx10g threads=${task.cpus} in=${fq1} in2=${fq2} out=${sample_id}_contigs.fa,\n        \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "fastq_for_tadpole"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "contigs_ch"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    },
+    "gap_fill_assembly": {
+        "string_process": "\nprocess gap_fill_assembly {\n    tag { \"Orienting and gap filling contigs for \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n                                                                                       \n                                                                                     \n    errorStrategy = { task.exitStatus == 3 ? 'ignore' : 'terminate' }\n\n    input:\n        set sample_id, file(contigs_fa) from contigs_ch\n        file(input_ref_fasta)\n    output:\n        set sample_id, file(\"${sample_id}-gap-filled-assembly.fa\"), file(\"${sample_id}-gap-filled-assembly.gaps.bed\") \\\n            into gap_filled_assembly_ch\n    script:\n        \"\"\"\n        set +e;\n        log=${sample_id}-gap-filled-assembly.log;\n        simple_contig_joiner.py -c ${contigs_fa} -r ${input_ref_fasta} \\\n          -s \"${sample_id}-gap-filled-assembly\" -o ${sample_id}-gap-filled-assembly.fa \\\n          -b \"${sample_id}-gap-filled-assembly.gaps.bed\" >& \\$log;\n\n        rc=\\$?\n        if [ \\$rc -ne 0 ]; then\n            # nothing to join, means we cannot continue. so stop here.\n            grep 'Nothing to join' \\$log && exit 3;\n            exit \\$rc;\n        fi\n        \"\"\"\n}",
+        "nb_lignes_process": 28,
+        "string_script": "        \"\"\"\n        set +e;\n        log=${sample_id}-gap-filled-assembly.log;\n        simple_contig_joiner.py -c ${contigs_fa} -r ${input_ref_fasta} \\\n          -s \"${sample_id}-gap-filled-assembly\" -o ${sample_id}-gap-filled-assembly.fa \\\n          -b \"${sample_id}-gap-filled-assembly.gaps.bed\" >& \\$log;\n\n        rc=\\$?\n        if [ \\$rc -ne 0 ]; then\n            # nothing to join, means we cannot continue. so stop here.\n            grep 'Nothing to join' \\$log && exit 3;\n            exit \\$rc;\n        fi\n        \"\"\"",
+        "nb_lignes_script": 13,
+        "tools": [],
+        "inputs": [
+            "contigs_ch",
+            "input_ref_fasta"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "gap_filled_assembly_ch"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    },
+    "polish_assembly": {
+        "string_process": "\nprocess polish_assembly {\n    tag { \"Polishing assembly for \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n    input:\n        set sample_id, file(assembly_fa), file(assembly_gaps_bed), file(fq1), file(fq2) \\\n            from gap_filled_assembly_ch.join(fastq_for_polish_assembly_ch)\n    output:\n        set sample_id, file(\"${sample_id}_polished_assembly.fa\") into polished_assembly_ch\n    script:\n        \"\"\"\n        # downsample to 1M reads to increase runtime\n        seqtk sample -s 666 ${fq1} 1000000 | gzip > R1_ds.R1.fastq.gz;\n        seqtk sample -s 666 ${fq2} 1000000 | gzip > R2_ds.R2.fastq.gz;\n        polish_viral_ref.sh -t ${task.cpus} -1 R1_ds.R1.fastq.gz -2 R2_ds.R2.fastq.gz \\\n            -r ${assembly_fa} -o ${sample_id}_polished_assembly.fa\n        \"\"\"\n}",
+        "nb_lignes_process": 17,
+        "string_script": "        \"\"\"\n        # downsample to 1M reads to increase runtime\n        seqtk sample -s 666 ${fq1} 1000000 | gzip > R1_ds.R1.fastq.gz;\n        seqtk sample -s 666 ${fq2} 1000000 | gzip > R2_ds.R2.fastq.gz;\n        polish_viral_ref.sh -t ${task.cpus} -1 R1_ds.R1.fastq.gz -2 R2_ds.R2.fastq.gz \\\n            -r ${assembly_fa} -o ${sample_id}_polished_assembly.fa\n        \"\"\"",
+        "nb_lignes_script": 6,
+        "tools": [
+            "seqtk"
+        ],
+        "inputs": [
+            "gap_filled_assembly_ch",
+            "fastq_for_polish_assembly_ch"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "polished_assembly_ch"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    },
+    "final_mapping": {
+        "string_process": "\nprocess final_mapping {\n    tag { \"Mapping to polished assembly for \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n    input:\n        set sample_id, file(ref_fa), file(fq1), file(fq2) \\\n            from polished_assembly_ch.join(fastq_for_mapping_ch)\n    output:\n        set sample_id, file(ref_fa), file(\"${sample_id}.bam\"), file(\"${sample_id}.bam.bai\") into \\\n            final_mapping_for_vcf_ch, final_mapping_for_cov_ch\n        set sample_id, \"${sample_id}.bam.stats\" into final_mapping_bamstats_ch\n    script:\n        \"\"\"\n        bwa index ${ref_fa};\n        samtools faidx ${ref_fa};\n        bwa mem -t ${task.cpus} ${ref_fa} ${fq1} ${fq2} | \\\n            lofreq viterbi -f ${ref_fa} - | \\\n            lofreq alnqual -u - ${ref_fa} | \\\n            lofreq indelqual --dindel -f ${ref_fa} - | \\\n            samtools sort -o ${sample_id}.bam -T ${sample_id}.final.tmp -;\n        samtools index ${sample_id}.bam;\n        samtools stats ${sample_id}.bam > ${sample_id}.bam.stats\n        \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "        \"\"\"\n        bwa index ${ref_fa};\n        samtools faidx ${ref_fa};\n        bwa mem -t ${task.cpus} ${ref_fa} ${fq1} ${fq2} | \\\n            lofreq viterbi -f ${ref_fa} - | \\\n            lofreq alnqual -u - ${ref_fa} | \\\n            lofreq indelqual --dindel -f ${ref_fa} - | \\\n            samtools sort -o ${sample_id}.bam -T ${sample_id}.final.tmp -;\n        samtools index ${sample_id}.bam;\n        samtools stats ${sample_id}.bam > ${sample_id}.bam.stats\n        \"\"\"",
+        "nb_lignes_script": 10,
+        "tools": [
+            "BWA",
+            "SAMtools"
+        ],
+        "inputs": [
+            "polished_assembly_ch",
+            "fastq_for_mapping_ch"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "final_mapping_for_vcf_ch",
+            "final_mapping_for_cov_ch",
+            "final_mapping_bamstats_ch"
+        ],
+        "nb_outputs": 3,
+        "name_workflow": "Vipr"
+    },
+    "var_calling": {
+        "string_process": "\nprocess var_calling {\n    tag { \"Final variant calling for \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n    input:\n        set sample_id, file(ref_fa), file(bam), file(bai) from final_mapping_for_vcf_ch\n    output:\n        set sample_id, file(ref_fa), file(\"${sample_id}.vcf.gz\") into vcf_ch\n    script:\n        \"\"\"\n        samtools faidx ${ref_fa};\n        lofreq call-parallel --pp-threads ${task.cpus} -f ${ref_fa} \\\n           -d 1000000 --call-indels -o ${sample_id}.vcf.gz ${bam}\n        \"\"\"\n}",
+        "nb_lignes_process": 14,
+        "string_script": "        \"\"\"\n        samtools faidx ${ref_fa};\n        lofreq call-parallel --pp-threads ${task.cpus} -f ${ref_fa} \\\n           -d 1000000 --call-indels -o ${sample_id}.vcf.gz ${bam}\n        \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "final_mapping_for_vcf_ch"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "vcf_ch"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    },
+    "genomecov": {
+        "string_process": "\nprocess genomecov {\n    tag { \"Genome coverage for \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n    input:\n        set sample_id, file(ref_fa), file(bam), file(bai) from final_mapping_for_cov_ch\n    output:\n        set sample_id, file(\"${sample_id}.cov.gz\") into cov_ch\n    script:\n        \"\"\"\n        # note: -d is one-based. -dz is zero-based but only non-zero values, so less explicit.\n        bedtools genomecov -d -ibam ${bam} | gzip > ${sample_id}.cov.gz;\n        \"\"\"\n}",
+        "nb_lignes_process": 13,
+        "string_script": "        \"\"\"\n        # note: -d is one-based. -dz is zero-based but only non-zero values, so less explicit.\n        bedtools genomecov -d -ibam ${bam} | gzip > ${sample_id}.cov.gz;\n        \"\"\"",
+        "nb_lignes_script": 3,
+        "tools": [
+            "BEDTools"
+        ],
+        "inputs": [
+            "final_mapping_for_cov_ch"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "cov_ch"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    },
+    "vipr_tools": {
+        "string_process": "\nprocess vipr_tools {\n    tag { \"Plotting AF vs. coverage and readying fasta for  \" + sample_id }\n    publishDir \"${params.outdir}/${sample_id}/\", mode: 'copy'\n\n    input:\n        set sample_id, file(cov), file(ref_fa), file(vcf) from cov_ch.join(vcf_ch)\n    output:\n        set sample_id, file(\"${sample_id}_af-vs-cov.html\"), file(\"${sample_id}_0cov2N.fa\")\n    script:\n        \"\"\"\n        vipr_af_vs_cov_html.py --vcf ${vcf} --cov ${cov} --plot ${sample_id}_af-vs-cov.html;\n        vipr_gaps_to_n.py -i ${ref_fa} -c ${cov} > ${sample_id}_0cov2N.fa;\n        \"\"\"\n}",
+        "nb_lignes_process": 13,
+        "string_script": "        \"\"\"\n        vipr_af_vs_cov_html.py --vcf ${vcf} --cov ${cov} --plot ${sample_id}_af-vs-cov.html;\n        vipr_gaps_to_n.py -i ${ref_fa} -c ${cov} > ${sample_id}_0cov2N.fa;\n        \"\"\"",
+        "nb_lignes_script": 3,
+        "tools": [],
+        "inputs": [
+            "cov_ch",
+            "vcf_ch"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "sample_id"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Vipr"
+    }
+}

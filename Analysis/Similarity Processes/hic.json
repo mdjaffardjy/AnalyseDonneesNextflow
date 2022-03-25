@@ -1,0 +1,495 @@
+{
+    "get_software_versions": {
+        "string_process": "\nprocess get_software_versions {\n    publishDir \"${params.outdir}/pipeline_info\", mode: params.publish_dir_mode,\n        saveAs: { filename -> if (filename.indexOf('.csv') > 0) filename else null }\n\n    output:\n    file 'software_versions_mqc.yaml' into ch_software_versions_yaml\n    file 'software_versions.csv'\n\n   script:\n   \"\"\"\n   echo $workflow.manifest.version > v_pipeline.txt\n   echo $workflow.nextflow.version > v_nextflow.txt\n   bowtie2 --version > v_bowtie2.txt\n   python --version > v_python.txt 2>&1\n   samtools --version > v_samtools.txt\n   multiqc --version > v_multiqc.txt\n   scrape_software_versions.py &> software_versions_mqc.yaml\n   \"\"\"\n}",
+        "nb_lignes_process": 18,
+        "string_script": "   \"\"\"\n   echo $workflow.manifest.version > v_pipeline.txt\n   echo $workflow.nextflow.version > v_nextflow.txt\n   bowtie2 --version > v_bowtie2.txt\n   python --version > v_python.txt 2>&1\n   samtools --version > v_samtools.txt\n   multiqc --version > v_multiqc.txt\n   scrape_software_versions.py &> software_versions_mqc.yaml\n   \"\"\"",
+        "nb_lignes_script": 8,
+        "tools": [
+            "Rbowtie2",
+            "SAMtools",
+            "MultiQC"
+        ],
+        "inputs": [],
+        "nb_inputs": 0,
+        "outputs": [
+            "ch_software_versions_yaml"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "makeBowtie2Index": {
+        "string_process": " process makeBowtie2Index {\n        tag \"$fasta_base\"\n        label 'process_highmem'\n\tpublishDir path: { params.save_reference ? \"${params.outdir}/reference_genome\" : params.outdir },\n                   saveAs: { params.save_reference ? it : null }, mode: params.publish_dir_mode\n\n        input:\n        file fasta from fasta_for_index\n\n        output:\n        file \"bowtie2_index\" into bwt2_index_end2end\n\tfile \"bowtie2_index\" into bwt2_index_trim\n\n        script:\n        fasta_base = fasta.toString() - ~/(\\.fa)?(\\.fasta)?(\\.fas)?(\\.fsa)?$/\n        \"\"\"\n        mkdir bowtie2_index\n\tbowtie2-build ${fasta} bowtie2_index/${fasta_base}\n\t\"\"\"\n      }",
+        "nb_lignes_process": 18,
+        "string_script": "        fasta_base = fasta.toString() - ~/(\\.fa)?(\\.fasta)?(\\.fas)?(\\.fsa)?$/\n        \"\"\"\n        mkdir bowtie2_index\n\tbowtie2-build ${fasta} bowtie2_index/${fasta_base}\n\t\"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [],
+        "inputs": [
+            "fasta_for_index"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "bwt2_index_end2end",
+            "bwt2_index_trim"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "makeChromSize": {
+        "string_process": " process makeChromSize {\n        tag \"$fasta\"\n\tlabel 'process_low'\n\tpublishDir path: { params.save_reference ? \"${params.outdir}/reference_genome\" : params.outdir },\n                   saveAs: { params.save_reference ? it : null }, mode: params.publish_dir_mode\n\n        input:\n        file fasta from fasta_for_chromsize\n\n        output:\n        file \"*.size\" into chrsize, chrsize_build, chrsize_raw, chrsize_balance, chrsize_zoom, chrsize_compartments\n\n        script:\n        \"\"\"\n\tsamtools faidx ${fasta}\n\tcut -f1,2 ${fasta}.fai > chrom.size\n   \t\"\"\"\n      }",
+        "nb_lignes_process": 16,
+        "string_script": "        \"\"\"\n\tsamtools faidx ${fasta}\n\tcut -f1,2 ${fasta}.fai > chrom.size\n   \t\"\"\"",
+        "nb_lignes_script": 3,
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "fasta_for_chromsize"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "chrsize",
+            "chrsize_build",
+            "chrsize_raw",
+            "chrsize_balance",
+            "chrsize_zoom",
+            "chrsize_compartments"
+        ],
+        "nb_outputs": 6,
+        "name_workflow": "Hic"
+    },
+    "getRestrictionFragments": {
+        "string_process": " process getRestrictionFragments {\n        tag \"$fasta ${params.restriction_site}\"\n\tlabel 'process_low'\n        publishDir path: { params.save_reference ? \"${params.outdir}/reference_genome\" : params.outdir },\n                   saveAs: { params.save_reference ? it : null }, mode: params.publish_dir_mode\n\n        input:\n        file fasta from fasta_for_resfrag\n\n        output:\n        file \"*.bed\" into res_frag_file\n\n        script:\n        \"\"\"\n\tdigest_genome.py -r ${params.restriction_site} -o restriction_fragments.bed ${fasta}\n\t\"\"\"\n      }",
+        "nb_lignes_process": 15,
+        "string_script": "        \"\"\"\n\tdigest_genome.py -r ${params.restriction_site} -o restriction_fragments.bed ${fasta}\n\t\"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "fasta_for_resfrag"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "res_frag_file"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "bowtie2_end_to_end": {
+        "string_process": "\nprocess bowtie2_end_to_end {\n   tag \"$sample\"\n   label 'process_medium'\n   publishDir path: { params.save_aligned_intermediates ? \"${params.outdir}/mapping/bwt2_end2end\" : params.outdir },\n              saveAs: { filename -> if (params.save_aligned_intermediates) filename }, mode: params.publish_dir_mode\n\n   input:\n   set val(sample), file(reads) from raw_reads\n   file index from bwt2_index_end2end.collect()\n\n   output:\n   set val(sample), file(\"${prefix}_unmap.fastq\") into unmapped_end_to_end\n   set val(sample), file(\"${prefix}.bam\") into end_to_end_bam\n\n   script:\n   prefix = reads.toString() - ~/(\\.fq)?(\\.fastq)?(\\.gz)?$/\n   def bwt2_opts = params.bwt2_opts_end2end\n   if (!params.dnase){\n   \"\"\"\n   INDEX=`find -L ./ -name \"*.rev.1.bt2\" | sed 's/.rev.1.bt2//'`\n   bowtie2 --rg-id BMG --rg SM:${prefix} \\\\\n\t${bwt2_opts} \\\\\n\t-p ${task.cpus} \\\\\n\t-x \\${INDEX} \\\\\n\t--un ${prefix}_unmap.fastq \\\\\n \t-U ${reads} | samtools view -F 4 -bS - > ${prefix}.bam\n   \"\"\"\n   }else{\n   \"\"\"\n   INDEX=`find -L ./ -name \"*.rev.1.bt2\" | sed 's/.rev.1.bt2//'`\n   bowtie2 --rg-id BMG --rg SM:${prefix} \\\\\n\t${bwt2_opts} \\\\\n\t-p ${task.cpus} \\\\\n\t-x \\${INDEX} \\\\\n\t--un ${prefix}_unmap.fastq \\\\\n \t-U ${reads} > ${prefix}.bam\n   \"\"\"\n   }\n}",
+        "nb_lignes_process": 38,
+        "string_script": "   prefix = reads.toString() - ~/(\\.fq)?(\\.fastq)?(\\.gz)?$/\n   def bwt2_opts = params.bwt2_opts_end2end\n   if (!params.dnase){\n   \"\"\"\n   INDEX=`find -L ./ -name \"*.rev.1.bt2\" | sed 's/.rev.1.bt2//'`\n   bowtie2 --rg-id BMG --rg SM:${prefix} \\\\\n\t${bwt2_opts} \\\\\n\t-p ${task.cpus} \\\\\n\t-x \\${INDEX} \\\\\n\t--un ${prefix}_unmap.fastq \\\\\n \t-U ${reads} | samtools view -F 4 -bS - > ${prefix}.bam\n   \"\"\"\n   }else{\n   \"\"\"\n   INDEX=`find -L ./ -name \"*.rev.1.bt2\" | sed 's/.rev.1.bt2//'`\n   bowtie2 --rg-id BMG --rg SM:${prefix} \\\\\n\t${bwt2_opts} \\\\\n\t-p ${task.cpus} \\\\\n\t-x \\${INDEX} \\\\\n\t--un ${prefix}_unmap.fastq \\\\\n \t-U ${reads} > ${prefix}.bam\n   \"\"\"\n   }",
+        "nb_lignes_script": 22,
+        "tools": [
+            "sdef",
+            "Rbowtie2",
+            "SAMtools"
+        ],
+        "inputs": [
+            "raw_reads",
+            "bwt2_index_end2end"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "unmapped_end_to_end",
+            "end_to_end_bam"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "trim_reads": {
+        "string_process": "\nprocess trim_reads {\n   tag \"$sample\"\n   label 'process_low'\n   publishDir path: { params.save_aligned_intermediates ? \"${params.outdir}/mapping/bwt2_trimmed\" : params.outdir },\n              saveAs: { filename -> if (params.save_aligned_intermediates) filename }, mode: params.publish_dir_mode\n              \n   when:\n   !params.dnase\n\n   input:\n   set val(sample), file(reads) from unmapped_end_to_end\n\n   output:\n   set val(sample), file(\"${prefix}_trimmed.fastq\") into trimmed_reads\n\n   script:\n   prefix = reads.toString() - ~/(\\.fq)?(\\.fastq)?(\\.gz)?$/\n   \"\"\"\n   cutsite_trimming --fastq $reads \\\\\n                    --cutsite  ${params.ligation_site} \\\\\n                    --out ${prefix}_trimmed.fastq\n   \"\"\"\n}",
+        "nb_lignes_process": 22,
+        "string_script": "   prefix = reads.toString() - ~/(\\.fq)?(\\.fastq)?(\\.gz)?$/\n   \"\"\"\n   cutsite_trimming --fastq $reads \\\\\n                    --cutsite  ${params.ligation_site} \\\\\n                    --out ${prefix}_trimmed.fastq\n   \"\"\"",
+        "nb_lignes_script": 5,
+        "tools": [],
+        "inputs": [
+            "unmapped_end_to_end"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "trimmed_reads"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "bowtie2_on_trimmed_reads": {
+        "string_process": "\nprocess bowtie2_on_trimmed_reads {\n   tag \"$sample\"\n   label 'process_medium'\n   publishDir path: { params.save_aligned_intermediates ? \"${params.outdir}/mapping/bwt2_trimmed\" : params.outdir },\n   \t      saveAs: { filename -> if (params.save_aligned_intermediates) filename }, mode: params.publish_dir_mode\n\n   when:\n   !params.dnase\n\n   input:\n   set val(sample), file(reads) from trimmed_reads\n   file index from bwt2_index_trim.collect()\n\n   output:\n   set val(sample), file(\"${prefix}_trimmed.bam\") into trimmed_bam\n\n   script:\n   prefix = reads.toString() - ~/(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n   \"\"\"\n   INDEX=`find -L ./ -name \"*.rev.1.bt2\" | sed 's/.rev.1.bt2//'`\n   bowtie2 --rg-id BMG --rg SM:${prefix} \\\\\n           ${params.bwt2_opts_trimmed} \\\\\n           -p ${task.cpus} \\\\\n           -x \\${INDEX} \\\\\n           -U ${reads} | samtools view -bS - > ${prefix}_trimmed.bam\n   \"\"\"\n}",
+        "nb_lignes_process": 26,
+        "string_script": "   prefix = reads.toString() - ~/(_trimmed)?(\\.fq)?(\\.fastq)?(\\.gz)?$/\n   \"\"\"\n   INDEX=`find -L ./ -name \"*.rev.1.bt2\" | sed 's/.rev.1.bt2//'`\n   bowtie2 --rg-id BMG --rg SM:${prefix} \\\\\n           ${params.bwt2_opts_trimmed} \\\\\n           -p ${task.cpus} \\\\\n           -x \\${INDEX} \\\\\n           -U ${reads} | samtools view -bS - > ${prefix}_trimmed.bam\n   \"\"\"",
+        "nb_lignes_script": 8,
+        "tools": [
+            "Rbowtie2",
+            "SAMtools"
+        ],
+        "inputs": [
+            "trimmed_reads",
+            "bwt2_index_trim"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "trimmed_bam"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "bowtie2_merge_mapping_steps": {
+        "string_process": " process bowtie2_merge_mapping_steps{\n      tag \"$prefix = $bam1 + $bam2\"\n      label 'process_medium'\n      publishDir \"${params.outdir}/hicpro/mapping\", mode: params.publish_dir_mode,\n   \t      saveAs: { filename -> if (params.save_aligned_intermediates && filename.endsWith(\"stat\")) \"stats/$filename\"\n\t\t\telse if (params.save_aligned_intermediates) filename}\n\n      input:\n      set val(prefix), file(bam1), file(bam2) from end_to_end_bam.join( trimmed_bam ).dump(tag:'merge')\n\n      output:\n      set val(sample), file(\"${prefix}_bwt2merged.bam\") into bwt2_merged_bam\n      set val(oname), file(\"${prefix}.mapstat\") into all_mapstat\n\n      script:\n      sample = prefix.toString() - ~/(_R1|_R2)/\n      tag = prefix.toString() =~/_R1/ ? \"R1\" : \"R2\"\n      oname = prefix.toString() - ~/(\\.[0-9]+)$/\n      \"\"\"\n      samtools merge -@ ${task.cpus} \\\\\n    \t             -f ${prefix}_bwt2merged.bam \\\\\n                     ${bam1} ${bam2}\n\n      samtools sort -@ ${task.cpus} -m 800M \\\\\n      \t            -n  \\\\\n\t            -o ${prefix}_bwt2merged.sorted.bam \\\\\n\t            ${prefix}_bwt2merged.bam\n\n      mv ${prefix}_bwt2merged.sorted.bam ${prefix}_bwt2merged.bam\n\n      echo \"## ${prefix}\" > ${prefix}.mapstat\n      echo -n \"total_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c ${prefix}_bwt2merged.bam >> ${prefix}.mapstat\n      echo -n \"mapped_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${prefix}_bwt2merged.bam >> ${prefix}.mapstat\n      echo -n \"global_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam1} >> ${prefix}.mapstat\n      echo -n \"local_${tag}\\t\"  >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam2} >> ${prefix}.mapstat\n      \"\"\"\n   }",
+        "nb_lignes_process": 39,
+        "string_script": "      sample = prefix.toString() - ~/(_R1|_R2)/\n      tag = prefix.toString() =~/_R1/ ? \"R1\" : \"R2\"\n      oname = prefix.toString() - ~/(\\.[0-9]+)$/\n      \"\"\"\n      samtools merge -@ ${task.cpus} \\\\\n    \t             -f ${prefix}_bwt2merged.bam \\\\\n                     ${bam1} ${bam2}\n\n      samtools sort -@ ${task.cpus} -m 800M \\\\\n      \t            -n  \\\\\n\t            -o ${prefix}_bwt2merged.sorted.bam \\\\\n\t            ${prefix}_bwt2merged.bam\n\n      mv ${prefix}_bwt2merged.sorted.bam ${prefix}_bwt2merged.bam\n\n      echo \"## ${prefix}\" > ${prefix}.mapstat\n      echo -n \"total_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c ${prefix}_bwt2merged.bam >> ${prefix}.mapstat\n      echo -n \"mapped_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${prefix}_bwt2merged.bam >> ${prefix}.mapstat\n      echo -n \"global_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam1} >> ${prefix}.mapstat\n      echo -n \"local_${tag}\\t\"  >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam2} >> ${prefix}.mapstat\n      \"\"\"",
+        "nb_lignes_script": 24,
+        "tools": [
+            "SAMPLE",
+            "TAG",
+            "goname",
+            "SAMtools"
+        ],
+        "inputs": [
+            "end_to_end_bam",
+            "trimmed_bam"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "bwt2_merged_bam",
+            "all_mapstat"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "dnase_mapping_stats": {
+        "string_process": " process dnase_mapping_stats{\n      tag \"$sample = $bam\"\n      label 'process_medium'\n      publishDir \"${params.outdir}/hicpro/mapping\",  mode: params.publish_dir_mode, \n   \t      saveAs: { filename -> if (params.save_aligned_intermediates && filename.endsWith(\"stat\")) \"stats/$filename\"\n\t                else if (params.save_aligned_intermediates) filename}\n\n      input:\n      set val(prefix), file(bam) from end_to_end_bam\n\n      output:\n      set val(sample), file(bam) into bwt2_merged_bam\n      set val(oname), file(\"${prefix}.mapstat\") into all_mapstat\n\n      script:\n      sample = prefix.toString() - ~/(_R1|_R2)/\n      tag = prefix.toString() =~/_R1/ ? \"R1\" : \"R2\"\n      oname = prefix.toString() - ~/(\\.[0-9]+)$/\n      \"\"\"\n      echo \"## ${prefix}\" > ${prefix}.mapstat\n      echo -n \"total_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c ${bam} >> ${prefix}.mapstat\n      echo -n \"mapped_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam} >> ${prefix}.mapstat\n      echo -n \"global_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam} >> ${prefix}.mapstat\n      echo -n \"local_${tag}\\t0\"  >> ${prefix}.mapstat\n      \"\"\"\n   }",
+        "nb_lignes_process": 27,
+        "string_script": "      sample = prefix.toString() - ~/(_R1|_R2)/\n      tag = prefix.toString() =~/_R1/ ? \"R1\" : \"R2\"\n      oname = prefix.toString() - ~/(\\.[0-9]+)$/\n      \"\"\"\n      echo \"## ${prefix}\" > ${prefix}.mapstat\n      echo -n \"total_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c ${bam} >> ${prefix}.mapstat\n      echo -n \"mapped_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam} >> ${prefix}.mapstat\n      echo -n \"global_${tag}\\t\" >> ${prefix}.mapstat\n      samtools view -c -F 4 ${bam} >> ${prefix}.mapstat\n      echo -n \"local_${tag}\\t0\"  >> ${prefix}.mapstat\n      \"\"\"",
+        "nb_lignes_script": 12,
+        "tools": [
+            "SAMPLE",
+            "TAG",
+            "goname",
+            "SAMtools"
+        ],
+        "inputs": [
+            "end_to_end_bam"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "bwt2_merged_bam",
+            "all_mapstat"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "combine_mates": {
+        "string_process": "\nprocess combine_mates{\n   tag \"$sample = $r1_prefix + $r2_prefix\"\n   label 'process_low'\n   publishDir \"${params.outdir}/hicpro/mapping\", mode: params.publish_dir_mode,\n   \t      saveAs: {filename -> filename.endsWith(\".pairstat\") ? \"stats/$filename\" : \"$filename\"}\n\n   input:\n   set val(sample), file(aligned_bam) from bwt2_merged_bam.groupTuple()\n\n   output:\n   set val(oname), file(\"${sample}_bwt2pairs.bam\") into paired_bam\n   set val(oname), file(\"*.pairstat\") into all_pairstat\n\n   script:\n   r1_bam = aligned_bam[0]\n   r1_prefix = r1_bam.toString() - ~/_bwt2merged.bam$/\n   r2_bam = aligned_bam[1]\n   r2_prefix = r2_bam.toString() - ~/_bwt2merged.bam$/\n   oname = sample.toString() - ~/(\\.[0-9]+)$/\n\n   def opts = \"-t\"\n   if (params.keep_multi) {\n     opts=\"${opts} --multi\"\n   }else if (params.min_mapq){\n     opts=\"${opts} -q ${params.min_mapq}\"\n   }\n   \"\"\"\n   mergeSAM.py -f ${r1_bam} -r ${r2_bam} -o ${sample}_bwt2pairs.bam ${opts}\n   \"\"\"\n}",
+        "nb_lignes_process": 29,
+        "string_script": "   r1_bam = aligned_bam[0]\n   r1_prefix = r1_bam.toString() - ~/_bwt2merged.bam$/\n   r2_bam = aligned_bam[1]\n   r2_prefix = r2_bam.toString() - ~/_bwt2merged.bam$/\n   oname = sample.toString() - ~/(\\.[0-9]+)$/\n\n   def opts = \"-t\"\n   if (params.keep_multi) {\n     opts=\"${opts} --multi\"\n   }else if (params.min_mapq){\n     opts=\"${opts} -q ${params.min_mapq}\"\n   }\n   \"\"\"\n   mergeSAM.py -f ${r1_bam} -r ${r2_bam} -o ${sample}_bwt2pairs.bam ${opts}\n   \"\"\"",
+        "nb_lignes_script": 14,
+        "tools": [
+            "goname",
+            "sdef"
+        ],
+        "inputs": [
+            "bwt2_merged_bam"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "paired_bam",
+            "all_pairstat"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "get_valid_interaction": {
+        "string_process": " process get_valid_interaction{\n      tag \"$sample\"\n      label 'process_low'\n      publishDir \"${params.outdir}/hicpro/valid_pairs\", mode: params.publish_dir_mode,\n   \t      saveAs: {filename -> if (filename.endsWith(\"RSstat\")) \"stats/$filename\"\n                                   else if (filename.endsWith(\".validPairs\")) filename\n                                   else if (params.save_nonvalid_pairs) filename}\n\n      input:\n      set val(sample), file(pe_bam) from paired_bam\n      file frag_file from res_frag_file.collect()\n\n      output:\n      set val(sample), file(\"*.validPairs\") into valid_pairs\n      set val(sample), file(\"*.validPairs\") into valid_pairs_4cool\n      set val(sample), file(\"*.DEPairs\") into de_pairs\n      set val(sample), file(\"*.SCPairs\") into sc_pairs\n      set val(sample), file(\"*.REPairs\") into re_pairs\n      set val(sample), file(\"*.FiltPairs\") into filt_pairs\n      set val(sample), file(\"*RSstat\") into all_rsstat\n\n      script:\n      if (params.split_fastq){\n         sample = sample.toString() - ~/(\\.[0-9]+)$/\n      }\n\n      def opts = \"\"\n      opts += params.min_cis_dist > 0 ? \" -d ${params.min_cis_dist}\" : ''\n      opts += params.min_insert_size > 0 ?  \" -s ${params.min_insert_size}\" : ''\n      opts += params.max_insert_size > 0 ? \" -l ${params.max_insert_size}\" : ''\n      opts += params.min_restriction_fragment_size > 0 ? \" -t ${params.min_restriction_fragment_size}\" : ''\n      opts += params.max_restriction_fragment_size > 0 ? \" -m ${params.max_restriction_fragment_size}\" : ''\n      opts += params.save_interaction_bam ? \" --sam\" : ''\n      prefix = pe_bam.toString() - ~/.bam/\n      \"\"\"\n      mapped_2hic_fragments.py -f ${frag_file} -r ${pe_bam} --all ${opts}\n      sort -k2,2V -k3,3n -k5,5V -k6,6n -o ${prefix}.validPairs ${prefix}.validPairs\n      \"\"\"\n   }",
+        "nb_lignes_process": 37,
+        "string_script": "      if (params.split_fastq){\n         sample = sample.toString() - ~/(\\.[0-9]+)$/\n      }\n\n      def opts = \"\"\n      opts += params.min_cis_dist > 0 ? \" -d ${params.min_cis_dist}\" : ''\n      opts += params.min_insert_size > 0 ?  \" -s ${params.min_insert_size}\" : ''\n      opts += params.max_insert_size > 0 ? \" -l ${params.max_insert_size}\" : ''\n      opts += params.min_restriction_fragment_size > 0 ? \" -t ${params.min_restriction_fragment_size}\" : ''\n      opts += params.max_restriction_fragment_size > 0 ? \" -m ${params.max_restriction_fragment_size}\" : ''\n      opts += params.save_interaction_bam ? \" --sam\" : ''\n      prefix = pe_bam.toString() - ~/.bam/\n      \"\"\"\n      mapped_2hic_fragments.py -f ${frag_file} -r ${pe_bam} --all ${opts}\n      sort -k2,2V -k3,3n -k5,5V -k6,6n -o ${prefix}.validPairs ${prefix}.validPairs\n      \"\"\"",
+        "nb_lignes_script": 15,
+        "tools": [
+            "SAMPLE",
+            "sdef"
+        ],
+        "inputs": [
+            "paired_bam",
+            "res_frag_file"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "valid_pairs",
+            "valid_pairs_4cool",
+            "de_pairs",
+            "sc_pairs",
+            "re_pairs",
+            "filt_pairs",
+            "all_rsstat"
+        ],
+        "nb_outputs": 7,
+        "name_workflow": "Hic"
+    },
+    "get_valid_interaction_dnase": {
+        "string_process": " process get_valid_interaction_dnase{\n      tag \"$sample\"\n      label 'process_low'\n      publishDir \"${params.outdir}/hicpro/valid_pairs\", mode: params.publish_dir_mode,\n   \t      saveAs: {filename -> if (filename.endsWith(\"RSstat\")) \"stats/$filename\" \n                                   else filename}\n\n      input:\n      set val(sample), file(pe_bam) from paired_bam\n\n      output:\n      set val(sample), file(\"*.validPairs\") into valid_pairs\n      set val(sample), file(\"*.validPairs\") into valid_pairs_4cool\n      set val(sample), file(\"*RSstat\") into all_rsstat\n\n      script:\n      if (params.split_fastq){\n         sample = sample.toString() - ~/(\\.[0-9]+)$/\n      }\n\n      opts = params.min_cis_dist > 0 ? \" -d ${params.min_cis_dist}\" : ''\n      prefix = pe_bam.toString() - ~/.bam/\n      \"\"\"\n      mapped_2hic_dnase.py -r ${pe_bam} ${opts}\n      sort -k2,2V -k3,3n -k5,5V -k6,6n -o ${prefix}.validPairs ${prefix}.validPairs\n      \"\"\"\n   }",
+        "nb_lignes_process": 25,
+        "string_script": "      if (params.split_fastq){\n         sample = sample.toString() - ~/(\\.[0-9]+)$/\n      }\n\n      opts = params.min_cis_dist > 0 ? \" -d ${params.min_cis_dist}\" : ''\n      prefix = pe_bam.toString() - ~/.bam/\n      \"\"\"\n      mapped_2hic_dnase.py -r ${pe_bam} ${opts}\n      sort -k2,2V -k3,3n -k5,5V -k6,6n -o ${prefix}.validPairs ${prefix}.validPairs\n      \"\"\"",
+        "nb_lignes_script": 9,
+        "tools": [
+            "SAMPLE"
+        ],
+        "inputs": [
+            "paired_bam"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "valid_pairs",
+            "valid_pairs_4cool",
+            "all_rsstat"
+        ],
+        "nb_outputs": 3,
+        "name_workflow": "Hic"
+    },
+    "remove_duplicates": {
+        "string_process": "\nprocess remove_duplicates {\n   tag \"$sample\"\n   label 'process_highmem'\n   publishDir \"${params.outdir}/hicpro/valid_pairs\", mode: params.publish_dir_mode,\n               saveAs: {filename -> if (filename.endsWith(\"mergestat\")) \"stats/$filename\" \n                                    else if (filename.endsWith(\"allValidPairs\")) \"$filename\"}\n   input:\n   set val(sample), file(vpairs) from valid_pairs.groupTuple()\n\n   output:\n   set val(sample), file(\"*.allValidPairs\") into ch_vpairs, ch_vpairs_cool\n   file(\"stats/\") into mqc_mergestat\n   file(\"*mergestat\") into all_mergestat\n\n   script:\n   if ( ! params.keep_dups ){\n   \"\"\"\n   mkdir -p stats/${sample}\n\n   ## Sort valid pairs and remove read pairs with same starts (i.e duplicated read pairs)\n   sort -S 50% -k2,2V -k3,3n -k5,5V -k6,6n -m ${vpairs} | \\\\\n   awk -F\"\\\\t\" 'BEGIN{c1=0;c2=0;s1=0;s2=0}(c1!=\\$2 || c2!=\\$5 || s1!=\\$3 || s2!=\\$6){print;c1=\\$2;c2=\\$5;s1=\\$3;s2=\\$6}' > ${sample}.allValidPairs\n\n   echo -n \"valid_interaction\\t\" > ${sample}_allValidPairs.mergestat\n   cat ${vpairs} | wc -l >> ${sample}_allValidPairs.mergestat\n   echo -n \"valid_interaction_rmdup\\t\" >> ${sample}_allValidPairs.mergestat\n   cat ${sample}.allValidPairs | wc -l >> ${sample}_allValidPairs.mergestat\n\n   ## Count short range (<20000) vs long range contacts\n   awk 'BEGIN{cis=0;trans=0;sr=0;lr=0} \\$2 == \\$5{cis=cis+1; d=\\$6>\\$3?\\$6-\\$3:\\$3-\\$6; if (d<=20000){sr=sr+1}else{lr=lr+1}} \\$2!=\\$5{trans=trans+1}END{print \"trans_interaction\\\\t\"trans\"\\\\ncis_interaction\\\\t\"cis\"\\\\ncis_shortRange\\\\t\"sr\"\\\\ncis_longRange\\\\t\"lr}' ${sample}.allValidPairs >> ${sample}_allValidPairs.mergestat\n \n   ## For MultiQC\n   mkdir -p stats/${sample} \n   cp ${sample}_allValidPairs.mergestat stats/${sample}/\n   \"\"\"\n   }else{\n   \"\"\"\n   cat ${vpairs} > ${sample}.allValidPairs\n   echo -n \"valid_interaction\\t\" > ${sample}_allValidPairs.mergestat\n   cat ${vpairs} | wc -l >> ${sample}_allValidPairs.mergestat\n   echo -n \"valid_interaction_rmdup\\t\" >> ${sample}_allValidPairs.mergestat\n   cat ${sample}.allValidPairs | wc -l >> ${sample}_allValidPairs.mergestat\n\n   ## Count short range (<20000) vs long range contacts\n   awk 'BEGIN{cis=0;trans=0;sr=0;lr=0} \\$2 == \\$5{cis=cis+1; d=\\$6>\\$3?\\$6-\\$3:\\$3-\\$6; if (d<=20000){sr=sr+1}else{lr=lr+1}} \\$2!=\\$5{trans=trans+1}END{print \"trans_interaction\\\\t\"trans\"\\\\ncis_interaction\\\\t\"cis\"\\\\ncis_shortRange\\\\t\"sr\"\\\\ncis_longRange\\\\t\"lr}' ${sample}.allValidPairs >> ${sample}_allValidPairs.mergestat\n\n   ## For MultiQC\n   mkdir -p stats/${sample}\n   cp ${sample}_allValidPairs.mergestat stats/${sample}/\n   \"\"\"\n   }\n}",
+        "nb_lignes_process": 51,
+        "string_script": "   if ( ! params.keep_dups ){\n   \"\"\"\n   mkdir -p stats/${sample}\n\n   ## Sort valid pairs and remove read pairs with same starts (i.e duplicated read pairs)\n   sort -S 50% -k2,2V -k3,3n -k5,5V -k6,6n -m ${vpairs} | \\\\\n   awk -F\"\\\\t\" 'BEGIN{c1=0;c2=0;s1=0;s2=0}(c1!=\\$2 || c2!=\\$5 || s1!=\\$3 || s2!=\\$6){print;c1=\\$2;c2=\\$5;s1=\\$3;s2=\\$6}' > ${sample}.allValidPairs\n\n   echo -n \"valid_interaction\\t\" > ${sample}_allValidPairs.mergestat\n   cat ${vpairs} | wc -l >> ${sample}_allValidPairs.mergestat\n   echo -n \"valid_interaction_rmdup\\t\" >> ${sample}_allValidPairs.mergestat\n   cat ${sample}.allValidPairs | wc -l >> ${sample}_allValidPairs.mergestat\n\n   ## Count short range (<20000) vs long range contacts\n   awk 'BEGIN{cis=0;trans=0;sr=0;lr=0} \\$2 == \\$5{cis=cis+1; d=\\$6>\\$3?\\$6-\\$3:\\$3-\\$6; if (d<=20000){sr=sr+1}else{lr=lr+1}} \\$2!=\\$5{trans=trans+1}END{print \"trans_interaction\\\\t\"trans\"\\\\ncis_interaction\\\\t\"cis\"\\\\ncis_shortRange\\\\t\"sr\"\\\\ncis_longRange\\\\t\"lr}' ${sample}.allValidPairs >> ${sample}_allValidPairs.mergestat\n \n   ## For MultiQC\n   mkdir -p stats/${sample} \n   cp ${sample}_allValidPairs.mergestat stats/${sample}/\n   \"\"\"\n   }else{\n   \"\"\"\n   cat ${vpairs} > ${sample}.allValidPairs\n   echo -n \"valid_interaction\\t\" > ${sample}_allValidPairs.mergestat\n   cat ${vpairs} | wc -l >> ${sample}_allValidPairs.mergestat\n   echo -n \"valid_interaction_rmdup\\t\" >> ${sample}_allValidPairs.mergestat\n   cat ${sample}.allValidPairs | wc -l >> ${sample}_allValidPairs.mergestat\n\n   ## Count short range (<20000) vs long range contacts\n   awk 'BEGIN{cis=0;trans=0;sr=0;lr=0} \\$2 == \\$5{cis=cis+1; d=\\$6>\\$3?\\$6-\\$3:\\$3-\\$6; if (d<=20000){sr=sr+1}else{lr=lr+1}} \\$2!=\\$5{trans=trans+1}END{print \"trans_interaction\\\\t\"trans\"\\\\ncis_interaction\\\\t\"cis\"\\\\ncis_shortRange\\\\t\"sr\"\\\\ncis_longRange\\\\t\"lr}' ${sample}.allValidPairs >> ${sample}_allValidPairs.mergestat\n\n   ## For MultiQC\n   mkdir -p stats/${sample}\n   cp ${sample}_allValidPairs.mergestat stats/${sample}/\n   \"\"\"\n   }",
+        "nb_lignes_script": 35,
+        "tools": [],
+        "inputs": [
+            "valid_pairs"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_vpairs",
+            "ch_vpairs_cool",
+            "mqc_mergestat",
+            "all_mergestat"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "Hic"
+    },
+    "merge_stats": {
+        "string_process": "\nprocess merge_stats {\n   tag \"$ext\"\n   label 'process_low'\n   publishDir \"${params.outdir}/hicpro/\", mode: params.publish_dir_mode,\n               saveAs: {filename -> if (filename.endsWith(\"stat\")) \"stats/$filename\"}\n\n   input:\n   set val(prefix), file(fstat) from all_mapstat.groupTuple().concat(all_pairstat.groupTuple(), all_rsstat.groupTuple())\n\n   output:\n   file(\"stats/\") into mqc_mstats\n   file(\"*stat\") into all_mstats\n\n  script:\n  sample = prefix.toString() - ~/(_R1|_R2|_val_1|_val_2|_1|_2)/\n  if ( (fstat =~ /.mapstat/) ){ ext = \"mmapstat\" }\n  if ( (fstat =~ /.pairstat/) ){ ext = \"mpairstat\" }\n  if ( (fstat =~ /.RSstat/) ){ ext = \"mRSstat\" }\n  \"\"\"\n  merge_statfiles.py -f ${fstat} > ${prefix}.${ext}\n  mkdir -p stats/${sample}\n  cp ${prefix}.${ext} stats/${sample}/\n  \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "  sample = prefix.toString() - ~/(_R1|_R2|_val_1|_val_2|_1|_2)/\n  if ( (fstat =~ /.mapstat/) ){ ext = \"mmapstat\" }\n  if ( (fstat =~ /.pairstat/) ){ ext = \"mpairstat\" }\n  if ( (fstat =~ /.RSstat/) ){ ext = \"mRSstat\" }\n  \"\"\"\n  merge_statfiles.py -f ${fstat} > ${prefix}.${ext}\n  mkdir -p stats/${sample}\n  cp ${prefix}.${ext} stats/${sample}/\n  \"\"\"",
+        "nb_lignes_script": 8,
+        "tools": [
+            "SAMPLE"
+        ],
+        "inputs": [
+            "all_mapstat"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "mqc_mstats",
+            "all_mstats"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "build_contact_maps": {
+        "string_process": "\nprocess build_contact_maps{\n   tag \"$sample - $mres\"\n   label 'process_highmem'\n   publishDir \"${params.outdir}/hicpro/matrix/raw\", mode: params.publish_dir_mode\n\n   when:\n   !params.skip_maps && params.hicpro_maps\n\n   input:\n   set val(sample), file(vpairs), val(mres) from ch_vpairs.combine(map_res)\n   file chrsize from chrsize.collect()\n\n   output:\n   set val(sample), val(mres), file(\"*.matrix\"), file(\"*.bed\") into raw_maps, raw_maps_4cool\n   \n   script:\n   \"\"\"\n   build_matrix --matrix-format upper  --binsize ${mres} --chrsizes ${chrsize} --ifile ${vpairs} --oprefix ${sample}_${mres}\n   \"\"\"\n}",
+        "nb_lignes_process": 19,
+        "string_script": "   \"\"\"\n   build_matrix --matrix-format upper  --binsize ${mres} --chrsizes ${chrsize} --ifile ${vpairs} --oprefix ${sample}_${mres}\n   \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "ch_vpairs",
+            "map_res",
+            "chrsize"
+        ],
+        "nb_inputs": 3,
+        "outputs": [
+            "raw_maps",
+            "raw_maps_4cool"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "run_ice": {
+        "string_process": "\nprocess run_ice{\n   tag \"$rmaps\"\n   label 'process_highmem'\n   publishDir \"${params.outdir}/hicpro/matrix/iced\", mode: params.publish_dir_mode\n\n   when:\n   !params.skip_maps && !params.skip_balancing && params.hicpro_maps\n\n   input:\n   set val(sample), val(res), file(rmaps), file(bed) from raw_maps\n\n   output:\n   set val(sample), val(res), file(\"*iced.matrix\"), file(bed) into hicpro_iced_maps\n   file (\"*.biases\") into hicpro_iced_bias\n\n   script:\n   prefix = rmaps.toString() - ~/(\\.matrix)?$/\n   \"\"\"\n   ice --filter_low_counts_perc ${params.ice_filter_low_count_perc} \\\n   --results_filename ${prefix}_iced.matrix \\\n   --filter_high_counts_perc ${params.ice_filter_high_count_perc} \\\n   --max_iter ${params.ice_max_iter} --eps ${params.ice_eps} --remove-all-zeros-loci --output-bias 1 --verbose 1 ${rmaps}\n   \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "   prefix = rmaps.toString() - ~/(\\.matrix)?$/\n   \"\"\"\n   ice --filter_low_counts_perc ${params.ice_filter_low_count_perc} \\\n   --results_filename ${prefix}_iced.matrix \\\n   --filter_high_counts_perc ${params.ice_filter_high_count_perc} \\\n   --max_iter ${params.ice_max_iter} --eps ${params.ice_eps} --remove-all-zeros-loci --output-bias 1 --verbose 1 ${rmaps}\n   \"\"\"",
+        "nb_lignes_script": 6,
+        "tools": [
+            "ICE"
+        ],
+        "inputs": [
+            "raw_maps"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "hicpro_iced_maps",
+            "hicpro_iced_bias"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "convert_to_pairs": {
+        "string_process": "\nprocess convert_to_pairs {\n   tag \"$sample\"\n   label 'process_medium'\n\n   when:\n   !params.skip_maps\n\n   input:\n   set val(sample), file(vpairs) from ch_vpairs_cool\n   file chrsize from chrsize_build.collect()\n\n   output:\n   set val(sample), file(\"*.txt.gz\") into cool_build, cool_build_zoom\n\n   script:\n   \"\"\"\n   ## chr/pos/strand/chr/pos/strand\n   awk '{OFS=\"\\t\";print \\$1,\\$2,\\$3,\\$5,\\$6,\\$4,\\$7}' $vpairs > contacts.txt\n   gzip contacts.txt\n   \"\"\"\n}",
+        "nb_lignes_process": 20,
+        "string_script": "   \"\"\"\n   ## chr/pos/strand/chr/pos/strand\n   awk '{OFS=\"\\t\";print \\$1,\\$2,\\$3,\\$5,\\$6,\\$4,\\$7}' $vpairs > contacts.txt\n   gzip contacts.txt\n   \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [],
+        "inputs": [
+            "ch_vpairs_cool",
+            "chrsize_build"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "cool_build",
+            "cool_build_zoom"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "cooler_raw": {
+        "string_process": "\nprocess cooler_raw {\n  tag \"$sample - ${res}\"\n  label 'process_medium'\n\n  publishDir \"${params.outdir}/contact_maps/\", mode: 'copy',\n              saveAs: {filename -> filename.endsWith(\".cool\") ? \"raw/cool/$filename\" : \"raw/txt/$filename\"}\n\n  input:\n  set val(sample), file(contacts), val(res) from cool_build.combine(map_res_cool)\n  file chrsize from chrsize_raw.collect()\n\n  output:\n  set val(sample), val(res), file(\"*cool\") into raw_cool_maps\n  set file(\"*.bed\"), file(\"${sample}_${res}.txt\") into raw_txt_maps\n\n  script:\n  \"\"\"\n  cooler makebins ${chrsize} ${res} > ${sample}_${res}.bed\n  cooler cload pairs -c1 2 -p1 3 -c2 4 -p2 5 ${sample}_${res}.bed ${contacts} ${sample}_${res}.cool\n  cooler dump ${sample}_${res}.cool | awk '{OFS=\"\\t\"; print \\$1+1,\\$2+1,\\$3}' > ${sample}_${res}.txt\n  \"\"\"\n}",
+        "nb_lignes_process": 21,
+        "string_script": "  \"\"\"\n  cooler makebins ${chrsize} ${res} > ${sample}_${res}.bed\n  cooler cload pairs -c1 2 -p1 3 -c2 4 -p2 5 ${sample}_${res}.bed ${contacts} ${sample}_${res}.cool\n  cooler dump ${sample}_${res}.cool | awk '{OFS=\"\\t\"; print \\$1+1,\\$2+1,\\$3}' > ${sample}_${res}.txt\n  \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [],
+        "inputs": [
+            "cool_build",
+            "map_res_cool",
+            "chrsize_raw"
+        ],
+        "nb_inputs": 3,
+        "outputs": [
+            "raw_cool_maps",
+            "raw_txt_maps"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "cooler_balance": {
+        "string_process": "\nprocess cooler_balance {\n  tag \"$sample - ${res}\"\n  label 'process_medium'\n\n  publishDir \"${params.outdir}/contact_maps/\", mode: 'copy',\n              saveAs: {filename -> filename.endsWith(\".cool\") ? \"norm/cool/$filename\" : \"norm/txt/$filename\"}\n\n  when:\n  !params.skip_balancing\n\n  input:\n  set val(sample), val(res), file(cool) from raw_cool_maps\n  file chrsize from chrsize_balance.collect()\n\n  output:\n  set val(sample), val(res), file(\"${sample}_${res}_norm.cool\") into balanced_cool_maps\n  file(\"${sample}_${res}_norm.txt\") into norm_txt_maps\n\n  script:\n  \"\"\"\n  cp ${cool} ${sample}_${res}_norm.cool\n  cooler balance ${sample}_${res}_norm.cool -p ${task.cpus} --force\n  cooler dump ${sample}_${res}_norm.cool --balanced --na-rep 0 | awk '{OFS=\"\\t\"; print \\$1+1,\\$2+1,\\$4}' > ${sample}_${res}_norm.txt\n  \"\"\"\n}",
+        "nb_lignes_process": 24,
+        "string_script": "  \"\"\"\n  cp ${cool} ${sample}_${res}_norm.cool\n  cooler balance ${sample}_${res}_norm.cool -p ${task.cpus} --force\n  cooler dump ${sample}_${res}_norm.cool --balanced --na-rep 0 | awk '{OFS=\"\\t\"; print \\$1+1,\\$2+1,\\$4}' > ${sample}_${res}_norm.txt\n  \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [],
+        "inputs": [
+            "raw_cool_maps",
+            "chrsize_balance"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "balanced_cool_maps",
+            "norm_txt_maps"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "Hic"
+    },
+    "cooler_zoomify": {
+        "string_process": "\nprocess cooler_zoomify {\n   tag \"$sample\"\n   label 'process_medium'\n   publishDir \"${params.outdir}/contact_maps/norm/mcool\", mode: 'copy'\n\n   when:\n   !params.skip_mcool\n\n   input:\n   set val(sample), file(contacts)  from cool_build_zoom\n   file chrsize from chrsize_zoom.collect()\n\n   output:\n   file(\"*mcool\") into mcool_maps\n\n   script:\n   \"\"\"\n   cooler makebins ${chrsize} ${params.res_zoomify} > bins.bed\n   cooler cload pairs -c1 2 -p1 3 -c2 4 -p2 5 bins.bed ${contacts} ${sample}.cool\n   cooler zoomify --nproc ${task.cpus} --balance ${sample}.cool\n   \"\"\"\n}",
+        "nb_lignes_process": 21,
+        "string_script": "   \"\"\"\n   cooler makebins ${chrsize} ${params.res_zoomify} > bins.bed\n   cooler cload pairs -c1 2 -p1 3 -c2 4 -p2 5 bins.bed ${contacts} ${sample}.cool\n   cooler zoomify --nproc ${task.cpus} --balance ${sample}.cool\n   \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [],
+        "inputs": [
+            "cool_build_zoom",
+            "chrsize_zoom"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "mcool_maps"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "dist_decay": {
+        "string_process": "\nprocess dist_decay {\n  tag \"$sample\"\n  label 'process_medium'\n  publishDir \"${params.outdir}/dist_decay\", mode: 'copy'\n\n  when:\n  !params.skip_dist_decay\n\n  input:\n  set val(sample), val(res), file(maps), val(r) from chddecay\n  \n  output:\n  file(\"*_distcount.txt\")\n  file(\"*.png\")\n\n\n  script:\n  \"\"\"\n  hicPlotDistVsCounts --matrices ${maps} \\\n                      --plotFile ${maps.baseName}_distcount.png \\\n  \t\t      --outFileData ${maps.baseName}_distcount.txt\n  \"\"\"\n}",
+        "nb_lignes_process": 22,
+        "string_script": "  \"\"\"\n  hicPlotDistVsCounts --matrices ${maps} \\\n                      --plotFile ${maps.baseName}_distcount.png \\\n  \t\t      --outFileData ${maps.baseName}_distcount.txt\n  \"\"\"",
+        "nb_lignes_script": 4,
+        "tools": [],
+        "inputs": [
+            "chddecay"
+        ],
+        "nb_inputs": 1,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "Hic"
+    },
+    "compartment_calling": {
+        "string_process": "\nprocess compartment_calling {\n  tag \"$sample - $res\"\n  label 'process_medium'\n  publishDir \"${params.outdir}/compartments\", mode: 'copy'\n\n  when:\n  !params.skip_compartments\n\n  input:\n  set val(sample), val(res), file(cool), val(r) from chcomp\n  file(fasta) from fasta_for_compartments.collect()\n  file(chrsize) from chrsize_compartments.collect()\n\n  output:\n  file(\"*compartments*\") optional true into out_compartments\n\n  script:\n  \"\"\"\n  cooltools genome binnify --all-names ${chrsize} ${res} > genome_bins.txt\n  cooltools genome gc genome_bins.txt ${fasta} > genome_gc.txt \n  cooltools call-compartments --contact-type cis -o ${sample}_compartments ${cool}\n  awk -F\"\\t\" 'NR>1{OFS=\"\\t\"; if(\\$6==\"\"){\\$6=0}; print \\$1,\\$2,\\$3,\\$6}' ${sample}_compartments.cis.vecs.tsv | sort -k1,1 -k2,2n > ${sample}_compartments.cis.E1.bedgraph\n  \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "  \"\"\"\n  cooltools genome binnify --all-names ${chrsize} ${res} > genome_bins.txt\n  cooltools genome gc genome_bins.txt ${fasta} > genome_gc.txt \n  cooltools call-compartments --contact-type cis -o ${sample}_compartments ${cool}\n  awk -F\"\\t\" 'NR>1{OFS=\"\\t\"; if(\\$6==\"\"){\\$6=0}; print \\$1,\\$2,\\$3,\\$6}' ${sample}_compartments.cis.vecs.tsv | sort -k1,1 -k2,2n > ${sample}_compartments.cis.E1.bedgraph\n  \"\"\"",
+        "nb_lignes_script": 5,
+        "tools": [],
+        "inputs": [
+            "chcomp",
+            "fasta_for_compartments",
+            "chrsize_compartments"
+        ],
+        "nb_inputs": 3,
+        "outputs": [
+            "out_compartments"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "tads_hicexplorer": {
+        "string_process": "\nprocess tads_hicexplorer {\n  tag \"$sample - $res\"\n  label 'process_medium'\n  publishDir \"${params.outdir}/tads/hicexplorer\", mode: 'copy'\n\n  when:\n  !params.skip_tads && params.tads_caller =~ 'hicexplorer'\n\n  input:\n  set val(sample), val(res), file(cool), val(r) from chtads\n\n  output:\n  file(\"*.{bed,bedgraph,gff}\") into hicexplorer_tads\n\n  script:\n  \"\"\"\n  hicFindTADs --matrix ${cool} \\\n  \t      --outPrefix tad \\\n\t      --correctForMultipleTesting fdr \\\n\t      --numberOfProcessors ${task.cpus}\n  \"\"\"\n}",
+        "nb_lignes_process": 21,
+        "string_script": "  \"\"\"\n  hicFindTADs --matrix ${cool} \\\n  \t      --outPrefix tad \\\n\t      --correctForMultipleTesting fdr \\\n\t      --numberOfProcessors ${task.cpus}\n  \"\"\"",
+        "nb_lignes_script": 5,
+        "tools": [],
+        "inputs": [
+            "chtads"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "hicexplorer_tads"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "tads_insulation": {
+        "string_process": "\nprocess tads_insulation {\n  tag \"$sample - $res\"\n  label 'process_medium'\n  publishDir \"${params.outdir}/tads/insulation\", mode: 'copy'\n\n  when:\n  !params.skip_tads && params.tads_caller =~ 'insulation'\n\n  input:\n  set val(sample), val(res), file(cool), val(r) from chIS\n\n  output:\n  file(\"*tsv\") into insulation_tads\n\n  script:\n  \"\"\"\n  cooltools diamond-insulation --window-pixels ${cool} 15 25 50 > ${sample}_insulation.tsv\n  \"\"\"\n}",
+        "nb_lignes_process": 18,
+        "string_script": "  \"\"\"\n  cooltools diamond-insulation --window-pixels ${cool} 15 25 50 > ${sample}_insulation.tsv\n  \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "chIS"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "insulation_tads"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "multiqc": {
+        "string_process": "\nprocess multiqc {\n   label 'process_low'\n   publishDir \"${params.outdir}/MultiQC\", mode: params.publish_dir_mode\n\n   when:\n   !params.skip_multiqc\n\n   input:\n   file multiqc_config from ch_multiqc_config\n   file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])\n   file ('input_*/*') from mqc_mstats.concat(mqc_mergestat).collect()\n   file ('software_versions/*') from ch_software_versions_yaml\n   file workflow_summary from ch_workflow_summary.collect()\n\n   output:\n   file \"*multiqc_report.html\" into multiqc_report\n   file \"*_data\"\n\n   script:\n   rtitle = ''\n   rfilename = ''\n   if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {\n     rtitle = \"--title \\\"${workflow.runName}\\\"\"\n     rfilename = \"--filename \" + workflow.runName.replaceAll('\\\\W','_').replaceAll('_+','_') + \"_multiqc_report\"\n   }\n   custom_config_file = params.multiqc_config ? \"--config $mqc_custom_config\" : ''\n   \"\"\"\n   multiqc -f $rtitle $rfilename $custom_config_file .\n   \"\"\"\n}",
+        "nb_lignes_process": 29,
+        "string_script": "   rtitle = ''\n   rfilename = ''\n   if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {\n     rtitle = \"--title \\\"${workflow.runName}\\\"\"\n     rfilename = \"--filename \" + workflow.runName.replaceAll('\\\\W','_').replaceAll('_+','_') + \"_multiqc_report\"\n   }\n   custom_config_file = params.multiqc_config ? \"--config $mqc_custom_config\" : ''\n   \"\"\"\n   multiqc -f $rtitle $rfilename $custom_config_file .\n   \"\"\"",
+        "nb_lignes_script": 9,
+        "tools": [
+            "MultiQC"
+        ],
+        "inputs": [
+            "ch_multiqc_config",
+            "ch_multiqc_custom_config",
+            "mqc_mstats",
+            "mqc_mergestat",
+            "ch_software_versions_yaml",
+            "ch_workflow_summary"
+        ],
+        "nb_inputs": 6,
+        "outputs": [
+            "multiqc_report"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "Hic"
+    },
+    "output_documentation": {
+        "string_process": "\nprocess output_documentation {\n    publishDir \"${params.outdir}/pipeline_info\", mode: params.publish_dir_mode\n\n    input:\n    file output_docs from ch_output_docs\n    file images from ch_output_docs_images\n\n    output:\n    file 'results_description.html'\n\n    script:\n    \"\"\"\n    markdown_to_html.py $output_docs -o results_description.html\n    \"\"\"\n}",
+        "nb_lignes_process": 14,
+        "string_script": "    \"\"\"\n    markdown_to_html.py $output_docs -o results_description.html\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "tools": [],
+        "inputs": [
+            "ch_output_docs",
+            "ch_output_docs_images"
+        ],
+        "nb_inputs": 2,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "Hic"
+    }
+}
