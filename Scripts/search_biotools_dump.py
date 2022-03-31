@@ -1,4 +1,4 @@
-from os import link, path
+from os import path
 from rdflib import ConjunctiveGraph
 from rdflib.namespace import Namespace, RDF, RDFS
 import jellyfish
@@ -14,6 +14,17 @@ import sys
 import functools
 
 printf = functools.partial(print, end="")
+
+current_adress = os.getcwd()
+os.chdir(".")
+root = os.getcwd()
+bioschemas_dump = glob.glob( "**/data/bioschemas-dump.ttl", recursive = True)
+EDAM = glob.glob( "**/data/EDAM_1.25.owl", recursive = True)
+os.chdir(current_adress)
+
+bioschemas_dump = root+'/'+bioschemas_dump[0]
+EDAM = root+'/'+EDAM[0]
+
 
 #setting the namespaces as constants
 sc = Namespace('http://schema.org/')
@@ -52,8 +63,8 @@ def thread2(threadname, q):
     a = 0
     q.put(True)
     q.put(True)
-    #These links might change in the future
-    kg.load('https://raw.githubusercontent.com/bio-tools/biotoolsRdf/master/biotools-dump-latest.ttl', format="turtle")
+    kg.load(bioschemas_dump, format="turtle")
+    #kg.load(EDAM)
     kg.load('http://edamontology.org/EDAM_dev.owl')
     q.put(None) # Poison pill
 
@@ -65,7 +76,6 @@ thread1.start()
 thread2.start()
 thread1.join()
 thread2.join()
-os.system('rm biotools-dump-latest.ttl')
 
 
 def get_sorted_matches(toolname):

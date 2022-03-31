@@ -400,6 +400,7 @@ class Process:
 
   def getListTools(self):
     if(self.script!=None): 
+        print(self.script.getListTools())
         return self.script.getListTools()
     return []
 
