@@ -40,7 +40,7 @@ class Workflow:
     def initialise_main(self):
         #Case DSL=1
         if(not self.get_DSL2()):
-            print('Workflow written in DSL1')
+            #print('Workflow written in DSL1')
             self.main= TypeMainDSL1(self.address_main)
             self.main.initialise()
 

@@ -1,80 +1,54 @@
-drop table topic_wf CASCADE;
+DROP TABLE topic_wf CASCADE; 
 
-drop table workflow CASCADE;
+DROP TABLE contributor CASCADE; 
 
-drop table person_git CASCADE;
+DROP TABLE person_git_comp CASCADE; 
 
-drop table person_git_comp CASCADE;
+DROP TABLE similarity_process CASCADE; 
 
-drop table contributor CASCADE;
+DROP TABLE channel CASCADE; 
 
-drop table process CASCADE;
+DROP TABLE process_have_channel CASCADE;  
 
-drop table similarity_process CASCADE;
+DROP TABLE operation_wf CASCADE; 
 
-drop table channel CASCADE;
+DROP TABLE channel_have_operation CASCADE;  
 
-drop table operation_wf CASCADE;
+DROP TABLE tools_have_topic CASCADE; 
 
-drop table channel_have_operation CASCADE;
+DROP TABLE topic_tools CASCADE; 
 
-drop table tool CASCADE;
+DROP TABLE tool_in_workflow CASCADE; 
 
-drop table tool_comp CASCADE;
+DROP TABLE tool_in_process CASCADE; 
 
-drop table topic_tools CASCADE;
+DROP TABLE tools_have_in_out CASCADE; 
 
-drop table tool_in_workflow CASCADE;
+DROP TABLE in_out_data CASCADE; 
 
-drop table tool_in_process CASCADE;
+DROP TABLE tools_have_operation CASCADE;  
 
-drop table tools_have_topic CASCADE;
+DROP TABLE operation_tool CASCADE; 
 
-drop table operation_tool CASCADE;
+DROP TABLE tool CASCADE; 
 
-drop table tools_have_operation CASCADE;
+DROP TABLE process CASCADE; 
 
-drop table credit_tool CASCADE;
+DROP TABLE workflow CASCADE; 
 
-drop table credit_tool_comp CASCADE;
-
-drop table in_out_data CASCADE;
-
-drop table in_out_format CASCADE;
-
-drop table in_out_link_data_format CASCADE;
-
-drop table tools_have_in_out CASCADE;
-
-drop table tools_contact_credit CASCADE;
-
-drop table process_have_channel CASCADE;
-
-drop table collectionID CASCADE;
+DROP TABLE person_git CASCADE; 
 
 ------------------------------------
 
-drop type type_system CASCADE;
+drop type type_system CASCADE; 
 
 drop type type_p CASCADE;
 
-drop type type_accessibility CASCADE;
+drop type type_kind; 
 
-drop type type_elixirNode CASCADE;
+drop type type_c; 
 
-drop type type_elixirPlatform CASCADE;
-
-drop type type_entity;
-
-drop type type_role;
-
-drop type type_kind;
-
-drop type type_c;
-
-drop type type_operation;
-
-drop type type_license_tool;
+drop type type_operation; 
 
 ------------------------------------
 
@@ -88,10 +62,6 @@ drop sequence seq_id_operation_wf;
 
 drop sequence seq_id_in_out_tool;
 
-drop sequence seq_id_credit;
-
 drop sequence seq_id_topic_tools;
 
 drop sequence seq_id_operation_tools;
-
-drop sequence seq_id_in_out_tool_format;

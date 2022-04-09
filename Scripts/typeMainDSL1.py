@@ -142,6 +142,8 @@ class TypeMainDSL1(TypeMain):
                 dict[p.getName()]['nb_lignes_script']= get_number_lignes(p.get_string_script())
                 dict[p.getName()]['language_script']= p.getScriptLanguage()
                 dict[p.getName()]['tools']= p.getListTools()
+                dict[p.getName()]['tools_url'] = p.getListToolsUrl()
+                dict[p.getName()]['tools_dico'] = p.getListAnnotationsTools()
                 inputs, outputs, emits=p.extractAll()
                 def simplify(tab):
                     temp=[]
@@ -524,12 +526,23 @@ class TypeMainDSL1(TypeMain):
 
     def save_channels(self, name='channels_extracted'):
         myText = open(name+'.nf','w')
+        dico = {}
         for c in self.channels:
             #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
             myText.write(c.get_id()+ ' string : '+c.get_full_string()+'\n')
             myText.write(c.get_id()+' origin : '+  str(c.get_origin())+'\n')
             myText.write(c.get_id() +' gives  : '+  str(c.get_gives())+'\n\n\n')
+
+            dico[c.get_id()] = {}
+            dico[c.get_id()]['string'] = c.get_full_string()
+            dico[c.get_id()]['origin'] = c.get_origin()
+            dico[c.get_id()]['gives'] = c.get_gives()
+
         myText.close()
+
+        with open(name+'.json', "w") as outfile:
+                json.dump(dico, outfile, indent=4)
+
 
     def get_channels_formated(self):
         temp=""
@@ -956,7 +969,7 @@ class TypeMainDSL1(TypeMain):
             #STEP2
             #Finds and adds the proccesses to the list of processes + analyses them
             self.find_processes()
-            print(f'Extracted {self.get_nb_processes()} processes')
+            #print(f'Extracted {self.get_nb_processes()} processes')
             self.format_processes()
 
             #STEP3
@@ -971,11 +984,11 @@ class TypeMainDSL1(TypeMain):
             #STEP5 
             #Find and analyse every channel and add them to the list of channels
             self.extract_analyse_channels()
-            print(f'Extracted {self.get_number_channels()} channels')
+            #print(f'Extracted {self.get_number_channels()} channels')
             
             self.get_structure_4()
-            print(f'Structure reconstructed')
-            print(f'With {self.nb_nodes_process} processes, {self.nb_nodes_operation} operations and {self.nb_edges} edges')
+            #print(f'Structure reconstructed')
+            #print(f'With {self.nb_nodes_process} processes, {self.nb_nodes_operation} operations and {self.nb_edges} edges')
             
             self.save_channels()
             self.save_processes()

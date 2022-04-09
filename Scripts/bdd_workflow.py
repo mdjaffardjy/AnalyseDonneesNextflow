@@ -2,8 +2,8 @@ import datetime
 
 class WorkflowBD:
     def __init__(self, info_workflow):
-        self.name_full = info_workflow['login_owner_wf'] + '/' + info_workflow['name_wf']         
-        self.name_wf = info_workflow['name_wf']     
+        self.name_full = info_workflow['name_wf']  
+        self.name_wf = info_workflow['name_wf'].split("/")[-1]
         self.id_git = info_workflow['id_git'] 
         self.files = info_workflow['files'] 
         self.git_url = info_workflow['git_url'] 
@@ -69,7 +69,7 @@ class WorkflowBD:
                             'dateU':datetime.date(int(dateU[0]), int(dateU[1]), int(dateU[2])),
                             'dateJ':datetime.date(int(dateJ[0]), int(dateJ[1]), int(dateJ[2])),
                             'description':self.description_wf, 'nbF':self.nb_forks, 'nbStars':self.nb_stars, 
-                            'nbW':self.nb_watchers,'nbS':self.nb_stars, 'system': language,
+                            'nbW':self.nb_watchers,'nbS':self.nb_subscribers, 'system': language,
                             'archived':self.archived, 'login':self.login_owner_wf})
             #extract the id of the wf
             idWf = cur.fetchone()[0]

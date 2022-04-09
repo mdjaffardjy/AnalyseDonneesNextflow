@@ -153,10 +153,10 @@ def main():
                 except Exception as inst:
                     #Error DSL2
                     if (str(inst) == "Workflow written in DSL2 : I don't know how to analyze the workflow yet"):
-                        print('\x1b[1;37;44m' + f"Workflow written in DSL2 : I don't know how to analyze the workflow yet"+ '\x1b[0m')
+                        #print('\x1b[1;37;44m' + f"Workflow written in DSL2 : I don't know how to analyze the workflow yet"+ '\x1b[0m')
                         DSL2+=1
                         DSL2_tab.append(tabWf[i])
-                        """try:
+                        try:
                             folder = args.input + "/" + tabWf[i] 
                             nbFile = 0
                             files = []
@@ -166,6 +166,8 @@ def main():
                                     files.append(p)
                             k = 0
                             for f in files:    
+                                #si il y a une erreur sur un fichier je n'ajoute pas ce fichier mais qd même les autres
+                                # -> a revoir 
                                 p = Workflow(f)
                                 p.initialise_main()
                                 addInDatabase(fileInputJSON, tabWf[i], args.json_directory)
@@ -197,7 +199,7 @@ def main():
                             else:
                                 print('\x1b[1;37;41m' + f"Couldn't analyse Workflow : {str(inst)}"+ '\x1b[0m')
                                 DSL1_not_analyzed+=1
-                                errors.append([tabWf[i], str(inst)])"""
+                                errors.append([tabWf[i], str(inst)])
                             
                             
                     #Error not the same number of curlies

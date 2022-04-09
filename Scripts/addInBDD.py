@@ -1,6 +1,4 @@
-import datetime
 import json
-import os
 from .bdd_person import *
 from .bdd_workflow import *
 from .bdd_process import *
@@ -104,133 +102,62 @@ def addTools(name_wf,idWf,cur,conn, adressJson):
     with open('processes_info.json') as json_processes:
         process = json.load(json_processes)
     
-    list_tools = []
-    name_tools = []
     for name_process in process:
-        tools = process[name_process]['tools']
-        toolsUrl = process[name_process]['tools_url']
-        all_tools = zip(tools, toolsUrl)
-        for t_name, t_url in all_tools:
-            if not t_name in name_tools:
-                list_tools.append(t_url)
-                name_tools.append(t_name)
+        tools = process[name_process]['tools_url']
+        dicoTools = process[name_process]['tools_dico']
 
-    currentPath = os.getcwd()
-    try : 
-        os.chdir(adressJson + "ToolsJson")
-    except:
-        os.chdir(adressJson)
-        os.mkdir('ToolsJson')
-        os.chdir(adressJson + "ToolsJson")
-
-    for t in list_tools:
-        tool = t.split('/')[-1]
-        name = tool + '.json'
-        try:
-            with open(name) as tool_json:
-                tool_information = json.load(tool_json)
-        except:
-            req = 'curl -X GET "https://bio.tools/api/tool/' + tool + '/?format=json" > '  + name
-            os.system(req)
-            with open(name) as tool_json:
-                tool_information = json.load(tool_json)
-
-        try:
+        for t, dico in zip(tools,dicoTools):
             info_tool = {}
-
-            info_tool['biotoolsID'] = tool_information['biotoolsID']
-            info_tool['name'] = tool_information['name']
-            info_tool['description'] = tool_information['description']
-            info_tool['homepage'] = tool_information['homepage']
             info_tool['url_biotools'] = t
+            info_tool['name_tool'] = dico['name']
+            info_tool['description'] = dico['description']
+            info_tool['homepage'] = dico['homepage']
 
-            info_tool['version'] = tool_information['version']
-            info_tool['license'] = tool_information['license']
-            info_tool['accessibility'] = tool_information['accessibility']
-            info_tool['elixirNode'] = tool_information['elixirNode']
-            info_tool['elixirPlatform'] = tool_information['elixirPlatform']
+            info_tool['topics'] = dico['topic']
 
-            try:
-                info_tool['topic'] = tool_information['topic']
-            except:
-                info_tool['topic'] = []
+            info_tool['operation'] = dico['function'][0]['operation']
 
-            info_tool['collectionID'] = tool_information['collectionID']
+            info_tool['input'] = dico['function'][0]['input']
 
-            try:
-                info_tool['operation'] = tool_information['function'][0]['operation']
-            except:
-                info_tool['operation'] = []
+            info_tool['output'] = dico['function'][0]['output']
 
-            info_tool['credit'] = tool_information['credit']
+            tool = ToolsBDD(info_tool)
+            tool.insertBDTool(cur)
+            tool.insertBDTopics(cur)
+            tool.insertBDOperation(cur)
+            tool.insertBDInput_Output(cur, 'input')
+            tool.insertBDInput_Output(cur, 'output')
+            tool.insertBDToolWf(cur, idWf)
 
-            try:
-                info_tool['input'] = tool_information['function'][0]['input']
-            except:
-                info_tool['input'] = []
-
-            try:
-                info_tool['output'] = tool_information['function'][0]['output']
-            except:
-                info_tool['output'] = []
-            
-            tool_study = ToolsBDD(info_tool)
-            already = tool_study.insertBDTool(cur)
-            if not already:
-                #tool_study.insertDBToolComp(cur)
-                tool_study.insertBDToolCollectionID(cur)
-                tool_study.insertBDTopics(cur)
-                tool_study.insertBDOperation(cur)
-                tool_study.insertBDInput_Output(cur, 'input')
-                tool_study.insertBDInput_Output(cur, 'output')
-                tool_study.insertBDCredit(cur)
-            tool_study.insertBDToolWf(cur,idWf) 
-        except  Exception as inst:
-            print(print('This tool has a problem :', tool , ' : ', inst))
-
-    for p in process:
-        toolsInThisProcess = process[p]['tools_url']
-        if len(toolsInThisProcess) != 0:
-            bignameProcess = name_wf + "/" + p
-            littlenameProcess = p
-            string_process = process[p]['string_process']
-            #on cherche le id du process dans la base
+    for name_process in process:
+        big_name = name_wf + '/' + name_process
+        little_name = name_process
+        string =  process[name_process]['string_process']  
+        verif = f"""
+            SELECT id_process FROM process
+            WHERE name_process = %(name_process)s AND little_name = %(little_name)s AND string = %(string)s
+            """ 
+        cur.execute(verif, {'name_process':big_name, 'little_name':little_name, 'string':string})
+        raw = cur.fetchall()
+        idProc = raw[0][0]
+        tools = process[name_process]['tools_url']
+        
+        for t in tools:
             verif = f"""
-                SELECT id_process FROM process
-                WHERE name_process = %(np)s AND little_name = %(ns)s AND string = %(string)s
+                SELECT url_biotools from tool_in_process
+                WHERE url_biotools = %(url)s AND id_proc = %(idP)s
                 """
-            cur.execute(verif, {'np':bignameProcess, 'ns':littlenameProcess, 'string':string_process})
-            idProc = cur.fetchall()[0][0]
-
-        for tool_url in toolsInThisProcess:
-            try:
-                tool = tool_url.split('/')[-1]
-                with open(tool + '.json') as tool_json:
-                    tool_info = json.load(tool_json)
-                bI = tool_info['biotoolsID']
-
-                #on verifie que le lien n'existe pas deja
-                verif = f"""
-                        SELECT biotoolsID FROM tool_in_process
-                        WHERE biotoolsID = %(bi)s AND id_proc = %(idP)s
-                        """
-                cur.execute(verif, {'bi':bI, 'idP':idProc})
-                raw = cur.fetchall()
-                if raw != []:
-                    #print("Already in the database : ", raw)
-                    None
-                else:
-                    requete = f"""
-                            INSERT INTO tool_in_process
-                            (biotoolsID, id_proc)
-                            VALUES
-                            (%(bI)s, %(idP)s)
-                            """
-                    cur.execute(requete, {'bI':bI, 'idP':idProc})
-
-            except Exception as inst:
-                #print(print('This tool has a problem :', tool , ' : ', inst))
+            cur.execute(verif, {'url':t, 'idP':idProc})
+            raw = cur.fetchall()
+            if raw != []:
                 None
+            else:
+                requete = f"""
+                    INSERT INTO tool_in_process
+                    (url_biotools, id_proc)
+                    VALUES
+                    (%(url)s, %(idP)s)
+                    """
+                cur.execute(requete, {'url':t, 'idP':idProc})
 
     conn.commit()
-    os.chdir(currentPath)
