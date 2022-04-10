@@ -154,7 +154,7 @@ def H_4_1(p1, p2, similarity):
 def H_4_2(p1, p2, similarity):
     def score_length_script(p1, p2):
         num = abs(p1['nb_lignes_script'] - p2['nb_lignes_script'])
-        denum = max(p1['nb_lignes_script'], p2['nb_lignes_script'])
+        denum = max(max(p1['nb_lignes_script'], p2['nb_lignes_script']), 1)
         return 1 - num/denum
     if(similarity(p1['tools'], p2['tools'])!=0):
         return (similarity(p1['tools'], p2['tools']) + score_length_script(p1, p2))/2
