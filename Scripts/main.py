@@ -31,9 +31,11 @@ def main():
     
     parser = argparse.ArgumentParser()
     #Obligatory
-    parser.add_argument('input') 
-    parser.add_argument('results_directory')
+    #parser.add_argument('input') 
+    #parser.add_argument('results_directory')
     #Facultative
+    parser.add_argument('--input', default='') 
+    parser.add_argument('--results_directory', default='')
     parser.add_argument('--name', default='Workflow_Analysis')
     parser.add_argument('--mode', default='single') #single mode is the default
     parser.add_argument('--dev', default='F') #For developpeur mode or not
@@ -42,6 +44,10 @@ def main():
     #Setting the current directory to where the extracted data will be saved
     os.chdir(args.results_directory)
 
+    if(args.input == ''):
+        raise Exception('\x1b[1;37;41m' + f'The parameter "input" was not given!!'+ '\x1b[0m')
+    if(args.results_directory == ''):
+        raise Exception('\x1b[1;37;41m' + f'The parameter "results_directory" was not given!!'+ '\x1b[0m')
     #=========
     # SINGLE
     #=========
@@ -49,25 +55,23 @@ def main():
         print('')
         print('\x1b[1;37;42m' + 'Single Workflow analysis mode was selected' + '\x1b[0m')
         print('')
-        #Checking that the file given exists
-        if Path(args.input).is_file():
-            #The file exists
-            print(f'Analyzing the workflow : {args.input}')
-            #Creating the new file if it doesn't exist
-            os.system(f"mkdir -p {args.name}")
-            #Setting the current directory to the file directory
-            res=args.results_directory+'/'+args.name
-            os.chdir(res)
-            #Analysing the workflow
-            w = Workflow(args.input)
-            w.initialise()
-            print(f'Results saved in : {res}')
-            #Delete developper files if not in dev mode
-            if(args.dev == 'F'):
-                os.system('rm channels_extracted.nf')
-                os.system('rm processes_extracted.nf')
-        else:
-            raise Exception('\x1b[1;37;41m' + f"Either '{args.input}' is not a file or doesn't exist!!"+ '\x1b[0m')
+        
+        #The file exists
+        print(f'Analyzing the workflow : {args.input}')
+        #Creating the new file if it doesn't exist
+        os.system(f"mkdir -p {args.name}")
+        #Setting the current directory to the file directory
+        res=args.results_directory+'/'+args.name
+        os.chdir(res)
+        #Analysing the workflow
+        w = Workflow(args.input)
+        w.initialise()
+        print(f'Results saved in : {res}')
+        #Delete developper files if not in dev mode
+        if(args.dev == 'F'):
+            os.system('rm -f channels_extracted.nf')
+            os.system('rm -f processes_extracted.nf')
+        
     
     #=========
     # MULTI
@@ -106,8 +110,8 @@ def main():
                     analyzed_tab.append(names[i])
                     #Delete developper files if in dev mode
                     if(args.dev != 'F'):
-                        os.system('rm channels_extracted.nf')
-                        os.system('rm processes_extracted.nf')
+                        os.system('rm -f channels_extracted.nf')
+                        os.system('rm -f processes_extracted.nf')
                 except Exception as inst:
                     #Error DSL2
                     if (str(inst) == "Workflow written in DSL2 : I don't know how to analyze the workflow yet"):

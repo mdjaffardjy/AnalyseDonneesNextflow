@@ -3,12 +3,13 @@
 # October 2021 - April 2022
 
 import re
-import os
+from pathlib import Path
 
 from .process import *
 from .file import *
 from .typeMain import *
 from .typeMainDSL1 import *
+from .typeMainDSL2 import *
 
 
 class Workflow:
@@ -51,10 +52,16 @@ class Workflow:
     
     #Initialise the workflow
     def initialise(self):
-        #Check to see if the workflow is written is DSL2 or not
-        self.check_DSL2()
-        #Analyze the workflow
-        self.initialise_main()
+        #Checking that it's a file
+        if Path(self.address_main).is_file():
+            #Check to see if the workflow is written is DSL2 or not
+            self.check_DSL2()
+            #Analyze the workflow
+            self.initialise_main()
+        else:
+            self.main= TypeMainDSL2(self.address_main)
+            self.main.initialise()
+
 
 
 
