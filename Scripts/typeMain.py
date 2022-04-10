@@ -124,6 +124,8 @@ class TypeMain(File):
                 dict[p.getName()]['nb_lignes_script']= get_number_lignes(p.get_string_script())
                 dict[p.getName()]['language_script']= p.getScriptLanguage()
                 dict[p.getName()]['tools']= p.getListTools()
+                dict[p.getName()]['tools_url'] = p.getListToolsUrl()
+                dict[p.getName()]['tools_dico'] = p.getListAnnotationsTools()
                 inputs, outputs, emits=p.extractAll()
                 def simplify(tab):
                     temp=[]

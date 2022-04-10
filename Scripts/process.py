@@ -402,6 +402,16 @@ class Process:
     if(self.script!=None): 
         return self.script.getListTools()
     return []
+  
+  def getListToolsUrl(self):
+    if self.script != None:
+      return self.script.getListToolsUrl()
+    return []
+
+  def getListAnnotationsTools(self):
+    if self.script != None:
+      return self.script.getListAnnotationsTools()
+    return []
 
   #Do everything to extract the informations
   def extractProcess(self, analyse_tools= True):

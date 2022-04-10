@@ -8,6 +8,8 @@ class Script:
             self.tools = []
             self.annotations = {}
             self.listTools  = []
+            self.listToolsUrl = []
+            self.listAnnotationsTools = []
 
     def printString(self):
         print(self.script_string)  
@@ -32,6 +34,18 @@ class Script:
             return self.listTools
         return []
 
+    def getListToolsUrl(self):
+        if(self.listToolsUrl!=None):
+            return self.listToolsUrl
+        return []
+    
+    def getListAnnotationsTools(self):
+        if(self.listAnnotationsTools!=None):
+            return self.listAnnotationsTools
+        return []
+
+
+
     def whichLanguage(self):
         self.language = whichLanguage(self.script_string)
 
@@ -46,7 +60,10 @@ class Script:
                 bioId = self.annotations[a]['name']
                 if not bioId in self.listTools:
                     self.listTools.append(bioId)
-
+                    self.listToolsUrl.append(self.annotations[a]['uri'])
+                    self.listAnnotationsTools.append(self.annotations[a])
+                    #print(self.annotations[a])
+                         
     def extractS(self):
         self.whichLanguage()
         self.extractTools()

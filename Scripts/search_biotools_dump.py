@@ -178,6 +178,17 @@ def extract_match_info(sorted_matchs, treshold = 5):
         function = {'operation': [operations,operations_syn], 'input' : inputs, 'output' : outputs}
         dict_tools.update({'function':[function]})
 
+        #Add more information about the tool - for the bd
+        description = ''
+        for s, p, o in kg.triples((tool[0], sc.description, None)):
+            description = o
+        dict_tools.update({'description':description})
+
+        homepage = ''
+        for s, p, o in kg.triples((tool[0], sc.url, None)):
+            homepage = o
+        dict_tools.update({'homepage':homepage})
+        
         liste_dict_tools.append(dict_tools)
 
         return liste_dict_tools
