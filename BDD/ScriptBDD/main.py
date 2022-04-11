@@ -99,9 +99,9 @@ def main():
             wfNoTools.append(nameWf)
             #print('No tools in this workflow : don\'t add in the database\n')
 
-    os.chdir(args.results_directory)
+    '''os.chdir(args.results_directory)
     with open("allProcesses.json", 'w') as dicoP:
-        json.dump(dicoAllProcess, dicoP, indent=4)
+        json.dump(dicoAllProcess, dicoP, indent=4)'''
 
     os.chdir(current_directory)
 
