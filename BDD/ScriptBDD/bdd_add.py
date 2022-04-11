@@ -80,8 +80,8 @@ def addWorkflowExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
     with open('processes_info.json') as json_processes:
         process = json.load(json_processes)
     
-    with open('channels_extracted.json') as json_channels:
-        channel = json.load(json_channels)
+    """with open('channels_extracted.json') as json_channels:
+        channel = json.load(json_channels)"""
 
     for p in process:
         info_process = {}
@@ -99,7 +99,7 @@ def addWorkflowExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
         proc = ProcessBD(info_process, idWf)
         id_proc = proc.insertBDProcess(cur)
 
-        #proc.addSimilarity(cur)
+        #proc.addSimilarity(cur) #A NE PAS LANCER CAR EXTREMEMENT LONG !!!!! A REVOIR COMMENT METTRE SIMILARITY
 
         temp = process[p]
         key = str(idWf) + "/" + str(id_proc)
