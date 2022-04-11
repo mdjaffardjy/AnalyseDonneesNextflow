@@ -47,7 +47,7 @@ class Workflow:
 
         #Case DSL=2
         elif(self.get_DSL2()):
-            raise Exception("Workflow written in DSL2 : I don't know how to analyze the workflow yet")
+            raise Exception("Single file is written in DSL2 : I don't know how to analyze this yet")
 
     
     #Initialise the workflow

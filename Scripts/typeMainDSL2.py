@@ -24,7 +24,7 @@ class TypeMainDSL2(TypeMain):
         print("Workflow written in DSL2")
         all_header_files = glob2.glob(self.address+'/**/*.nf')
         #print(all_header_files)
-        print(f'Found {len(all_header_files)} nextflow files to analyse in {self.address}\n')
+        print(f'Found {len(all_header_files)} nextflow files to analyse in {self.address}')
         for f in all_header_files:
             
             next_file = TypeMain(f)
@@ -34,6 +34,6 @@ class TypeMainDSL2(TypeMain):
             print(f'Analyzing {f[len(self.address):]} : {len(pro)} processes found')
             self.processes += pro
         
-        print(f'\nTotal number of processes in workflow : {len(self.processes)}')
+        print(f'Total number of processes in the workflow {self.get_name_workflow()} : {len(self.processes)}')
         self.get_info_processes()
 
