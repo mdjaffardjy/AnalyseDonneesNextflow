@@ -99,7 +99,6 @@ def addWorkflowExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
         proc = ProcessBD(info_process, idWf)
         id_proc = proc.insertBDProcess(cur)
 
-        #proc.addSimilarity(cur) #A NE PAS LANCER CAR EXTREMEMENT LONG !!!!! A REVOIR COMMENT METTRE SIMILARITY
 
         temp = process[p]
         key = str(idWf) + "/" + str(id_proc)
