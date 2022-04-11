@@ -17,6 +17,7 @@ class TypeMain(File):
     #===========================================
     #UTILITY METHODS
     #===========================================
+
     #Intermediate method that 'finds' the end of the process or functions, when we give the start position
     #So it follows the pattern 'process name {....}' or def name(..){...}
     def extract_curly(self, start):
@@ -24,7 +25,6 @@ class TypeMain(File):
         end = start
         work= self.string
         while(count_curly != 0):
-            #print(work[end])
             if(work[end] == "{"):
                 count_curly += 1
             elif(work[end] == "}"):
@@ -32,11 +32,14 @@ class TypeMain(File):
             end += 1
         return end
 
+    #Methods that checks that there are the same number of open curlies than closing curlies in the file
     def right_nb_curly(self):
         if(self.string.count('{')==self.string.count('}')):
             return True
         return False
 
+    #Method that retrieves the name of the workflow
+    #It does this by 'looking' in which directory the file is found
     def get_name_workflow(self):
         t = os.getcwd()
         i=-1
@@ -51,6 +54,7 @@ class TypeMain(File):
     #===========================================
     #METHODS FOR MANIPULATING PROCESSES
     #===========================================
+
     #Finds and adds the processes to the list of processes + analyses them
     def find_processes(self):
         pattern=  r'([^\w]?process\s+\w+\s*{)'
@@ -75,7 +79,7 @@ class TypeMain(File):
         for i in range(len(self.processes)):
             print(self.processes[i].get_string())
 
-    #Removes the processes from the workflow string (this simplifies the analysis)
+    #Removes (by formatting them) the processes from the workflow string (this simplifies the analysis)
     def format_processes(self):
         for p1 in self.processes:
             i=-1
@@ -87,10 +91,10 @@ class TypeMain(File):
         for i in range(len(self.processes)):
             self.string= self.string.replace(self.processes[i].get_string(), 'PROCESS DEF '+self.processes[i].get_name(), 1)
     
+    #Method that saves some information from the processes extracted from the workflow
     def save_processes(self, name='processes_extracted'):
         myText = open(name+'.nf','w')
         for p in self.processes:
-            #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
             myText.write('Name : '+p.getName()+'\n')
             input, output, emit= p.extractAll()
             myText.write('Inputs : '+  str(input)+'\n')
@@ -102,7 +106,7 @@ class TypeMain(File):
     def get_processes(self):
         return self.processes
 
-    
+    #Saves the informations extracted from the processes into a json
     def get_info_processes(self, name='processes_info'):
         if(self.analyze_processes):
             dict={}
@@ -136,10 +140,7 @@ class TypeMain(File):
                 dict[p.getName()]['nb_inputs']= len(inputs)
                 dict[p.getName()]['outputs']= simplify(outputs)
                 dict[p.getName()]['nb_outputs']= len(outputs)
-
                 dict[p.getName()]['name_workflow']= self.get_name_workflow()
-                
-                
                 dict[p.getName()]['directive']= p.getDirectiveList()
                 dict[p.getName()]['when']= p.getWhen()
                 dict[p.getName()]['stub']= p.getStub()

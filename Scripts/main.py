@@ -3,7 +3,6 @@
 # October 2021 - April 2022
 
 import argparse
-from concurrent.futures import process 
 from pathlib import Path
 import os
 import glob2
@@ -30,10 +29,7 @@ def main():
     current_directory = os.getcwd()
     
     parser = argparse.ArgumentParser()
-    #Obligatory
-    #parser.add_argument('input') 
-    #parser.add_argument('results_directory')
-    #Facultative
+    #Parameters
     parser.add_argument('--input', default='') 
     parser.add_argument('--results_directory', default='')
     parser.add_argument('--name', default='Workflow_Analysis')
@@ -41,13 +37,15 @@ def main():
     parser.add_argument('--dev', default='F') #For developpeur mode or not
     args = parser.parse_args() 
     
-    #Setting the current directory to where the extracted data will be saved
-    os.chdir(args.results_directory)
-
+    #If no input or output address are given an error is thrown
     if(args.input == ''):
         raise Exception('\x1b[1;37;41m' + f'The parameter "input" was not given!!'+ '\x1b[0m')
     if(args.results_directory == ''):
         raise Exception('\x1b[1;37;41m' + f'The parameter "results_directory" was not given!!'+ '\x1b[0m')
+    
+    #Setting the current directory to where the extracted data will be saved
+    os.chdir(args.results_directory)
+
     #=========
     # SINGLE
     #=========
@@ -85,17 +83,16 @@ def main():
         if Path(args.input).is_file():
             raise Exception('\x1b[1;37;41m' + f"'{args.input}' is file, a directory is expected for multi mode!!"+ '\x1b[0m')
         else:
-
-
+            
+            #Retrieving the addresses of the nextflow files found at the root of the directory -> these are the workflow that are considered written in DSL2
+            all_header_files = glob2.glob(args.input+'/*.nf')
+            #Retrieve the folders found in the directory -> these are the workflows that are considered written in DSL2 
             folder = args.input
             sub_folders = [name for name in os.listdir(folder) if os.path.isdir(os.path.join(folder, name))]
 
             #===========================================================================
-            #Searching for files -> excepting single files written in DSL1
+            #Analyzing the DSL1 workflows -> single file (process + structure)
             #===========================================================================
-
-            #Retrieving the addresses of the nextflow files found at the root of the file
-            all_header_files = glob2.glob(args.input+'/*.nf')
             print(f'Found {len(all_header_files)} workflows to analyse in {args.input}\n')
             #Extract the names of the workflows
             names=[]
@@ -145,14 +142,15 @@ def main():
             
             
             #===========================================================================
-            #Searching for folders -> excepting folders with DSL2 workflows written in them
+            #Analyzing the DSL2 workflows -> folders (process)
             #===========================================================================
-
-
+            #For each folder found
             for i in range(len(sub_folders)):
+                total+=1
+                #Retrieve it's name
                 f = sub_folders[i]
                 print(f'{i+1+len(all_header_files)}/{len(all_header_files)+len(sub_folders)}')
-                #Creating the new folder to save the data from the analyze
+                #Creating the new folder to save the data from the analisis
                 res=args.results_directory+'/'+args.name+'/'+f
                 os.system(f"mkdir -p {res}")
                 os.chdir(res)
@@ -162,7 +160,6 @@ def main():
                     w.initialise()
                     workflow_DSL2_analyzed+=1
                     workflow_DSL2_analyzed_tab.append(f)
-                
                 except Exception as inst:
                     #Error not the same number of curlies
                     if (str(inst) == "WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies"):
@@ -188,8 +185,7 @@ def main():
             os.chdir(res)
 
             print('--------------------')
-
-            #Saving the results
+            #Showing and saving the results
             s = f'{total} Total\n'
             s+= f'{workflow_DSL1_analyzed} DSL1_analyzed\n'
             s+= f'{workflow_DSL1_not_analyzed} DSL1_not_analyzed\n'
@@ -200,8 +196,6 @@ def main():
             myText.write(s)
             myText.close()
             print(s)
-
-            #workflow_DSL2_analyzed_tab, workflow_DSL2_not_analyzed_tab, workflow_DSL1_analyzed_tab, workflow_DSL1_not_analyzed_tab
 
             myText = open('workflow_DSL2_not_analyzed'+'.txt','w')
             for e in workflow_DSL2_not_analyzed_tab:
@@ -225,8 +219,7 @@ def main():
 
             res=args.results_directory+'/'+args.name
             print(f'Results saved in : {res}')
-
-            
+           
     #=========
     # ERROR
     #=========

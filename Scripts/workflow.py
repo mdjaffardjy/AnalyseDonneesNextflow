@@ -52,12 +52,13 @@ class Workflow:
     
     #Initialise the workflow
     def initialise(self):
-        #Checking that it's a file
+        #Checking that it's a file -> supposed a workflow written in DSL1 in this case
         if Path(self.address_main).is_file():
             #Check to see if the workflow is written is DSL2 or not
             self.check_DSL2()
             #Analyze the workflow
             self.initialise_main()
+        #If it's a folder it's supposed that it is a workflow written in DSL2 
         else:
             self.main= TypeMainDSL2(self.address_main)
             self.main.initialise()

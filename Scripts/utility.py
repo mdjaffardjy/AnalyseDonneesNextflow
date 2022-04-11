@@ -1,7 +1,5 @@
 import re
 
-
-
 def is_in(tab, ele):
     for e in tab:
         if (e==ele):
@@ -75,19 +73,6 @@ def extract_curly(string, start):
             print_in_red( f"Started looking at : {string[start-20: start]}" )
             raise e
     return end
-
-"""def put_on_one_line(string):
-    index=-1
-    while(True):
-        index+=1
-        if(index>=len(string)):
-            break
-        if(string[index]=='\n'):
-            next_element= get_next_element_caracter(string, index)
-            if(next_element[0]=='.'):
-                string= string[:index]+string[next_element[1]:]
-                index=-1
-    return string"""
  
 #Returns the string corresponding to the next line + start and end index
 def get_next_line(string, i):
@@ -208,20 +193,6 @@ def add_spaces(string):
         string= string.replace(r[0], r[1], 1)
     return string
 
-"""def link_conditions_2(conditions, negative=False):
-    #print('conditions: ', conditions)
-    temp=''
-    if(len(conditions)==0):
-        #Might need to change this later on
-        return temp
-    elif(len(conditions)==1):
-        #Might need to change this later on
-         negative*'!('+conditions[0]+negative*')'
-    for i in range(len(conditions)-1):
-        if(conditions[i]!=' '):
-            temp+= negative*'!('+conditions[i]+negative*')'+' && '
-    temp+= negative*'!('+conditions[-1]+negative*')'
-    return temp"""
 
 #TODO add comments to this function
 #Supposing that all the ifs and elses have curlies and the start is the begining of the if we want to analyse

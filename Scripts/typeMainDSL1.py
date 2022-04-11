@@ -3,9 +3,7 @@
 # October 2021 - April 2022
 
 import re
-import os
 import graphviz
-import json
 
 from .typeMain import * 
 from .process import *
@@ -29,14 +27,16 @@ class TypeMainDSL1(TypeMain):
         self.nb_nodes_operation = 0
         
 
-    #===========================================
-    #METHODS FOR MANIPULATING CHANNELS
-    #===========================================
-    #Method that extratcs the channel => finds the end of the channel
-    def get_end_channel(self, start, curly_count=0, parenthesis_count=0):
+    #==============================================
+    #METHODS FOR MANIPULATING CHANNELS + OPERATIONS
+    #==============================================
+
+    #Method that extratcs the operation e.g Finds the end of the operation
+    #Following the pattern that a operztion is finished when another doesn't concatenate with the end of it
+    #Meaning when the next caracter isn't a '.' -> to add another operation at the end
+    def get_end_operation(self, start, curly_count=0, parenthesis_count=0):
         index= start
         while(index<len(self.string)):
-
             if(self.string[index]=='{'):
                 curly_count+=1
             elif(self.string[index]=='}'):
@@ -45,16 +45,13 @@ class TypeMainDSL1(TypeMain):
                 parenthesis_count+= 1
             elif(self.string[index]==')'):
                 parenthesis_count-= 1
-
             elif(curly_count==0 and parenthesis_count==0):
-
                 if(self.string[index]==':'):
+                    #TODO Find out why this is here
                     return index
                 elif(self.string[index]=='\n' and get_next_element_caracter(self.string, index)[0]!='.'):
                     return index
-            
             index+=1
-        #raise Exception("Major Problem in get_end_channel: out of range")
         return index 
 
 
@@ -73,7 +70,6 @@ class TypeMainDSL1(TypeMain):
             tab.append(match.group(1))
         return tab
 
-    #TODO Check to see if multiMap works well => haven't tested yet
     def extract_added_operators(self):
         tab=[]
         pattern =r'.(branch|multiMap)\s*{'
@@ -282,7 +278,7 @@ class TypeMainDSL1(TypeMain):
             for match in re.finditer(pattern, self.string):
                 start= match.span(1)[0]
                 #print(match.span(1))
-                end= self.get_end_channel(start)
+                end= self.get_end_operation(start)
                 code= self.string[start:end]
                 #print(code)
                 #print(code)
@@ -308,9 +304,9 @@ class TypeMainDSL1(TypeMain):
                     #print(match.group(0))
                     start= match.span(0)[0]
                     if(self.string[match.span(0)[1]-1]=='('):
-                        end= self.get_end_channel(match.span(0)[1], 0, 1)
+                        end= self.get_end_operation(match.span(0)[1], 0, 1)
                     elif(self.string[match.span(0)[1]-1]=='{'):
-                        end= self.get_end_channel(match.span(0)[1], 1, 0)
+                        end= self.get_end_operation(match.span(0)[1], 1, 0)
                     else: 
                         raise Exception("Don't know what i'm looking at..")
                     name= 'CHANNEL_'+str(index)
@@ -407,14 +403,10 @@ class TypeMainDSL1(TypeMain):
 
 
 
-
-
-
-
-
     #===========================================
     #METHODS FOR MANIPULATING FUNCTIONS
     #===========================================
+
     #Finds and adds the functions to the list of functions
     def find_functions(self):
         pattern= r'def +\w+ *\([^\)]*\)\s*{'
@@ -440,7 +432,7 @@ class TypeMainDSL1(TypeMain):
             print('Function {} : '.format(f.get_name()))
             f.print_function()
 
-    #Removes the functions from the workflow string: this isn't really usefull outside the prototyping/developpement stage
+    #Removes the functions from the workflow string
     def format_functions(self):
         for i in range(len(self.functions)):
             self.string= self.string.replace(self.functions[i].get_string(), 'FUNCTION DEF '+self.functions[i].get_name())
@@ -459,26 +451,29 @@ class TypeMainDSL1(TypeMain):
             return False
         return True
 
-
+    #Finds/ Analyzes and formats the functions
     def clean_function(self):
         self.find_functions()
         self.format_functions()
     
 
 
+
+
+
     #===========================================
     #METHODS to manipulate ifs
     #===========================================
     
+    #Method that replaces the condition ‘a = c1 ? val1 : val2’ by ‘if(c1){ a=val1 } else{ a=val2 }’
     def clean_up_if_double_dots_question_2(self):
         pattern= r'([^\=\n]+)\s*=\s*([^\?\n]+)\s*\?([^\n]+)'
         to_be_added=[]
         for match in re.finditer(pattern, self.string):
             variable = match.group(1)
             condition = match.group(2)
-
-            #We have to identify the 2 different case by 'hand' because there can be a ':' in a paranthesis for example
-            #In that case we can't use a regex pattern
+            #We have to identify the 2 different cases (values) by 'hand' because there can be a ':' in a paranthesis for example
+            #We can't use a regex pattern
             start= match.span(3)[0]
             end=match.span(3)[1]
             i=start
@@ -494,31 +489,16 @@ class TypeMainDSL1(TypeMain):
                     curly_count+=1
                 elif(s[i]=='}'):
                     curly_count-=1
-
                 elif(para_count==0 and curly_count ==0 and s[i]==':'):
                     condition_true= s[start:i].strip()
                     condition_false= s[i+1:end].strip()
                     break
                 i+=1
-        
+            #Replace the old string by the new one
             new_string="if ("+condition+") { \n"+variable+" = "+condition_true+"\n } else { \n"+variable+" = "+condition_false+"\n } "
             to_be_added.append([match.group(0), new_string])
         for a in to_be_added:
             self.string= self.string.replace(a[0], a[1])
-        #Update the sets in the channels
-        #self.link_channels_set()
-
-
-    def clean_up_if_one_line(self):
-        #self.string= add_curly(add_spaces(self.string))
-        self.string= add_spaces(add_curly(self.string))
-    
-    def format_ifs(self):
-        self.string= format_conditions(self.string)
-
-            
-
-
 
 
 
@@ -534,26 +514,30 @@ class TypeMainDSL1(TypeMain):
 
     def create_node_type(self, dot, id, name, type):
         #id = 'CHANNEL_\d+' 
+        # P for Pointer -> like the name of the variable
+        # V for Value -> like 1, 2, 'a', [4, 5, 6]
+        # A for Adress -> like /data/some/bigfile.txt
+        # S for queries the NCBI SRA 
         name=id[8:]
         self.nb_nodes_operation+=1
         if(type=='A'):
-            dot.node(id, name, color= '4', shape='doublecircle')
+            dot.node(id, name, color= '4', shape='doublecircle')#Purple
         elif(type=='V'):
-            dot.node(id, name, color= '3', shape='doublecircle')
+            dot.node(id, name, color= '3', shape='doublecircle')#Green 
         elif(type=='S'):
-            dot.node(id, name, color= '5', shape='doublecircle')
+            dot.node(id, name, color= '5', shape='doublecircle')#Orange
         elif(type=='P'):
-            dot.node(id, name, color= '1', shape='doublecircle')
+            dot.node(id, name, color= '1', shape='doublecircle')#Red
         elif(type=='F'):
-            dot.node(id, name, color= '6', shape='doublecircle')
+            dot.node(id, name, color= '6', shape='doublecircle')#Yellow
 
+    #Method that reconstructs the structure of a workflow from the information extracted
     def get_structure_4(self,name='structure_worklow_4'):
         if(self.can_analyse):
-            #nb_links correspond aux nombre de lien de flux de données
             nb_process, nb_links= 0, 0
             #Start by defining the graphviz diagram
-            dot = graphviz.Digraph(filename=name, format='png', comment='structure'\
-                                    , node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
+            dot = graphviz.Digraph(filename=name, format='png', comment='structure', node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
+            
             #Defining 2 lists: tab_origin and tab_gives
             #These 2 lists allow us to get the structure since we start from the processes
             #and follow the 'route' which is drawn for us
@@ -561,52 +545,37 @@ class TypeMainDSL1(TypeMain):
             #tab_gives contains all the elements c such as c -> x for every x 
             #[0] -> the pointer and [1] -> of what (either process or channel)
             tab_origin, tab_gives= [], []
-            #Start by adding all the inputs and outputs of the processes 
-            #to the different lists => since there is no (~or very little) false positives
+
+            #Start by adding all the inputs and outputs of the processes to the different lists
             for p in self.processes:
-                #print(p.getAll())
                 input, output, emit= p.extractAll()
                 for i in input:
                     id, name= i[0], i[1]
+       
                     tab_origin.append([name, p.getName()])
                 for o in output:
                     id, name= o[0], o[1]
                     tab_gives.append([name, p.getName()])
-                #Adding the processes to the diagram/ network
-                dot.node(p.getName(), p.getName(), color= '2', shape='box')
+                #Adding the processes to the graph
+                dot.node(p.getName(), p.getName(), color= '2', shape='box')#Blue
                 nb_process +=1
+
             #Defining the list links_added which allows us to check if we have already added 
-            #a link to the network => it is just to avoid redundancies 
+            #a link to the graph => it is just to avoid redundancies 
             links_added=[]
             
-            #print('Gives: ', c.get_gives())
-            #print('Origin: ', c.get_origin())
-            #print(self.channels[0].get_gives(), '\n')
             #===============================================================
             #Case p.output -> p.input
             #===============================================================
             #For earch process
             for p1 in self.processes:
-                
-                #TEMPORARY
-                """input_p1, output_p1, emit_p1= p1.extractAll()
-                for i in input_p1:
-                    input_id, input_for= i[0], i[1]
-                    dot.edge(input_for, p1.getName(), constraint='true', label='')
-                for o in output_p1:
-                    output_id, output_for= o[0], o[1]
-                    dot.edge(p1.getName(), output_for, constraint='true', label='')"""
-                #END TEMPORARY
-
-
-
-                #Get the inputs and outputs
+                #Get the outputs
                 input_p1, output_p1, emit_p1= p1.extractAll()
                 #For the other processes
                 for p2 in self.processes:
                     #Check it's not the same process
                     if(p1!=p2):
-                        #Get the inputs and outputs
+                        #Get the inputs 
                         input_p2, output_p2, emit_p2= p2.extractAll()
                         #For each inputs and outputs for both processes
                         for output_p1_for_full in output_p1:
@@ -618,19 +587,15 @@ class TypeMainDSL1(TypeMain):
                                     reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1_for , p2.getName(), input_p2_for)
                                     #Check that we've not already added it to the graph
                                     if(not check_containing(reference, links_added)):
-                                        #Adding it to the graph
+                                        #Adding it to the graph and to the list
                                         links_added.append(reference)
-                                        #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
                                         self.create_edge(dot, p1.getName(), p2.getName(), output_p1_for)
                                         nb_links+=1
             
-            #The next step is starting from the inputs and outputs from the different processes and linking the rest of the structure from that
+            #The next step is starting from the inputs and outputs from the different processes and linking the getting of the structure from that
             added_link= True
             channels_added=[]
-            index=1
             while(added_link):
-                #print('here')
-                #print(tab_origin, '\n')
                 added_link = False
                 #===========================================
                 #===========================================
@@ -652,8 +617,6 @@ class TypeMainDSL1(TypeMain):
                                         links_added.append(reference)
                             
                                         if(not check_containing(c.get_id(), channels_added)):
-                                            #TODO Find what to put in the channel to show
-                                            #self.create_channels_links(dot, c.get_id())
                                             types=[]
                                             i=0
                                             for c_origin in c.get_origin():
@@ -728,7 +691,6 @@ class TypeMainDSL1(TypeMain):
                                         #print(reference)
                                         links_added.append(reference)
                                         if(not check_containing(c.get_id(), channels_added)):
-                                            #TODO Find what to put in the channel to show
                                             #Forcement a pointeur
                                             self.create_node_type(dot, c.get_id(), c.get_string(), 'P')
                                             #self.create_channels_links(dot, c.get_id())
@@ -783,8 +745,10 @@ class TypeMainDSL1(TypeMain):
 
 
     #===========================================
-    #GENERAL METHODS
+    #GENERAL METHODS : TO SAVE
     #===========================================
+
+    #Saves the number of nodes (the different types) and edges into a file
     def save_nb_nodes_edges(self):
         myText = open('nb_nodes_edges'+'.txt','w')
         myText.write(f'{self.nb_nodes_process} node_processes\n')
@@ -792,7 +756,7 @@ class TypeMainDSL1(TypeMain):
         myText.write(f'{self.nb_edges} edges\n')
         myText.close()
 
-    #Saves the the worklfow string in a given address as a nextflow file
+    #Saves the the worklfow string (formated version) as a nextflow file
     def save_file(self, name='formated_workflow'):
         myText = open(name+'.nf','w')
         myText.write(self.string)
@@ -820,21 +784,23 @@ class TypeMainDSL1(TypeMain):
             #We have to do this to update the channels which are in the double dots -> otherwise the analyseur won't recongise them later on 
             self.clean_up_if_double_dots_question_2()
 
-
             #STEP5 
-            #Find and analyse every channel and add them to the list of channels
+            #Finds and analyzes every operation and adds the channels to the list of channels
             self.extract_analyse_channels()
             print(f'Extracted {self.get_number_channels()} channels')
             
+            #STEP6
+            #Reconstructs the structure of the workflow from the information that has been extracted
             self.get_structure_4()
             print(f'Structure reconstructed')
             print(f'With {self.nb_nodes_process} processes, {self.nb_nodes_operation} operations and {self.nb_edges} edges')
             
+            #STEP7
+            #Save the information that has been extracted
             self.save_channels()
             self.save_processes()
             self.get_info_processes()
             self.save_nb_nodes_edges()
-
 
         else:
             raise Exception("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies")
