@@ -1,7 +1,7 @@
 from os import listdir
 from .commonFunction import *
 import re
-from .channel import *
+from .operation import *
 
 """
 FIRST PART
@@ -145,8 +145,8 @@ class Inputs:
                             ok = False
                             for s in wt:
                                 if s == '.' and not ok:
-                                    channel = Channel('',wt)
-                                    channel.initialise_channel()
+                                    channel = Operation('',wt)
+                                    channel.initialise_operation()
                                     if len(channel.get_gives()) != 0:
                                         print("Channel bizarre dans extraction nameInputs")
                                     
@@ -159,8 +159,8 @@ class Inputs:
                                 self.list_words_workflow.append([i,wt])
                 #Channel
                 else :
-                    channel = Channel('',string)
-                    channel.initialise_channel()
+                    channel = Operation('',string)
+                    channel.initialise_operation()
                     if len(channel.get_gives()) != 0:
                         print("Channel bizarre dans extraction nameInputs")
                     tabOrigin = channel.get_origin()

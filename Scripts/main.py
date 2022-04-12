@@ -66,7 +66,7 @@ def main():
         print(f'Results saved in : {res}')
         #Delete developper files if not in dev mode
         if(args.dev == 'F'):
-            os.system('rm -f channels_extracted.nf')
+            os.system('rm -f operations_extracted.nf')
             os.system('rm -f processes_extracted.nf')
         
     
@@ -115,7 +115,7 @@ def main():
                     workflow_DSL1_analyzed_tab.append(names[i])
                     #Delete developper files if in dev mode
                     if(args.dev != 'F'):
-                        os.system('rm -f channels_extracted.nf')
+                        os.system('rm -f operations_extracted.nf')
                         os.system('rm -f processes_extracted.nf')
                 except Exception as inst:
                     #Error DSL2

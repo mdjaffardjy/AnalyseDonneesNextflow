@@ -8,7 +8,7 @@ import graphviz
 from .typeMain import * 
 from .process import *
 from .function import *
-from .channel import *
+from .operation import *
 from .utility import *
 
 
@@ -16,7 +16,7 @@ class TypeMainDSL1(TypeMain):
     def __init__(self, address):
         super().__init__(address)
         self.functions=[]
-        self.channels=[]
+        self.operations=[]
         self.added_operators= []
 
         self.can_analyse=True
@@ -55,11 +55,11 @@ class TypeMainDSL1(TypeMain):
         return index 
 
 
-    def get_channel(self, id):
-        for c in self.channels:
+    def get_operation(self, id):
+        for c in self.operations:
             if id== c.get_id():
                 return c
-        raise Exception('Channel not in list of channels')
+        raise Exception('Opeartion not in list of operations')
 
     
     def extract_branches(self, start, end):
@@ -81,12 +81,12 @@ class TypeMainDSL1(TypeMain):
             tab+= self.extract_branches(start, end)
         return tab
 
-    def link_channels_set(self):
-        pattern= r'(\w+)\s*=\s*(CHANNEL_\d+)'
+    def link_operations_set(self):
+        pattern= r'(\w+)\s*=\s*(OPERATION_\d+)'
         to_change=[]
         for match in re.finditer(pattern, self.string):
             #print(match.group(0),match.group(1), match.group(2))
-            c= self.get_channel(match.group(2))
+            c= self.get_operation(match.group(2))
             c.set_gives([match.group(1), 'P'])
             c.set_full_string(match.group(1)+' = '+c.get_string())
             #self.string= self.string.replace(match.group(0), match.group(2), 1)
@@ -95,10 +95,10 @@ class TypeMainDSL1(TypeMain):
             self.string= self.string.replace(c[0], c[1], 1)
 
         #The case (var1, var2) or (var1, var2, ..., varX)
-        pattern= r'\((\s*\w+\s*,(\s*\w+\s*,)*\s*\w+\s*)\)\s*=\s*(CHANNEL_\d+)'
+        pattern= r'\((\s*\w+\s*,(\s*\w+\s*,)*\s*\w+\s*)\)\s*=\s*(OPERATION_\d+)'
         to_change=[]
         for match in re.finditer(pattern, self.string):
-            c= self.get_channel(match.group(3))
+            c= self.get_operation(match.group(3))
             temp=match.group(1)
             temp= temp.split(',')
             for t in temp:
@@ -113,15 +113,15 @@ class TypeMainDSL1(TypeMain):
     def get_added_operators(self):
         return self.added_operators
     
-    def find_problematic_channels(self):
+    def find_problematic_operations(self):
         index=-1
-        problematic_channels = []
+        problematic_operations = []
         pattern = r'(\w+) *= *(\w+)'
-        for c in self.channels:
+        for c in self.operations:
             if c.get_full_string() != None :
                 for match in re.finditer(pattern, c.get_full_string()):
                     if(match.group(1) == match.group(2)):
-                        problematic_channels.append(match.group(1))
+                        problematic_operations.append(match.group(1))
         
         def is_in(string, word):
             for i in range(0, len(string)-len(word)):
@@ -142,22 +142,22 @@ class TypeMainDSL1(TypeMain):
                     ino.append(l)
             return ino
 
-        for ch in problematic_channels:
-            channels_containing = []
-            for c in self.channels:
+        for ch in problematic_operations:
+            operations_containing = []
+            for c in self.operations:
                 string=''
                 if c.get_full_string() != None :
                     string = c.get_full_string()
                 else:
                     string = c.get_string()
                 if(is_in(string, ch)):
-                    channels_containing.append(c)
+                    operations_containing.append(c)
             
-            for c in channels_containing:
-                c.initialise_channel()
+            for c in operations_containing:
+                c.initialise_operation()
                 
             operations_with_ch_gives = []
-            for c in channels_containing:
+            for c in operations_containing:
                 gives = c.get_gives()
                 for g in gives :
                     if(containg(g, ch)):
@@ -171,12 +171,12 @@ class TypeMainDSL1(TypeMain):
                 else:
                     string = c.get_string()
                 new += string+' + '
-                self.channels.remove(c)            
+                self.operations.remove(c)            
             
-            name= 'CHANNEL_'+str(index)
+            name= 'OPERATION_'+str(index)
             #print(name)
             index-=1
-            channel= Channel(name, new)
+            operation= Operation(name, new)
             #print(new)
             origins_total, gives_total = [], []
             for c in operations_with_ch_gives:
@@ -197,28 +197,27 @@ class TypeMainDSL1(TypeMain):
                 None
             #print(origins_total, gives_total)
 
-            channel.set_total_gives(gives_total)
-            channel.set_total_origin(origins_total)
-            channel.set_initia()
+            operation.set_total_gives(gives_total)
+            operation.set_total_origin(origins_total)
+            operation.set_initia()
 
-            self.channels.append(channel)
+            self.operations.append(operation)
 
-            #print(self.channels[-1].get_id())
 
         
 
 
-    def initialise_channels(self):
-        for c in self.channels:
-            c.initialise_channel()
+    def initialise_operations(self):
+        for c in self.operations:
+            c.initialise_operation()
     
-    def get_number_channels(self):
-        return len(self.channels)
+    def get_number_operations(self):
+        return len(self.operations)
             
 
     def get_all_defined_channels(self):
         tab=[]
-        for c in self.channels:
+        for c in self.operations:
             origin = c.get_origin()
             gives = c.get_gives()
             for o in origin:
@@ -232,7 +231,6 @@ class TypeMainDSL1(TypeMain):
 
     def get_inputs_and_outputs_processe(self):
         tab=[]
-
         for p in self.processes:
             #print(p.getAll())
             input, output, emit= p.extractAll()
@@ -242,7 +240,7 @@ class TypeMainDSL1(TypeMain):
                 tab.append(o[1])
         return list(set(tab))
 
-    def extract_analyse_channels(self):
+    def extract_analyse_operations(self):
         #=================================================================
         #PART ZERO: BEFORE WE START WE NEED TO EXTRACT THE ADDED OPERATORS CREATED WITH BRANCH OR MULTIMAP
         #=================================================================
@@ -282,8 +280,8 @@ class TypeMainDSL1(TypeMain):
                 code= self.string[start:end]
                 #print(code)
                 #print(code)
-                name= 'CHANNEL_'+str(index)
-                self.channels.append(Channel(name, code))
+                name= 'OPERATION_'+str(index)
+                self.operations.append(Operation(name, code))
                 index+=1
 
                 changed=True
@@ -309,9 +307,9 @@ class TypeMainDSL1(TypeMain):
                         end= self.get_end_operation(match.span(0)[1], 1, 0)
                     else: 
                         raise Exception("Don't know what i'm looking at..")
-                    name= 'CHANNEL_'+str(index)
+                    name= 'OPERATION_'+str(index)
                     code= self.string[start:end]
-                    self.channels.append(Channel(name, code))
+                    self.operations.append(Operation(name, code))
                     index+=1
 
                     changed=True
@@ -319,11 +317,11 @@ class TypeMainDSL1(TypeMain):
                     break
 
         #=================================================================
-        #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = CHANNEL_ID
+        #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = OPERATION_ID
         #=================================================================
-        self.link_channels_set()
-        self.find_problematic_channels()
-        self.initialise_channels()
+        self.link_operations_set()
+        self.find_problematic_operations()
+        self.initialise_operations()
 
 
         #=================================================================
@@ -361,37 +359,36 @@ class TypeMainDSL1(TypeMain):
             if(right != left):
                 if (is_in(tab_all_definied_channels, right) or is_in(tab_all_definied_inputs_outputs, right)):
                     #print('her')
-                    name= 'CHANNEL_'+str(index)
+                    name= 'OPERATION_'+str(index)
                     code= c
-                    temp_channel= Channel(name, code)
-                    temp_channel.not_normal()
-                    self.channels.append(temp_channel)
+                    temp_operation= Operation(name, code)
+                    temp_operation.not_normal()
+                    self.operations.append(temp_operation)
                     index+=1
                     tab_all_definied_channels.append(left)
-        for c in self.channels:
+        for c in self.operations:
             self.string= self.string.replace(c.get_string(), c.get_id(), 1)
+        self.initialise_operations()
 
-        self.initialise_channels()
 
-
-    def print_channels(self):
-        for c in self.channels:
+    def print_operations(self):
+        for c in self.operations:
             print(c.get_id(), 'string :', c.get_full_string())
             print(c.get_id(), 'origin :',  c.get_origin())
             print(c.get_id(), 'gives  :',  c.get_gives())
 
-    def save_channels(self, name='channels_extracted'):
+    def save_operations(self, name='operations_extracted'):
         myText = open(name+'.nf','w')
-        for c in self.channels:
+        for c in self.operations:
             #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
             myText.write(c.get_id()+ ' string : '+c.get_full_string()+'\n')
             myText.write(c.get_id()+' origin : '+  str(c.get_origin())+'\n')
             myText.write(c.get_id() +' gives  : '+  str(c.get_gives())+'\n\n\n')
         myText.close()
 
-    def get_channels_formated(self):
+    def get_operations_formated(self):
         temp=""
-        for c in self.channels:
+        for c in self.operations:
             temp+=(c.get_id()+ ' string : '+c.get_full_string()+'\n')
             temp+=(c.get_id()+' origin : '+  str(c.get_origin())+'\n')
             temp+=(c.get_id() +' gives  : '+  str(c.get_gives())+'\n\n\n')
@@ -513,7 +510,7 @@ class TypeMainDSL1(TypeMain):
         dot.edge(l1, l2, constraint='true', label='')
 
     def create_node_type(self, dot, id, name, type):
-        #id = 'CHANNEL_\d+' 
+        #id = 'OPERATION_\d+' 
         # P for Pointer -> like the name of the variable
         # V for Value -> like 1, 2, 'a', [4, 5, 6]
         # A for Adress -> like /data/some/bigfile.txt
@@ -605,7 +602,7 @@ class TypeMainDSL1(TypeMain):
                 new_channels_added=[]
                 for origin in tab_origin:
                     origin_name, name_thing= origin[0], origin[1]
-                    for c in self.channels:
+                    for c in self.operations:
                         c_gives= c.get_gives()
                         for c_gives_for in c_gives:
                             c_name, type_c=  c_gives_for[0], c_gives_for[1]
@@ -680,7 +677,7 @@ class TypeMainDSL1(TypeMain):
                 new_channels_added=[]
                 for gives in tab_gives:
                     gives_name, name_thing= gives[0], gives[1]
-                    for c in self.channels:
+                    for c in self.operations:
                         c_origin= c.get_origin()
                         for c_origin_for in c_origin:
                             c_name, type_c=  c_origin_for[0], c_origin_for[1]
@@ -786,8 +783,8 @@ class TypeMainDSL1(TypeMain):
 
             #STEP5 
             #Finds and analyzes every operation and adds the channels to the list of channels
-            self.extract_analyse_channels()
-            print(f'Extracted {self.get_number_channels()} channels')
+            self.extract_analyse_operations()
+            print(f'Extracted {self.get_number_operations()} channels')
             
             #STEP6
             #Reconstructs the structure of the workflow from the information that has been extracted
@@ -797,7 +794,7 @@ class TypeMainDSL1(TypeMain):
             
             #STEP7
             #Save the information that has been extracted
-            self.save_channels()
+            self.save_operations()
             self.save_processes()
             self.get_info_processes()
             self.save_nb_nodes_edges()
