@@ -70,9 +70,15 @@ def main():
 
     #attention : ne pas mettre ceux avec 0 d'outils - on garde seulement ceux avec au minimum un outil ds le wf
     wfNoTools = []
-    #attention : dsl 1 on a bien que 7 fichiers mais dsl 2 : a voir comment se sera
+
     for i in range (len(listDirectoryResults)):
         nameWf = listDirectoryResults[i].replace(args.results_directory + '/', '')
+        temp = list(nameWf)
+        idx = temp.index('_')
+        temp[idx] = '/'
+        nameWf = "".join(temp)
+        
+        #print(nameWf)
         print(str(i+1) + "/" + str(len(listDirectoryResults)) + " : " + nameWf)
         #listFile = os.listdir(listDirectoryResults[i])
         os.chdir(listDirectoryResults[i])
@@ -93,16 +99,9 @@ def main():
             wfNoTools.append(nameWf)
             #print('No tools in this workflow : don\'t add in the database\n')
 
-    os.chdir(args.results_directory)
+    '''os.chdir(args.results_directory)
     with open("allProcesses.json", 'w') as dicoP:
-        json.dump(dicoAllProcess, dicoP, indent=4)
-
-    #add similarity + ajout dans la base
-    #Avoir au préalable installe ProSim
-    """inputs = args.results_directory + '/' + 'allProcesses.json'
-    os.system('ProSim --mode "single" --results_directory ' + args.results_directory + ' --processA ' + inputs + ' --processB ' + inputs)
-
-    os.chdir(args.results_directory + "/Results_Similarity")"""
+        json.dump(dicoAllProcess, dicoP, indent=4)'''
 
     os.chdir(current_directory)
 
