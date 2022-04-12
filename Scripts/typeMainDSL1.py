@@ -397,9 +397,6 @@ class TypeMainDSL1(TypeMain):
     
     
 
-
-
-
     #===========================================
     #METHODS FOR MANIPULATING FUNCTIONS
     #===========================================
