@@ -1,3 +1,8 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
+
 from .commonFunction import *
 from .toolFunction import *
 
@@ -67,6 +72,3 @@ class Script:
     def extractS(self):
         self.whichLanguage()
         self.extractTools()
-
-if __name__ == "__main__":
-    print("I shouldn't be executed as a main")

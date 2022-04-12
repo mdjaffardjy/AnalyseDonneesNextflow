@@ -1,3 +1,7 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 import re
 
 def is_in(tab, ele):
@@ -438,16 +442,4 @@ def format_conditions(string):
 
     return new_string
 
-
-if __name__ == "__main__":
-    test="""
-        if(clemence){
-            yo
-        }else{
-            no yo
-        }
-        """
-    #print(format_conditions(add_curly(add_spaces(test))))
-    a=[1, 2,3, 4, 5, 6]
-    print(check_containing(743, a))
 

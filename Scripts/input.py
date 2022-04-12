@@ -1,6 +1,10 @@
-from os import listdir
-from .commonFunction import *
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 import re
+
+from .commonFunction import *
 from .operation import *
 
 """
@@ -192,6 +196,4 @@ class Inputs:
         self.extractQualifier()
         self.extractName()
 
-    
-if __name__ == "__main__":
-    print("I shouldn't be executed as a main")
+

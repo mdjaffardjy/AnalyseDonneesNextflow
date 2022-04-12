@@ -1,4 +1,10 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
+
 import re
+
 """
 This file contains all the functions which could be use in different Class
 """
@@ -10,8 +16,6 @@ DIRECTIVE - INPUT - OUTPUT
 """
 Clean an element : no \n and no \
 """
-
-#adresse_language= __file__[:-len("functionsProcess/commonFunction.py")]+"/language.txt"
 
 def clean(txt):
     antiSlash = []

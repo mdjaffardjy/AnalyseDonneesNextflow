@@ -1,3 +1,7 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 from .directive import *
 from .input import *
 from .output import * 
@@ -457,7 +461,3 @@ class Process:
 
   def goodForAnalyse(self):
     return self.allAnalyse
-
-
-if __name__ == "__main__":
-    print("I shouldn't be executed as a main")

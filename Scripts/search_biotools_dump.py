@@ -1,16 +1,17 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 from os import path
 from rdflib import ConjunctiveGraph
 from rdflib.namespace import Namespace, RDF, RDFS
 import jellyfish
-
 import glob
 import os
-
 from threading import Thread
 from queue import Queue
 import time
 import sys
-
 import functools
 
 printf = functools.partial(print, end="")

@@ -1,9 +1,14 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 import os
+import re
+from pathlib import Path
+
 from .process import *
 from .typeMainDSL1 import *
 from .toolFunction import *
-import re
-from pathlib import Path
 
 """
 If two or more process have the same name in the workflows - give an index number

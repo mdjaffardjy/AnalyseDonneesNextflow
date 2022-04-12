@@ -1,5 +1,11 @@
-from .commonFunction import *
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
 import re
+
+from .commonFunction import *
+
 """
 FIRST PART
 """ 
@@ -145,5 +151,4 @@ class Outputs:
         self.extractEmit()
         self.extractName()
     
-if __name__ == "__main__":
-    print("I shouldn't be executed as a main")
+

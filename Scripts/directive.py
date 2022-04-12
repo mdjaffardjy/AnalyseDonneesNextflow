@@ -1,3 +1,8 @@
+# Nextflow Analyzer
+# Written by Clémence Sebe and George Marchment
+# October 2021 - April 2022
+
+
 from .commonFunction import *
 
 """
@@ -49,5 +54,3 @@ class Directives:
         self.splitDirective()
         self.extractQualifier()
 
-if __name__ == "__main__":
-    print("I shouldn't be executed as a main")
