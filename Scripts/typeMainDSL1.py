@@ -506,16 +506,17 @@ class TypeMainDSL1(TypeMain):
     #METHODS STRUCTURE
     #===========================================
     
+    #Method that add an edge to the graph given 
     def create_edge(self, dot, l1, l2, la):
         dot.edge(l1, l2, constraint='true', label='')
 
+    #Method that adds nodes to the graph with the corresponding type
     def create_node_type(self, dot, id, name, type):
-        #id = 'OPERATION_\d+' 
-        # P for Pointer -> like the name of the variable
-        # V for Value -> like 1, 2, 'a', [4, 5, 6]
-        # A for Adress -> like /data/some/bigfile.txt
-        # S for queries the NCBI SRA 
-        name=id[8:]
+        # P for Pointer -> like the name of the variable -> Red
+        # V for Value -> like 1, 2, 'a', [4, 5, 6] -> Green
+        # A for Adress -> like /data/some/bigfile.txt -> Purple
+        # S for queries the NCBI SRA -> Orange
+        name=id[len('OPERATION_'):]
         self.nb_nodes_operation+=1
         if(type=='A'):
             dot.node(id, name, color= '4', shape='doublecircle')#Purple
@@ -529,33 +530,32 @@ class TypeMainDSL1(TypeMain):
             dot.node(id, name, color= '6', shape='doublecircle')#Yellow
 
     #Method that reconstructs the structure of a workflow from the information extracted
-    def get_structure_4(self,name='structure_worklow_4'):
+    def get_structure(self,name='structure_worklow'):
         if(self.can_analyse):
-            nb_process, nb_links= 0, 0
             #Start by defining the graphviz diagram
             dot = graphviz.Digraph(filename=name, format='png', comment='structure', node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
             
-            #Defining 2 lists: tab_origin and tab_gives
-            #These 2 lists allow us to get the structure since we start from the processes
-            #and follow the 'route' which is drawn for us
-            #tab_origin contains all the elements c such as x -> c for every x 
-            #tab_gives contains all the elements c such as c -> x for every x 
-            #[0] -> the pointer and [1] -> of what (either process or channel)
+            #We start by creating 2 lists : tab_origin and tab_gives, 
+            #every time that a node (either a process or an operation) 
+            #is added to the graph the inputs of the node need to be added 
+            #to tab_origin, and the outputs in tab_gives, the name of the 
+            #node (either process or operation) also needs to be added to the 
+            #list (more explicitly [‘key’, ‘name_node’] is added), these lists 
+            #are to be used later on
             tab_origin, tab_gives= [], []
 
             #Start by adding all the inputs and outputs of the processes to the different lists
             for p in self.processes:
-                input, output, emit= p.extractAll()
+                input, output, _ = p.extractAll()
                 for i in input:
-                    id, name= i[0], i[1]
-       
+                    _, name= i[0], i[1]
                     tab_origin.append([name, p.getName()])
                 for o in output:
-                    id, name= o[0], o[1]
+                    _, name= o[0], o[1]
                     tab_gives.append([name, p.getName()])
                 #Adding the processes to the graph
                 dot.node(p.getName(), p.getName(), color= '2', shape='box')#Blue
-                nb_process +=1
+                self.nb_nodes_process +=1
 
             #Defining the list links_added which allows us to check if we have already added 
             #a link to the graph => it is just to avoid redundancies 
@@ -567,59 +567,70 @@ class TypeMainDSL1(TypeMain):
             #For earch process
             for p1 in self.processes:
                 #Get the outputs
-                input_p1, output_p1, emit_p1= p1.extractAll()
+                _, outputs_p1, _= p1.extractAll()
                 #For the other processes
                 for p2 in self.processes:
                     #Check it's not the same process
                     if(p1!=p2):
                         #Get the inputs 
-                        input_p2, output_p2, emit_p2= p2.extractAll()
+                        inputs_p2, _, _= p2.extractAll()
                         #For each inputs and outputs for both processes
-                        for output_p1_for_full in output_p1:
-                            output_p1_for_id, output_p1_for= output_p1_for_full[0], output_p1_for_full[1]
-                            for input_p2_for_full in input_p2:
-                                input_p2_for_id, input_p2_for= input_p2_for_full[0], input_p2_for_full[1]
+                        for output_p1_for in outputs_p1:
+                            _, output_p1= output_p1_for[0], output_p1_for[1]
+                            for input_p2_for in inputs_p2:
+                                _, input_p2= input_p2_for[0], input_p2_for[1]
                                 #check if the link matches
-                                if(output_p1_for== input_p2_for):
-                                    reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1_for , p2.getName(), input_p2_for)
+                                if(output_p1== input_p2):
+                                    reference='{}:{} -> {}:{}'.format(p1.getName(),output_p1 , p2.getName(), input_p2)
                                     #Check that we've not already added it to the graph
                                     if(not check_containing(reference, links_added)):
                                         #Adding it to the graph and to the list
                                         links_added.append(reference)
-                                        self.create_edge(dot, p1.getName(), p2.getName(), output_p1_for)
-                                        nb_links+=1
+                                        self.create_edge(dot, p1.getName(), p2.getName(), output_p1)
+                                        self.nb_edges+=1
             
-            #The next step is starting from the inputs and outputs from the different processes and linking the getting of the structure from that
+            #The next step is starting from the inputs and outputs from the different processes and linking the rest of the structure from that
             added_link= True
-            channels_added=[]
+            operations_added=[]
             while(added_link):
                 added_link = False
+
                 #===========================================
+                #From the origin tab :
                 #===========================================
-                #From the origin tab
-                #===========================================
-                #===========================================
-                new_channels_added=[]
+                #For every element o in origin_tab, 
+                #we are searching for an element e which can link with o, 
+                #such as e gives o (e -> o)
+                new_operations_added=[]
                 for origin in tab_origin:
-                    origin_name, name_thing= origin[0], origin[1]
+                    origin_name, node_name= origin[0], origin[1]
+
+                    #We start by searching if a channel given by an operation can link with the origin
+                    #For every operation
                     for c in self.operations:
+                        #Retrieve the channel that it gives (output)
                         c_gives= c.get_gives()
+                        #For every one of its gives
                         for c_gives_for in c_gives:
+                            #Get it's type + ID/Name
                             c_name, type_c=  c_gives_for[0], c_gives_for[1]
+                            #If it's a pointer type (it should always be a pointer for gives)
+                            #But there is no harm in checking
                             if(type_c=='P'):
+                                #If the link can be made 
                                 if(c_name== origin_name):
-                                    reference='{}:{} -> {}:{}'.format(c.get_id(), c_name , name_thing, origin_name)
-                                    
+                                    #We check that it hasn't already been added
+                                    reference='{}:{} -> {}:{}'.format(c.get_id(), c_name , node_name, origin_name)
                                     if(not check_containing(reference, links_added)):
                                         links_added.append(reference)
-                            
-                                        if(not check_containing(c.get_id(), channels_added)):
+                                        #If the operation hasn't been added to the graph
+                                        #It is added with its corresponding type
+                                        if(not check_containing(c.get_id(), operations_added)):
                                             types=[]
                                             i=0
                                             for c_origin in c.get_origin():
-                                                c_origin_name, type_c_origin= c_origin[0], c_origin[1]
+                                                _, type_c_origin= c_origin[0], c_origin[1]
                                                 types.append(type_c_origin)
-                                            #print(types)
                                             if(len(list(set(types)))!=1):
                                                 if(is_in(types, 'P') or list(set(types))== []):
                                                     t='P'
@@ -630,37 +641,34 @@ class TypeMainDSL1(TypeMain):
                                                         t=types[0]
                                             else:
                                                 t= list(set(types))[0]
-                                                #if(self.check_name_is_function(c_origin[0])):
-                                                    #Function
-                                                    #t = 'F'
                                             self.create_node_type(dot, c.get_id(), c.get_string(), t)
-                                            channels_added.append(c.get_id())
-                                            new_channels_added.append(c)
-                                        self.create_edge(dot, c.get_id(), name_thing, c_name)
-                                        nb_links+=1
+                                            operations_added.append(c.get_id())
+                                            new_operations_added.append(c)
+                                        #The edge is added
+                                        self.create_edge(dot, c.get_id(), node_name, c_name)
+                                        self.nb_edges+=1
                                         added_link= True
-                    
-                    #Add the same for the processes
+
+                    #Searching if an output of a process can link with the origin
                     for p in self.processes:
-                        if(p.getName()!=name_thing):
+                        if(p.getName()!=node_name):
                             #Get the inputs and outputs
-                            input_p, output_p, emit_p= p.extractAll()
-                            #For each inputs and outputs for both processes
-                            for output_p_full in output_p:
-                                output_p_id, output_p_name= output_p_full[0], output_p_full[1]
-                                if(output_p_name== origin_name):
-                                    reference='{}:{} -> {}:{}'.format(p.getName(),output_p_name , name_thing, origin_name)
+                            _, outputs_p, _ = p.extractAll()
+                            for output_p_full in outputs_p:
+                                _, output_p= output_p_full[0], output_p_full[1]
+                                #If the link can ve made
+                                if(output_p== origin_name):
+                                    reference='{}:{} -> {}:{}'.format(p.getName(), output_p, node_name, origin_name)
                                     #Check that we've not already added it to the graph
                                     if(not check_containing(reference, links_added)):
-                                        #print(reference)
                                         #Adding it to the graph
                                         links_added.append(reference)
-                                        #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
-                                        self.create_edge(dot, p.getName(), name_thing, output_p_name)
-                                        nb_links+=1
+                                        self.create_edge(dot, p.getName(), node_name, output_p)
+                                        self.nb_edges+=1
                                         added_link= True
                     
-                for c in new_channels_added:
+                #Can the newly added operation to tab_origin and tab_gives  
+                for c in new_operations_added:
                     c_origin, c_gives= c.get_origin(), c.get_gives()
                     for o in c_origin:
                         if(o[1]=='P'):
@@ -670,56 +678,62 @@ class TypeMainDSL1(TypeMain):
                             tab_gives.append([g[0], c.get_id()])    
 
                 #===========================================
-                #===========================================
                 #From the gives tab
                 #===========================================
-                #===========================================
-                new_channels_added=[]
+                #For every element g in gives_tab, 
+                #we are searching for an element e which can link with g, 
+                #such as g gives e (g -> e)
+                new_operations_added=[]
                 for gives in tab_gives:
-                    gives_name, name_thing= gives[0], gives[1]
+                    gives_name, node_name= gives[0], gives[1]
+
+                    #We start by searching if a channel origin by an operation can link with the gives
+                    #For every operation
                     for c in self.operations:
+                        #Retrieve the channel that it takes (origin/ input)
                         c_origin= c.get_origin()
+                        #For every one of its origins
                         for c_origin_for in c_origin:
+                            #Get it's type + ID/Name
                             c_name, type_c=  c_origin_for[0], c_origin_for[1]
+                            #If it's a pointer type
                             if(type_c=='P'):
+                                #If the link can be made
                                 if(c_name== gives_name):
-                                    reference='{}:{} -> {}:{}'.format(name_thing, gives_name, c.get_id(), c_name)
+                                    #We check that it hasn't already been added
+                                    reference='{}:{} -> {}:{}'.format(node_name, gives_name, c.get_id(), c_name)
                                     if(not check_containing(reference, links_added)):
-                                        #print(reference)
                                         links_added.append(reference)
-                                        if(not check_containing(c.get_id(), channels_added)):
-                                            #Forcement a pointeur
+                                        #If the operation hasn't been added to the graph
+                                        #It is added with its corresponding type (it is a pointer type : we have already checked)
+                                        if(not check_containing(c.get_id(), operations_added)):
                                             self.create_node_type(dot, c.get_id(), c.get_string(), 'P')
-                                            #self.create_channels_links(dot, c.get_id())
-                                            channels_added.append(c.get_id())
-                                            new_channels_added.append(c)
-                                        self.create_edge(dot,name_thing, c.get_id(),c_name)
-                                        nb_links+=1
+                                            operations_added.append(c.get_id())
+                                            new_operations_added.append(c)
+                                        #The edge is added
+                                        self.create_edge(dot,node_name, c.get_id(),c_name)
+                                        self.nb_edges+=1
                                         added_link= True
 
-                    #Add the same for the processes
+                    #Searching if an input of a process can link with the gives
                     for p in self.processes:
-                        
-                        if(p.getName()!=name_thing):
-                            
+                        if(p.getName()!=node_name):
                             #Get the inputs and outputs
-                            input_p, output_p, emit_p= p.extractAll()
-                            #For each inputs and outputs for both processes
-                            for input_p_full in input_p:
+                            inputs_p, _, _ = p.extractAll()
+                            for input_p_full in inputs_p:
                                 input_p_id, input_p_name= input_p_full[0], input_p_full[1]
                                 if(input_p_name== gives_name):
-                                    reference='{}:{} -> {}:{}'.format(name_thing, gives_name, p.getName(),input_p_name )
+                                    reference='{}:{} -> {}:{}'.format(node_name, gives_name, p.getName(),input_p_name )
                                     #Check that we've not already added it to the graph
                                     if(not check_containing(reference, links_added)):
-                                        #print(reference)
                                         #Adding it to the graph
                                         links_added.append(reference)
-                                        #dot.edge(p1.getName(), p2.getName(), constraint='true', label=output_p1)
-                                        self.create_edge(dot, name_thing, p.getName(),input_p_name)
-                                        nb_links+=1
+                                        self.create_edge(dot, node_name, p.getName(),input_p_name)
+                                        self.nb_edges+=1
                                         added_link= True
-                    
-                for c in new_channels_added:
+                
+                #Can the newly added operation to tab_origin and tab_gives 
+                for c in new_operations_added:
                     c_origin, c_gives= c.get_origin(), c.get_gives()
                     for o in c_origin:
                         if(o[1]=='P'):
@@ -727,18 +741,13 @@ class TypeMainDSL1(TypeMain):
                     for g in c_gives:
                         if(g[1]=='P'):
                             tab_gives.append([g[0], c.get_id()]) 
-                                
-            #print(address)
+            #Save the graph                  
             dot.render()
             dot.save()
-            self.nb_edges = nb_links
-            self.nb_nodes_process= nb_process
         else:
             self.nb_edges = -1
             self.nb_nodes_process= -1
             self.nb_nodes_operation = -1
-
-
 
 
     #===========================================
@@ -760,6 +769,9 @@ class TypeMainDSL1(TypeMain):
         myText.close()
 
 
+    #===========================================
+    #INITIALIZATION AND RUN
+    #===========================================
 
     #Initialise the basic stuff for a mainDSL1 type
     def initialise(self):
@@ -788,7 +800,7 @@ class TypeMainDSL1(TypeMain):
             
             #STEP6
             #Reconstructs the structure of the workflow from the information that has been extracted
-            self.get_structure_4()
+            self.get_structure()
             print(f'Structure reconstructed')
             print(f'With {self.nb_nodes_process} processes, {self.nb_nodes_operation} operations and {self.nb_edges} edges')
             
