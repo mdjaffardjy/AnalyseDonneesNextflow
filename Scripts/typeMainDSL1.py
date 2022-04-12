@@ -32,8 +32,8 @@ class TypeMainDSL1(TypeMain):
     #==============================================
 
     #Method that extratcs the operation e.g Finds the end of the operation
-    #Following the pattern that a operztion is finished when another doesn't concatenate with the end of it
-    #Meaning when the next caracter isn't a '.' -> to add another operation at the end
+    #Following the pattern that a operation is finished when another operator doesn't concatenate with the end of it
+    #Meaning when the next caracter isn't a '.' -> to add another operator at the end
     def get_end_operation(self, start, curly_count=0, parenthesis_count=0):
         index= start
         while(index<len(self.string)):
@@ -54,14 +54,15 @@ class TypeMainDSL1(TypeMain):
             index+=1
         return index 
 
-
+    #Returns the operator corresponding to its ID
     def get_operation(self, id):
         for c in self.operations:
             if id== c.get_id():
                 return c
-        raise Exception('Opeartion not in list of operations')
+        raise Exception('Operation not in list of operations')
 
     
+    #Function that return the added operators in either a branch or multimap operator 
     def extract_branches(self, start, end):
         string= self.string[start:end]
         tab=[]
@@ -70,30 +71,29 @@ class TypeMainDSL1(TypeMain):
             tab.append(match.group(1))
         return tab
 
+    #Methods that return the added operator created with branch or multimap
+    #Search branch => https://www.nextflow.io/docs/latest/operator.html
     def extract_added_operators(self):
         tab=[]
         pattern =r'.(branch|multiMap)\s*{'
         for match in re.finditer(pattern, self.string):
-            #print(match.span(0))
             start=match.span(0)[0]
             end= extract_curly(self.string, match.span(0)[1])
-            #print(string[start:end])
             tab+= self.extract_branches(start, end)
         return tab
 
+    #Method thats updates the operations which are definied as channel_1 = OPERATION_X
+    #Basically updates the operation to take into account the term on the left
     def link_operations_set(self):
         pattern= r'(\w+)\s*=\s*(OPERATION_\d+)'
         to_change=[]
         for match in re.finditer(pattern, self.string):
-            #print(match.group(0),match.group(1), match.group(2))
             c= self.get_operation(match.group(2))
             c.set_gives([match.group(1), 'P'])
             c.set_full_string(match.group(1)+' = '+c.get_string())
-            #self.string= self.string.replace(match.group(0), match.group(2), 1)
             to_change.append([match.group(0), match.group(2)])
         for c in to_change:
             self.string= self.string.replace(c[0], c[1], 1)
-
         #The case (var1, var2) or (var1, var2, ..., varX)
         pattern= r'\((\s*\w+\s*,(\s*\w+\s*,)*\s*\w+\s*)\)\s*=\s*(OPERATION_\d+)'
         to_change=[]
@@ -105,36 +105,41 @@ class TypeMainDSL1(TypeMain):
                 t= t.strip()
                 c.set_gives([t, 'P'])
             c.set_full_string(match.group(1)+' = '+c.get_string())
-            #self.string= self.string.replace(match.group(0), match.group(3), 1)
             to_change.append([match.group(0), match.group(3)])
         for c in to_change:
             self.string= self.string.replace(c[0], c[1], 1)
 
+    #Return the addded oprators
     def get_added_operators(self):
         return self.added_operators
     
+    #Method that deals with the operations where a channel is modified multiple times
     def find_problematic_operations(self):
         index=-1
         problematic_operations = []
         pattern = r'(\w+) *= *(\w+)'
+        #Identifying the problematic operations
         for c in self.operations:
             if c.get_full_string() != None :
                 for match in re.finditer(pattern, c.get_full_string()):
                     if(match.group(1) == match.group(2)):
                         problematic_operations.append(match.group(1))
         
+        #Function that checks if a word is in a string
         def is_in(string, word):
             for i in range(0, len(string)-len(word)):
                 if(string[i:i+len(word)]==word):
                     return True
             return False
 
+        #Function that checks if a word is in a list
         def containg(tab, word):
             for t in tab:
                 if(t==word):
                     return True
             return False
 
+        #Function that removes the duplicates from a list
         def remove_duplicates(list):
             ino=[]
             for l in list :
@@ -142,8 +147,10 @@ class TypeMainDSL1(TypeMain):
                     ino.append(l)
             return ino
 
+        #For every channel in a problematic operations
         for ch in problematic_operations:
             operations_containing = []
+            #Searching for the operations containing the channel (which is modified multiple times)
             for c in self.operations:
                 string=''
                 if c.get_full_string() != None :
@@ -153,9 +160,11 @@ class TypeMainDSL1(TypeMain):
                 if(is_in(string, ch)):
                     operations_containing.append(c)
             
+            #Initilialize the operations (eg get the origins and gives)
             for c in operations_containing:
                 c.initialise_operation()
-                
+            
+            #Fing the operations which gives the problematic channel
             operations_with_ch_gives = []
             for c in operations_containing:
                 gives = c.get_gives()
@@ -163,6 +172,8 @@ class TypeMainDSL1(TypeMain):
                     if(containg(g, ch)):
                         operations_with_ch_gives.append(c)
 
+            #Remove the problematic operations from the list of operations 
+            #And create a new single operation (addition of all problematic operations)
             new= ''
             for c in operations_with_ch_gives:
                 string=''
@@ -170,14 +181,14 @@ class TypeMainDSL1(TypeMain):
                     string = c.get_full_string()
                 else:
                     string = c.get_string()
-                new += string+' + '
+                new = string+' + '+new
                 self.operations.remove(c)            
             
+            #Create the new operation which is a mix of all the problematic operation
+            #And add it to the list 
             name= 'OPERATION_'+str(index)
-            #print(name)
             index-=1
             operation= Operation(name, new)
-            #print(new)
             origins_total, gives_total = [], []
             for c in operations_with_ch_gives:
                 origins= c.get_origin()
@@ -185,36 +196,29 @@ class TypeMainDSL1(TypeMain):
                     origins_total.append(o)
                 gives= c.get_gives()
                 for g in gives:
-                    gives_total.append(g)
-
-            
-                
+                    gives_total.append(g)    
             origins_total = remove_duplicates(origins_total)
             gives_total = remove_duplicates(gives_total)
             try:
                 origins_total.remove([ch, 'P'])
             except:
                 None
-            #print(origins_total, gives_total)
-
             operation.set_total_gives(gives_total)
             operation.set_total_origin(origins_total)
             operation.set_initia()
-
             self.operations.append(operation)
 
 
-        
-
-
+    #Initialize the operations eg extract their gives and origins
     def initialise_operations(self):
         for c in self.operations:
             c.initialise_operation()
     
+    #Return the number of operators found
     def get_number_operations(self):
         return len(self.operations)
             
-
+    #Return all the defined channels in the operations
     def get_all_defined_channels(self):
         tab=[]
         for c in self.operations:
@@ -229,6 +233,7 @@ class TypeMainDSL1(TypeMain):
                     tab.append(g[0])
         return list(set(tab))
 
+    #Return all the defined channels in the processes
     def get_inputs_and_outputs_processe(self):
         tab=[]
         for p in self.processes:
@@ -240,31 +245,42 @@ class TypeMainDSL1(TypeMain):
                 tab.append(o[1])
         return list(set(tab))
 
+
+    #This method extarcts ans analyzes the operation to extract the channels that is takes (origin) and gives
     def extract_analyse_operations(self):
+
+        #Test that the extarction the operation are working as expected
+        temp = Operation('', '')
+        temp.tests()
+
         #=================================================================
         #PART ZERO: BEFORE WE START WE NEED TO EXTRACT THE ADDED OPERATORS CREATED WITH BRANCH OR MULTIMAP
         #=================================================================
+        #Extarct the added operators
         ope= self.extract_added_operators()
         added= '|'.join(ope)
         if added != '':
             added='|'+added
-        #print(added)
-        #TODO I think we do this to see make the recognition of channels easier later on
+        #We do this to see make the recognition of operator easier later on
         for o in ope:
             pattern=r'\.\s*('+o+')\s*\.'
             for match in re.finditer(pattern, self.string):
                 word=match.group(0)
                 self.string= self.string.replace(word, '.{}().'.format(o), 1)
-                #print('.{}().'.format(o))
         self.added_operators= ope
 
+        
+        #You can ignore this comment
+        #-------------------------------------------------------------------------------------------------------
         #In the following we replace the channel format in a weird way, in a while loop 
-        # and a for with a brak => basically everytime we see a channel that matches the pattern
-        # it is replaced imedialtly => so we have to reload the new positions in the string that's way there 
-        # is the break => we do this to avoid weird bugs due to the map operator => basically you can use 
-        # function in groovy for example with the same syntaxe as the channel operators => so it was doing
-        # this weird thing where it was recognising a channel in a channel and it created a loop in the structure
-        # Writtig the code in this way avoids that problem by replacing the channel as soon as it sees it
+        #and a for with a brak => basically everytime we see a channel that matches the pattern
+        #it is replaced imedialtly => so we have to reload the new positions in the string that's way there 
+        #is the break => we do this to avoid weird bugs due to the map operator => basically you can use 
+        #function in groovy for example with the same syntaxe as the channel operators => so it was doing
+        #this weird thing where it was recognising a channel in a channel and it created a loop in the structure
+        #Writtig the code in this way avoids that problem by replacing the channel as soon as it sees it
+        #-------------------------------------------------------------------------------------------------------
+        
         #=================================================================
         #FIRST PART: WE EXTRACT THE ONES WITH THE WORD CHANNEL 
         #=================================================================
@@ -275,15 +291,11 @@ class TypeMainDSL1(TypeMain):
             changed=False
             for match in re.finditer(pattern, self.string):
                 start= match.span(1)[0]
-                #print(match.span(1))
                 end= self.get_end_operation(start)
                 code= self.string[start:end]
-                #print(code)
-                #print(code)
                 name= 'OPERATION_'+str(index)
                 self.operations.append(Operation(name, code))
                 index+=1
-
                 changed=True
                 self.string= self.string.replace(code, name, 1)
                 break
@@ -299,19 +311,17 @@ class TypeMainDSL1(TypeMain):
             changed=False
             for match in re.finditer(pattern, self.string):
                 if match.group(1)!='workflow':
-                    #print(match.group(0))
                     start= match.span(0)[0]
                     if(self.string[match.span(0)[1]-1]=='('):
                         end= self.get_end_operation(match.span(0)[1], 0, 1)
                     elif(self.string[match.span(0)[1]-1]=='{'):
                         end= self.get_end_operation(match.span(0)[1], 1, 0)
                     else: 
-                        raise Exception("Don't know what i'm looking at..")
+                        raise Exception(f"Don't know what i'm looking at, here : {match.span(0)}")
                     name= 'OPERATION_'+str(index)
                     code= self.string[start:end]
                     self.operations.append(Operation(name, code))
                     index+=1
-
                     changed=True
                     self.string= self.string.replace(code, name, 1)
                     break
@@ -320,7 +330,13 @@ class TypeMainDSL1(TypeMain):
         #THIRD PART: LINK THE TYPES CHANNEL THAT ARE DEFINED AS ... = OPERATION_ID
         #=================================================================
         self.link_operations_set()
+
+        #=================================================================
+        #PART 3.5: DEALS WITH THE CASE WHERE A CHANNEL IS MODIFIED MULTIPLE TIMES
+        #=================================================================
         self.find_problematic_operations()
+
+        #Initialize the operations eg extract their gives and origins
         self.initialise_operations()
 
 
@@ -339,16 +355,18 @@ class TypeMainDSL1(TypeMain):
         #Removing the occurences of .word = word
         tab= list(set(all) - set(dots))
 
-        #Organising tab in a linear order:
+        #Organising tab in a linear order (in order seen in the workflow):
         order=[]
         for t in tab:
              order.append(self.string.index(t))
         order_sorted= sorted(range(len(order)), key=lambda k: order[k])
 
-        #print(tab)
+        #Retrieveing all the defined channels 
         tab_all_definied_channels= self.get_all_defined_channels()
         tab_all_definied_inputs_outputs= self.get_inputs_and_outputs_processe()
-        #print(tab_all_definied_channels)
+        
+        #Checking if the right terms are found in the list of channels, and if so 
+        #Adding the operation to the list of operations
         for i in order_sorted:
             c= tab[i]
             pattern= r'(\w+) *= *(\w+)'
@@ -358,7 +376,6 @@ class TypeMainDSL1(TypeMain):
                 left= match.group(1)
             if(right != left):
                 if (is_in(tab_all_definied_channels, right) or is_in(tab_all_definied_inputs_outputs, right)):
-                    #print('her')
                     name= 'OPERATION_'+str(index)
                     code= c
                     temp_operation= Operation(name, code)
@@ -368,15 +385,19 @@ class TypeMainDSL1(TypeMain):
                     tab_all_definied_channels.append(left)
         for c in self.operations:
             self.string= self.string.replace(c.get_string(), c.get_id(), 1)
+        
+        #Inisializing the operations
         self.initialise_operations()
 
 
+    #Method that prints the operations
     def print_operations(self):
         for c in self.operations:
             print(c.get_id(), 'string :', c.get_full_string())
             print(c.get_id(), 'origin :',  c.get_origin())
             print(c.get_id(), 'gives  :',  c.get_gives())
-
+        
+    #Method that saves the operations
     def save_operations(self, name='operations_extracted'):
         myText = open(name+'.nf','w')
         for c in self.operations:
@@ -386,6 +407,7 @@ class TypeMainDSL1(TypeMain):
             myText.write(c.get_id() +' gives  : '+  str(c.get_gives())+'\n\n\n')
         myText.close()
 
+    #Return the sting of the formated operations
     def get_operations_formated(self):
         temp=""
         for c in self.operations:
@@ -793,7 +815,7 @@ class TypeMainDSL1(TypeMain):
             #STEP5 
             #Finds and analyzes every operation and adds the channels to the list of channels
             self.extract_analyse_operations()
-            print(f'Extracted {self.get_number_operations()} channels')
+            print(f'Extracted {self.get_number_operations()} operations')
             
             #STEP6
             #Reconstructs the structure of the workflow from the information that has been extracted

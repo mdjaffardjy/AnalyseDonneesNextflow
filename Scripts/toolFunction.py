@@ -4,9 +4,6 @@ author : marinedjaffardjy
 
 import ntpath
 import re
-import requests
-from ratelimiter import RateLimiter
-import json
 from .search_biotools_dump import *
 
 EXCEPTIONS = ["export", 'awk', 'sed', 'grep', "cmd", "module", "cat", "elif", "sort", "cd", "zcat",

@@ -71,6 +71,7 @@ class Operation:
         if(self.get_first_word()!='Channel' and self.get_first_word()!='channel'):
             self.origin.append([self.get_first_word(), 'P']) 
 
+
     #For every case i have checked by compilying the nextflow code for each operator
     #join in the name of the method doesn't reference the join operator but the action of 'joining' channels together
     def check_join(self):
@@ -242,7 +243,6 @@ class Operation:
             if(self.normal):
                 self.check_first_word()
                 self.check_set()
-                #print(self.get_first_word())
                 self.check_join()
                 self.check_fork()
                 self.check_factory()
@@ -253,281 +253,281 @@ class Operation:
 
         #DO_STUFF
 
-def tests():
-    #Channel.join(..) or others shoudn't work but we've added it anyway
-    #It doesn't matter since we suppose that the workflow is written correctly
-    #===================================================
-    #join
-    #===================================================
-    test="left.join(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
+    def tests(self):
+        #Channel.join(..) or others shoudn't work but we've added it anyway
+        #It doesn't matter since we suppose that the workflow is written correctly
+        #===================================================
+        #join
+        #===================================================
+        test="left.join(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
 
-    test="Channel.join(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #merge
-    #===================================================
-    test="odds.merge( evens ).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['odds', 'P'], ['evens', 'P']])
+        test="Channel.join(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #merge
+        #===================================================
+        test="odds.merge( evens ).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['odds', 'P'], ['evens', 'P']])
 
-    test="odds.merge( evens, george, and,the , penguin ).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['odds', 'P'], ['evens', 'P'], ['george', 'P'], ['and', 'P'], ['the', 'P'], ['penguin', 'P']])
+        test="odds.merge( evens, george, and,the , penguin ).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['odds', 'P'], ['evens', 'P'], ['george', 'P'], ['and', 'P'], ['the', 'P'], ['penguin', 'P']])
 
-    test="Channel.merge(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #mix
-    #===================================================
-    test="odds.mix( evens ).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['odds', 'P'], ['evens', 'P']])
+        test="Channel.merge(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #mix
+        #===================================================
+        test="odds.mix( evens ).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['odds', 'P'], ['evens', 'P']])
 
-    test="odds.mix ( evens, george, and,the , penguin ).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['odds', 'P'], ['evens', 'P'], ['george', 'P'], ['and', 'P'], ['the', 'P'], ['penguin', 'P']])
+        test="odds.mix ( evens, george, and,the , penguin ).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['odds', 'P'], ['evens', 'P'], ['george', 'P'], ['and', 'P'], ['the', 'P'], ['penguin', 'P']])
 
-    test="Channel.mix(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #phase
-    #===================================================
-    test="left.phase (right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
+        test="Channel.mix(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #phase
+        #===================================================
+        test="left.phase (right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
 
-    test="Channel.phase(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #cross
-    #===================================================
-    test="left.cross (right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
+        test="Channel.phase(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #cross
+        #===================================================
+        test="left.cross (right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
 
-    test="Channel.cross(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #cross
-    #===================================================
-    test="left.combine (right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
+        test="Channel.cross(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #cross
+        #===================================================
+        test="left.combine (right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['left', 'P'], ['right', 'P']])
 
-    test="Channel.combine(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #mix
-    #===================================================
-    test="odds.concat( evens ).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['odds', 'P'], ['evens', 'P']])
+        test="Channel.combine(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #mix
+        #===================================================
+        test="odds.concat( evens ).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['odds', 'P'], ['evens', 'P']])
 
-    test="odds.concat ( evens, george, and,the , penguin ).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['odds', 'P'], ['evens', 'P'], ['george', 'P'], ['and', 'P'], ['the', 'P'], ['penguin', 'P']])
+        test="odds.concat ( evens, george, and,the , penguin ).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['odds', 'P'], ['evens', 'P'], ['george', 'P'], ['and', 'P'], ['the', 'P'], ['penguin', 'P']])
 
-    test="Channel.concat(right).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['right', 'P']])
-    #===================================================
-    #spread
-    #===================================================
-    test="Channel.from(1,2,3).spread(['a','b'])"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["['a','b']", 'V'], ["1,2,3", 'V']])
-    #===================================================
-    #choice
-    #===================================================
-    test="source.choice( queue1, queue2 ) { a -> a =~ /^Hello.*/ ? 0 : 1 }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['source', 'P']])
-    assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P']])
+        test="Channel.concat(right).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['right', 'P']])
+        #===================================================
+        #spread
+        #===================================================
+        test="Channel.from(1,2,3).spread(['a','b'])"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["['a','b']", 'V'], ["1,2,3", 'V']])
+        #===================================================
+        #choice
+        #===================================================
+        test="source.choice( queue1, queue2 ) { a -> a =~ /^Hello.*/ ? 0 : 1 }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['source', 'P']])
+        assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P']])
 
-    test="Channel.choice( queue1, queue2 ) { a -> a =~ /^Hello.*/ ? 0 : 1 }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[])
-    assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P']])
+        test="Channel.choice( queue1, queue2 ) { a -> a =~ /^Hello.*/ ? 0 : 1 }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[])
+        assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P']])
 
-    test="source.choice( queue1, queue2 , queue3) { a -> a =~ /^Hello.*/ ? 0 : 1 }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['source', 'P']])
-    assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P'], ['queue3', 'P']])
-    #===================================================
-    #into
-    #===================================================
-    test="Channel.from( 'a', 'b', 'c' ).into{ foo; bar }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_gives()==[['foo', 'P'], ['bar', 'P']])
-    assert(c.get_origin()==[["'a', 'b', 'c'", 'V']])
+        test="source.choice( queue1, queue2 , queue3) { a -> a =~ /^Hello.*/ ? 0 : 1 }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['source', 'P']])
+        assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P'], ['queue3', 'P']])
+        #===================================================
+        #into
+        #===================================================
+        test="Channel.from( 'a', 'b', 'c' ).into{ foo; bar }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_gives()==[['foo', 'P'], ['bar', 'P']])
+        assert(c.get_origin()==[["'a', 'b', 'c'", 'V']])
 
-    test="Channel.from( 'a','b','c').into(2)"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_gives()==[])
-    assert(c.get_origin()==[["'a','b','c'", 'V']])
-    #===================================================
-    #seperate
-    #===================================================
-    test="Channel.from ( 2,4,8 ).separate( queue1, queue2 ) { a -> [a+1, a*a] }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P']])
-    assert(c.get_origin()==[["2,4,8", 'V']])
+        test="Channel.from( 'a','b','c').into(2)"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_gives()==[])
+        assert(c.get_origin()==[["'a','b','c'", 'V']])
+        #===================================================
+        #seperate
+        #===================================================
+        test="Channel.from ( 2,4,8 ).separate( queue1, queue2 ) { a -> [a+1, a*a] }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_gives()==[['queue1', 'P'], ['queue2', 'P']])
+        assert(c.get_origin()==[["2,4,8", 'V']])
 
-    test="source.separate(3) { a -> [a, a+1, a*a] }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['source', 'P']])
-    assert(c.get_gives()==[])
-    #===================================================
-    #tap
-    #===================================================
-    test="Channel.of ( 'a', 'b', 'c' ).tap ( log1 ).map { it * 2 }.tap ( log2 ).map { it.toUpperCase() }.view { 'Result: $it' }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    #print(c.get_gives())
-    assert(c.get_gives()==[['log1', 'P'], ['log2', 'P']])
+        test="source.separate(3) { a -> [a, a+1, a*a] }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['source', 'P']])
+        assert(c.get_gives()==[])
+        #===================================================
+        #tap
+        #===================================================
+        test="Channel.of ( 'a', 'b', 'c' ).tap ( log1 ).map { it * 2 }.tap ( log2 ).map { it.toUpperCase() }.view { 'Result: $it' }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        #print(c.get_gives())
+        assert(c.get_gives()==[['log1', 'P'], ['log2', 'P']])
 
-    test="Channel.of ( 'a', 'b', 'c' ).tap { log1 }.map { it * 2 }.tap { log2 }.map { it.toUpperCase() }.view { 'Result: $it' }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    #print(c.get_gives())
-    assert(c.get_gives()==[['log1', 'P'], ['log2', 'P']])
-    #===================================================
-    #of
-    #===================================================
-    test="Channel.of(1, 4, 6, 7, 8)"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['1, 4, 6, 7, 8', 'V']])
-    #===================================================
-    #value
-    #===================================================
-    test="Channel.value()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['', 'V']])
+        test="Channel.of ( 'a', 'b', 'c' ).tap { log1 }.map { it * 2 }.tap { log2 }.map { it.toUpperCase() }.view { 'Result: $it' }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        #print(c.get_gives())
+        assert(c.get_gives()==[['log1', 'P'], ['log2', 'P']])
+        #===================================================
+        #of
+        #===================================================
+        test="Channel.of(1, 4, 6, 7, 8)"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['1, 4, 6, 7, 8', 'V']])
+        #===================================================
+        #value
+        #===================================================
+        test="Channel.value()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['', 'V']])
 
-    test="Channel.value( 'Hello there' )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'Hello there'", 'V']])
+        test="Channel.value( 'Hello there' )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'Hello there'", 'V']])
 
-    test="Channel.value( [1,2,3,4,5] )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[['[1,2,3,4,5]', 'V']])
-    #===================================================
-    #fromList
-    #===================================================
-    test="Channel.fromList( ['a', 'b', 'c', 'd'] ).view { 'value: $it' }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["['a', 'b', 'c', 'd']", 'V']])
-    #===================================================
-    #fromPath
-    #===================================================
-    test="Channel.fromPath( '/data/some/bigfile.txt' )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'/data/some/bigfile.txt'", 'A']])
+        test="Channel.value( [1,2,3,4,5] )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[['[1,2,3,4,5]', 'V']])
+        #===================================================
+        #fromList
+        #===================================================
+        test="Channel.fromList( ['a', 'b', 'c', 'd'] ).view { 'value: $it' }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["['a', 'b', 'c', 'd']", 'V']])
+        #===================================================
+        #fromPath
+        #===================================================
+        test="Channel.fromPath( '/data/some/bigfile.txt' )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'/data/some/bigfile.txt'", 'A']])
 
-    test="Channel.fromPath( '/data/big/*.txt' )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'/data/big/*.txt'", 'A']])
+        test="Channel.fromPath( '/data/big/*.txt' )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'/data/big/*.txt'", 'A']])
 
-    test="Channel.fromPath( 'data/file_{1,2}.fq' )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'data/file_{1,2}.fq'", 'A']])
+        test="Channel.fromPath( 'data/file_{1,2}.fq' )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'data/file_{1,2}.fq'", 'A']])
 
-    test="Channel.fromPath( ['/some/path/*.fq', '/other/path/*.fastq'] )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["['/some/path/*.fq', '/other/path/*.fastq']", 'A']])
-    #===================================================
-    #fromFilePairs
-    #===================================================
-    test="Channel.fromFilePairs('/my/data/SRR*_{1,2}.fastq')"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'/my/data/SRR*_{1,2}.fastq'", 'A']])
+        test="Channel.fromPath( ['/some/path/*.fq', '/other/path/*.fastq'] )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["['/some/path/*.fq', '/other/path/*.fastq']", 'A']])
+        #===================================================
+        #fromFilePairs
+        #===================================================
+        test="Channel.fromFilePairs('/my/data/SRR*_{1,2}.fastq')"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'/my/data/SRR*_{1,2}.fastq'", 'A']])
 
-    test="Channel.fromFilePairs('/some/data/*', size: -1) { file -> file.extension }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'/some/data/*', size: -1", 'A']])
-    #===================================================
-    #fromSRA
-    #===================================================
-    test="Channel.fromSRA('SRP043510').view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'SRP043510'", 'S']])
+        test="Channel.fromFilePairs('/some/data/*', size: -1) { file -> file.extension }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'/some/data/*', size: -1", 'A']])
+        #===================================================
+        #fromSRA
+        #===================================================
+        test="Channel.fromSRA('SRP043510').view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'SRP043510'", 'S']])
 
-    test="Channel.fromSRA(ids).view()"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["ids", 'S']])
-    #===================================================
-    #watchPath
-    #===================================================
-    test="Channel.watchPath( '/path/*.fa' ).subscribe { println 'Fasta file: $it' }"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    assert(c.get_origin()==[["'/path/*.fa'", 'A']])
-    #===================================================
-    #Bind
-    #===================================================
-    test="Channel.bind( 'Hello world' )"
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    #print(c.get_origin())
-    assert(c.get_origin()==[["'Hello world'", 'V']])
+        test="Channel.fromSRA(ids).view()"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["ids", 'S']])
+        #===================================================
+        #watchPath
+        #===================================================
+        test="Channel.watchPath( '/path/*.fa' ).subscribe { println 'Fasta file: $it' }"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        assert(c.get_origin()==[["'/path/*.fa'", 'A']])
+        #===================================================
+        #Bind
+        #===================================================
+        test="Channel.bind( 'Hello world' )"
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        #print(c.get_origin())
+        assert(c.get_origin()==[["'Hello world'", 'V']])
 
-    test="Channel << 'Hello world' "
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    #print(c.get_origin())
-    assert(c.get_origin()==[["'Hello world'", 'V']])
+        test="Channel << 'Hello world' "
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        #print(c.get_origin())
+        assert(c.get_origin()==[["'Hello world'", 'V']])
 
-    test="my_channel << 'Hello world' "
-    c= Operation('penguin', test)
-    c.initialise_operation()
-    #print(c.get_origin())
-    assert(c.get_origin()==[["my_channel", 'P'], ["'Hello world'", 'V']])
-    
+        test="my_channel << 'Hello world' "
+        c= Operation('penguin', test)
+        c.initialise_operation()
+        #print(c.get_origin())
+        assert(c.get_origin()==[["my_channel", 'P'], ["'Hello world'", 'V']])
+        
 
         

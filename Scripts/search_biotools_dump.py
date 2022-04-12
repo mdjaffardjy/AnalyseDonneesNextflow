@@ -2,9 +2,8 @@
 # Written by Clémence Sebe and George Marchment
 # October 2021 - April 2022
 
-from os import path
 from rdflib import ConjunctiveGraph
-from rdflib.namespace import Namespace, RDF, RDFS
+from rdflib.namespace import Namespace, RDFS
 import jellyfish
 import glob
 import os
