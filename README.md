@@ -5,8 +5,8 @@
 
 In this repository are presented multiple tools :
 
-- The main one __'Nextflow analyzer'__ allows users to extract information (info on processes or and the structure) of a single or multiple Nextflow workflows. This tool is found here at the root.
-- The second one __'ProSim'__ allows users to compare processes following different hypotheses, it is presented and is found [here](/Analysis/Similarity%20Processes/) 
+- The main one __Nextflow analyzer__ allows users to extract information (info on processes or and the structure) of a single or multiple Nextflow workflows. This tool is found here at the root.
+- The second one __ProSim__ allows users to compare processes following different hypotheses, it is presented and is found [here](/Analysis/Similarity%20Processes/) 
 - The final one _#TODO -> Clémence_
 
 Main contributors are: 
@@ -16,7 +16,23 @@ Main contributors are:
 
 ## Main features
 
+__Nextflow analyzer__ allows users to extract information automatically from Nextflow workflows.
 
+The main information extracted are :
+
+- The structure of the workflow, this refers to all the interaction possible between the processes and the operations of the workflow. The structure is represented by a directed acyclic grap. The analyzer can only extract the structure of Nextflow workflows written in DSL1. Meaning if the user gives a workflow written in DSL2, the analyzer will not return the structure.
+- Information concerning the different processes of the workflow, this information is composed of the individual tools used by the processes, the inputs and outputs etc. This information is saved in a json file which can easily be used later on, to perform analysis (it is these json files that we give __ProSim__ to perform processe comparison, see [here](/Analysis/Similarity%20Processes/)). The analyzer can extract this information (on the processes), from any type of Nextflow workflow. Meaning that the json file will be produced if the user gives the analyzer a workflow written in DSL1 or DSL2.
+
+Finally the analyzer has 2 modes :
+
+- single 
+- multi
+
+Single mode is used to perform the analysis of a single workflow.
+
+Multi mode is used to perform the analysis of multiple workflows.
+
+All the code is annoted, and there is an explicit explanation of the different steps of the analyzer [here](/Docs/Explanation%20of%20the%20Analyzer.pdf).
 
 ## Known bugs
 
