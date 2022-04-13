@@ -1,1 +1,0 @@
-In the futur when testing on worflows from nf-core for example, maybe only put the link to the github to avoid having heavy files.
