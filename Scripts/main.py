@@ -93,7 +93,7 @@ def main():
             #===========================================================================
             #Analyzing the DSL1 workflows -> single file (process + structure)
             #===========================================================================
-            print(f'Found {len(all_header_files)} workflows to analyse in {args.input}\n')
+            print(f'Found {len(all_header_files)+len(sub_folders)} workflows to analyse in {args.input}\n')
             #Extract the names of the workflows
             names=[]
             for h in all_header_files:
