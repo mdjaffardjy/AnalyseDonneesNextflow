@@ -3,37 +3,20 @@
 
 # AnalyseDonneesNextflow
 
-In this repository are presented variations of a Github crawler, adapted to search for Nextflow and Snakemake workflows. 
+In this repository are presented multiple tools :
 
-In the context of research, the need to form a database to be able to compare several workflows led to the development of the crawler.
-
-These Jupyter notebooks showcase how GitHub can be crawled to assemble a corpus of scientific workflows written in various languages.
+- The main one __'Nextflow analyzer'__ allows users to extract information (info on processes or and the structure) of a single or multiple Nextflow workflows. This tool is found here at the root.
+- The second one __'ProSim'__ allows users to compare processes following different hypotheses, it is presented and is found [here](/Analysis/Similarity%20Processes/) 
+- The final one _#TODO -> Clémence_
 
 Main contributors are: 
-- [Alban Gaignard](https://github.com/albangaignard)
+- [Clémence Sebe](https://github.com/ClemenceS)
 - [George Marchment](https://github.com/George-Marchment)
  
 
 ## Main features
 
-The GitHub Search API has a custom rate limit. User-to-server requests are limited to 5,000 requests per hour and per authenticated user. 
 
-There are 3 different versions of the crawler.
- 
-
-- The first 2 versions 'crawler_one_at_a_time' and 'Bioinformatics workflows crawler' work as such : after each request the crawler waits a period of time as so not to surpass the 5,000 requests per hour rate limit. 
-
-    The GitHub Search API provides up to 1,000 results for each search. This causes a problem when wanting to form a large database (of workflows here). To overcome this limitation, the global request : ‘retrieve files written in Snakemake or Nextflow’, is divided into multiple requests :  ‘retrieve files written in Snakemake or Nextflow during *x* month and year’. The month and year are incremented and the request is repeated. This is what differentiate these 2 versions : 
-  1. 'crawler_one_at_a_time' repeats the request during different time periods as to maximise the results. 
-  2. 'Bioinformatics workflows crawler' does not.
-
-
-
-* In the third version of the crawler ‘crawler_all_at_once’, the 5,000 requests are done linearly and are not limited by the time, however after the 5,000 requests the crawler waits an hour. In the same way as 'crawler_one_at_a_time', it repeats the request during different time periods as to maximise the results.
-
-All versions of the crawler are functional.
-
-While the crawler is running, the data is saved in a json file.
 
 ## Known bugs
 
