@@ -1,0 +1,1709 @@
+{
+    "unzip_reference": {
+        "name_process": "unzip_reference",
+        "string_process": " process unzip_reference{\n        tag \"${zipped_fasta}\"\n\n        input:\n        path zipped_fasta from file(params.fasta)                                                                                                                                                \n\n        output:\n        path \"$unzip\" into ch_fasta into ch_fasta_for_bwaindex,ch_fasta_for_bt2index,ch_fasta_for_faidx,ch_fasta_for_seqdict,ch_fasta_for_circulargenerator,ch_fasta_for_circularmapper,ch_fasta_for_damageprofiler,ch_fasta_for_qualimap,ch_fasta_for_pmdtools,ch_fasta_for_genotyping_ug,ch_fasta_for_genotyping_hc,ch_fasta_for_genotyping_freebayes,ch_fasta_for_genotyping_pileupcaller,ch_fasta_for_vcf2genome,ch_fasta_for_multivcfanalyzer,ch_fasta_for_genotyping_angsd,ch_fasta_for_damagerescaling,ch_fasta_for_bcftools_stats\n\n        script:\n        unzip = zipped_fasta.toString() - '.gz'\n        \"\"\"\n        pigz -f -d -p ${task.cpus} $zipped_fasta\n        \"\"\"\n        }",
+        "nb_lignes_process": 13,
+        "string_script": "        unzip = zipped_fasta.toString() - '.gz'\n        \"\"\"\n        pigz -f -d -p ${task.cpus} $zipped_fasta\n        \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [],
+        "nb_inputs": 0,
+        "outputs": [
+            "ch_fasta into ch_fasta_for_bwaindex",
+            "ch_fasta_for_bt2index",
+            "ch_fasta_for_faidx",
+            "ch_fasta_for_seqdict",
+            "ch_fasta_for_circulargenerator",
+            "ch_fasta_for_circularmapper",
+            "ch_fasta_for_damageprofiler",
+            "ch_fasta_for_qualimap",
+            "ch_fasta_for_pmdtools",
+            "ch_fasta_for_genotyping_ug",
+            "ch_fasta_for_genotyping_hc",
+            "ch_fasta_for_genotyping_freebayes",
+            "ch_fasta_for_genotyping_pileupcaller",
+            "ch_fasta_for_vcf2genome",
+            "ch_fasta_for_multivcfanalyzer",
+            "ch_fasta_for_genotyping_angsd",
+            "ch_fasta_for_damagerescaling",
+            "ch_fasta_for_bcftools_stats"
+        ],
+        "nb_outputs": 18,
+        "name_workflow": "George",
+        "directive": [
+            "tag \"${zipped_fasta}\""
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "makeBWAIndex": {
+        "name_process": "makeBWAIndex",
+        "string_process": " process makeBWAIndex {\n    label 'sc_medium'\n    tag \"${fasta}\"\n    publishDir path: \"${params.outdir}/reference_genome/bwa_index\", mode: params.publish_dir_mode, saveAs: { filename -> \n            if (params.save_reference) filename \n            else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename\n            else null\n    }\n\n    input:\n    path fasta from ch_fasta_for_bwaindex\n    path where_are_my_files\n\n    output:\n    path \"BWAIndex\" into (bwa_index, bwa_index_bwamem)\n    path \"where_are_my_files.txt\"\n\n    script:\n    \"\"\"\n    bwa index $fasta\n    mkdir BWAIndex && mv ${fasta}* BWAIndex\n    \"\"\"\n    }",
+        "nb_lignes_process": 21,
+        "string_script": "    \"\"\"\n    bwa index $fasta\n    mkdir BWAIndex && mv ${fasta}* BWAIndex\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [
+            "BWA"
+        ],
+        "inputs": [
+            "ch_fasta_for_bwaindex",
+            "where_are_my_files"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            ""
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_medium'",
+            "tag \"${fasta}\"",
+            "publishDir path: \"${params.outdir}/reference_genome/bwa_index\", mode: params.publish_dir_mode, saveAs: { filename -> if (params.save_reference) filename else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename else null }"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "makeBT2Index": {
+        "name_process": "makeBT2Index",
+        "string_process": " process makeBT2Index {\n    label 'sc_medium'\n    tag \"${fasta}\"\n    publishDir path: \"${params.outdir}/reference_genome/bt2_index\", mode: params.publish_dir_mode, saveAs: { filename -> \n            if (params.save_reference) filename \n            else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename\n            else null\n    }\n\n    input:\n    path fasta from ch_fasta_for_bt2index\n    path where_are_my_files\n\n    output:\n    path \"BT2Index\" into (bt2_index)\n    path \"where_are_my_files.txt\"\n\n    script:\n    \"\"\"\n    bowtie2-build $fasta $fasta\n    mkdir BT2Index && mv ${fasta}* BT2Index\n    \"\"\"\n    }",
+        "nb_lignes_process": 21,
+        "string_script": "    \"\"\"\n    bowtie2-build $fasta $fasta\n    mkdir BT2Index && mv ${fasta}* BT2Index\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_fasta_for_bt2index",
+            "where_are_my_files"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            ""
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_medium'",
+            "tag \"${fasta}\"",
+            "publishDir path: \"${params.outdir}/reference_genome/bt2_index\", mode: params.publish_dir_mode, saveAs: { filename -> if (params.save_reference) filename else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename else null }"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "makeFastaIndex": {
+        "name_process": "makeFastaIndex",
+        "string_process": "\nprocess makeFastaIndex {\n    label 'sc_small'\n    tag \"${fasta}\"\n    publishDir path: \"${params.outdir}/reference_genome/fasta_index\", mode: params.publish_dir_mode, saveAs: { filename -> \n            if (params.save_reference) filename \n            else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename\n            else null\n    }\n    \n    when: !params.fasta_index && params.fasta && ( params.mapper == 'bwaaln' || params.mapper == 'bwamem' || params.mapper == 'circularmapper')\n\n    input:\n    path fasta from ch_fasta_for_faidx\n    path where_are_my_files\n\n    output:\n    path \"*.fai\" into ch_fasta_faidx_index\n    path \"where_are_my_files.txt\"\n\n    script:\n    \"\"\"\n    samtools faidx $fasta\n    \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "    \"\"\"\n    samtools faidx $fasta\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_fasta_for_faidx",
+            "where_are_my_files"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_fasta_faidx_index"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'",
+            "tag \"${fasta}\"",
+            "publishDir path: \"${params.outdir}/reference_genome/fasta_index\", mode: params.publish_dir_mode, saveAs: { filename -> if (params.save_reference) filename else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename else null } when: !params.fasta_index && params.fasta && ( params.mapper == 'bwaaln' || params.mapper == 'bwamem' || params.mapper == 'circularmapper')"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "makeSeqDict": {
+        "name_process": "makeSeqDict",
+        "string_process": "\nprocess makeSeqDict {\n    label 'sc_medium'\n    tag \"${fasta}\"\n    publishDir path: \"${params.outdir}/reference_genome/seq_dict\", mode: params.publish_dir_mode, saveAs: { filename -> \n            if (params.save_reference) filename \n            else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename\n            else null\n    }\n    \n    when: !params.seq_dict && params.fasta\n\n    input:\n    path fasta from ch_fasta_for_seqdict\n    path where_are_my_files\n\n    output:\n    path \"*.dict\" into ch_seq_dict\n    path \"where_are_my_files.txt\"\n\n    script:\n    \"\"\"\n    picard -Xmx${task.memory.toMega()}M CreateSequenceDictionary R=$fasta O=\"${fasta.baseName}.dict\"\n    \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "    \"\"\"\n    picard -Xmx${task.memory.toMega()}M CreateSequenceDictionary R=$fasta O=\"${fasta.baseName}.dict\"\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [
+            "Picard"
+        ],
+        "inputs": [
+            "ch_fasta_for_seqdict",
+            "where_are_my_files"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_seq_dict"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_medium'",
+            "tag \"${fasta}\"",
+            "publishDir path: \"${params.outdir}/reference_genome/seq_dict\", mode: params.publish_dir_mode, saveAs: { filename -> if (params.save_reference) filename else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename else null } when: !params.seq_dict && params.fasta"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "convertBam": {
+        "name_process": "convertBam",
+        "string_process": "\nprocess convertBam {\n    label 'mc_small'\n    tag \"$libraryid\"\n    \n    when: \n    params.run_convertinputbam\n\n    input: \n    tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, path(bam) from ch_input_for_convertbam \n\n    output:\n    tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, path(\"*fastq.gz\"), val('NA') into ch_output_from_convertbam\n\n    script:\n    base = \"${bam.baseName}\"\n    \"\"\"\n    samtools fastq -tn ${bam} | pigz -p ${task.cpus} > ${base}.converted.fastq.gz\n    \"\"\" \n}",
+        "nb_lignes_process": 18,
+        "string_script": "    base = \"${bam.baseName}\"\n    \"\"\"\n    samtools fastq -tn ${bam} | pigz -p ${task.cpus} > ${base}.converted.fastq.gz\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [
+            "BASE",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_input_for_convertbam"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_output_from_convertbam"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"$libraryid\""
+        ],
+        "when": "params.run_convertinputbam",
+        "stub": ""
+    },
+    "indexinputbam": {
+        "name_process": "indexinputbam",
+        "string_process": "\nprocess indexinputbam {\n  label 'sc_small'\n  tag \"$libraryid\"\n\n  when: \n  bam != 'NA' && !params.run_convertinputbam\n\n  input:\n  tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, path(bam) from ch_input_for_indexbam \n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), file(\"*.{bai,csi}\")  into ch_indexbam_for_filtering\n\n  script:\n  def size = params.large_ref ? '-c' : ''\n  \"\"\"\n  samtools index ${bam} ${size}\n  \"\"\"\n}",
+        "nb_lignes_process": 18,
+        "string_script": "  def size = params.large_ref ? '-c' : ''\n  \"\"\"\n  samtools index ${bam} ${size}\n  \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_input_for_indexbam"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_indexbam_for_filtering"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'",
+            "tag \"$libraryid\""
+        ],
+        "when": "bam != 'NA' && !params.run_convertinputbam",
+        "stub": ""
+    },
+    "fastqc": {
+        "name_process": "fastqc",
+        "string_process": "\nprocess fastqc {\n    label 'mc_small'\n    tag \"${libraryid}_L${lane}\"\n    publishDir \"${params.outdir}/fastqc/input_fastq\", mode: params.publish_dir_mode,\n        saveAs: { filename ->\n                      filename.indexOf(\".zip\") > 0 ? \"zips/$filename\" : \"$filename\"\n                }\n\n\n    input:\n    tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_convertbam_for_fastqc\n\n    output:\n    path \"*_fastqc.{zip,html}\" into ch_prefastqc_for_multiqc\n\n    when: \n    !params.skip_fastqc\n\n    script:\n    if ( seqtype == 'PE' ) {\n    \"\"\"\n    fastqc -t ${task.cpus} -q $r1 $r2\n    rename 's/_fastqc\\\\.zip\\$/_raw_fastqc.zip/' *_fastqc.zip\n    rename 's/_fastqc\\\\.html\\$/_raw_fastqc.html/' *_fastqc.html\n    \"\"\"\n    } else {\n    \"\"\"\n    fastqc -q $r1\n    rename 's/_fastqc\\\\.zip\\$/_raw_fastqc.zip/' *_fastqc.zip\n    rename 's/_fastqc\\\\.html\\$/_raw_fastqc.html/' *_fastqc.html\n    \"\"\"\n    }\n}",
+        "nb_lignes_process": 32,
+        "string_script": "    if ( seqtype == 'PE' ) {\n    \"\"\"\n    fastqc -t ${task.cpus} -q $r1 $r2\n    rename 's/_fastqc\\\\.zip\\$/_raw_fastqc.zip/' *_fastqc.zip\n    rename 's/_fastqc\\\\.html\\$/_raw_fastqc.html/' *_fastqc.html\n    \"\"\"\n    } else {\n    \"\"\"\n    fastqc -q $r1\n    rename 's/_fastqc\\\\.zip\\$/_raw_fastqc.zip/' *_fastqc.zip\n    rename 's/_fastqc\\\\.html\\$/_raw_fastqc.html/' *_fastqc.html\n    \"\"\"\n    }",
+        "nb_lignes_script": 12,
+        "language_script": "bash",
+        "tools": [
+            "FastQC"
+        ],
+        "inputs": [
+            "ch_convertbam_for_fastqc"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_prefastqc_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}_L${lane}\"",
+            "publishDir \"${params.outdir}/fastqc/input_fastq\", mode: params.publish_dir_mode , saveAs: { filename -> filename.indexOf(\".zip\") > 0 ? \"zips/$filename\" : \"$filename\" }"
+        ],
+        "when": "!params.skip_fastqc",
+        "stub": ""
+    },
+    "fastp": {
+        "name_process": "fastp",
+        "string_process": "\nprocess fastp {\n    label 'mc_small'\n    tag \"${libraryid}_L${lane}\"\n    publishDir \"${params.outdir}/FastP\", mode: params.publish_dir_mode\n\n    when: \n    params.complexity_filter_poly_g\n\n    input:\n    tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_input_for_fastp.twocol\n\n    output:\n    tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, path(\"*.pG.fq.gz\") into ch_output_from_fastp\n    path(\"*.json\") into ch_fastp_for_multiqc\n\n    script:\n    if( seqtype == 'SE' ){\n    \"\"\"\n    fastp --in1 ${r1} --out1 \"${r1.baseName}.pG.fq.gz\" -A -g --poly_g_min_len \"${params.complexity_filter_poly_g_min}\" -Q -L -w ${task.cpus} --json \"${r1.baseName}\"_L${lane}_fastp.json \n    \"\"\"\n    } else {\n    \"\"\"\n    fastp --in1 ${r1} --in2 ${r2} --out1 \"${r1.baseName}.pG.fq.gz\" --out2 \"${r2.baseName}.pG.fq.gz\" -A -g --poly_g_min_len \"${params.complexity_filter_poly_g_min}\" -Q -L -w ${task.cpus} --json \"${libraryid}\"_L${lane}_polyg_fastp.json \n    \"\"\"\n    }\n}",
+        "nb_lignes_process": 25,
+        "string_script": "    if( seqtype == 'SE' ){\n    \"\"\"\n    fastp --in1 ${r1} --out1 \"${r1.baseName}.pG.fq.gz\" -A -g --poly_g_min_len \"${params.complexity_filter_poly_g_min}\" -Q -L -w ${task.cpus} --json \"${r1.baseName}\"_L${lane}_fastp.json \n    \"\"\"\n    } else {\n    \"\"\"\n    fastp --in1 ${r1} --in2 ${r2} --out1 \"${r1.baseName}.pG.fq.gz\" --out2 \"${r2.baseName}.pG.fq.gz\" -A -g --poly_g_min_len \"${params.complexity_filter_poly_g_min}\" -Q -L -w ${task.cpus} --json \"${libraryid}\"_L${lane}_polyg_fastp.json \n    \"\"\"\n    }",
+        "nb_lignes_script": 8,
+        "language_script": "bash",
+        "tools": [
+            "fastPHASE"
+        ],
+        "inputs": [
+            "ch_input_for_fastp"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_output_from_fastp",
+            "ch_fastp_for_multiqc"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}_L${lane}\"",
+            "publishDir \"${params.outdir}/FastP\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.complexity_filter_poly_g",
+        "stub": ""
+    },
+    "adapter_removal": {
+        "name_process": "adapter_removal",
+        "string_process": "\nprocess adapter_removal {\n    label 'mc_small'\n    tag \"${libraryid}_L${lane}\"\n    publishDir \"${params.outdir}/adapterremoval\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_fastp_for_adapterremoval\n    path adapterlist from ch_adapterlist.collect().dump(tag: \"Adapter list\")\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"output/*{combined.fq,.se.truncated,pair1.truncated}.gz\") into ch_output_from_adapterremoval_r1\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"output/*pair2.truncated.gz\") optional true into ch_output_from_adapterremoval_r2\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"output/*.settings\") into ch_adapterremoval_logs\n    \n    when: \n    !params.skip_adapterremoval\n\n    script:\n    def base = \"${r1.baseName}_L${lane}\"\n    def adapters_to_remove = !params.clip_adapters_list ? \"--adapter1 ${params.clip_forward_adaptor} --adapter2 ${params.clip_reverse_adaptor}\" : \"--adapter-list ${adapterlist}\"\n                                                                              \n    def preserve5p = params.preserve5p ? '--preserve5p' : '' // applies to any AR command - doesn't affect output file combination\n    \n    if ( seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim  && !params.mergedonly && !params.preserve5p ) {\n    \"\"\"\n    mkdir -p output\n\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n\n    cat *.collapsed.gz *.collapsed.truncated.gz *.singleton.truncated.gz *.pair1.truncated.gz *.pair2.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n    \n    mv *.settings output/\n\n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n    \"\"\"\n                                                                     \n    } else if (seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim  && !params.mergedonly && params.preserve5p) {\n    \"\"\"\n    mkdir -p output\n\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n\n    cat *.collapsed.gz *.singleton.truncated.gz *.pair1.truncated.gz *.pair2.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n\n    mv *.settings output/\n\n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n    \"\"\"\n                                                                 \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim && params.mergedonly && !params.preserve5p ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe  --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    \n    cat *.collapsed.gz *.collapsed.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n        \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz >  output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim && params.mergedonly && params.preserve5p ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe  --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    \n    cat *.collapsed.gz > output/${base}.pe.combined.tmp.fq.gz\n    \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g  output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                                                                                     \n                                                        \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && params.skip_trim && !params.mergedonly ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --adapter1 \"\" --adapter2 \"\"\n    \n    cat *.collapsed.gz *.pair1.truncated.gz *.pair2.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n        \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                                                                                                  \n                                                        \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && params.skip_trim && params.mergedonly ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p}  --adapter1 \"\" --adapter2 \"\"\n    \n    cat *.collapsed.gz > output/${base}.pe.combined.tmp.fq.gz\n    \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                                                    \n    } else if ( seqtype == 'PE'  && params.skip_collapse && !params.skip_trim ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    \n    mv ${base}.pe.pair*.truncated.gz *.settings output/\n    \"\"\"\n    } else if ( seqtype != 'PE' && !params.skip_trim ) {\n                                                \n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --basename ${base}.se --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    mv *.settings *.se.truncated.gz output/\n    \"\"\"\n    } else if ( seqtype != 'PE' && params.skip_trim ) {\n                                                \n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --basename ${base}.se --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} ${preserve5p} --adapter1 \"\" --adapter2 \"\"\n    mv *.settings *.se.truncated.gz output/\n    \"\"\"\n    }\n}",
+        "nb_lignes_process": 133,
+        "string_script": "    def base = \"${r1.baseName}_L${lane}\"\n    def adapters_to_remove = !params.clip_adapters_list ? \"--adapter1 ${params.clip_forward_adaptor} --adapter2 ${params.clip_reverse_adaptor}\" : \"--adapter-list ${adapterlist}\"\n                                                                              \n    def preserve5p = params.preserve5p ? '--preserve5p' : '' // applies to any AR command - doesn't affect output file combination\n    \n    if ( seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim  && !params.mergedonly && !params.preserve5p ) {\n    \"\"\"\n    mkdir -p output\n\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n\n    cat *.collapsed.gz *.collapsed.truncated.gz *.singleton.truncated.gz *.pair1.truncated.gz *.pair2.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n    \n    mv *.settings output/\n\n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n    \"\"\"\n                                                                     \n    } else if (seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim  && !params.mergedonly && params.preserve5p) {\n    \"\"\"\n    mkdir -p output\n\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n\n    cat *.collapsed.gz *.singleton.truncated.gz *.pair1.truncated.gz *.pair2.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n\n    mv *.settings output/\n\n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n    \"\"\"\n                                                                 \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim && params.mergedonly && !params.preserve5p ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe  --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    \n    cat *.collapsed.gz *.collapsed.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n        \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz >  output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && !params.skip_trim && params.mergedonly && params.preserve5p ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe  --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    \n    cat *.collapsed.gz > output/${base}.pe.combined.tmp.fq.gz\n    \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g  output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                                                                                     \n                                                        \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && params.skip_trim && !params.mergedonly ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p} --adapter1 \"\" --adapter2 \"\"\n    \n    cat *.collapsed.gz *.pair1.truncated.gz *.pair2.truncated.gz > output/${base}.pe.combined.tmp.fq.gz\n        \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                                                                                                  \n                                                        \n    } else if ( seqtype == 'PE'  && !params.skip_collapse && params.skip_trim && params.mergedonly ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} --collapse ${preserve5p}  --adapter1 \"\" --adapter2 \"\"\n    \n    cat *.collapsed.gz > output/${base}.pe.combined.tmp.fq.gz\n    \n    ## Add R_ and L_ for unmerged reads for DeDup compatibility\n    AdapterRemovalFixPrefix -Xmx${task.memory.toGiga()}g output/${base}.pe.combined.tmp.fq.gz > output/${base}.pe.combined.fq\n    pigz -p ${task.cpus - 1} output/${base}.pe.combined.fq\n\n    mv *.settings output/\n    \"\"\"\n                                                                                                                    \n    } else if ( seqtype == 'PE'  && params.skip_collapse && !params.skip_trim ) {\n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --file2 ${r2} --basename ${base}.pe --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    \n    mv ${base}.pe.pair*.truncated.gz *.settings output/\n    \"\"\"\n    } else if ( seqtype != 'PE' && !params.skip_trim ) {\n                                                \n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --basename ${base}.se --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} ${preserve5p} --trimns --trimqualities ${adapters_to_remove} --minlength ${params.clip_readlength} --minquality ${params.clip_min_read_quality} --minadapteroverlap ${params.min_adap_overlap}\n    mv *.settings *.se.truncated.gz output/\n    \"\"\"\n    } else if ( seqtype != 'PE' && params.skip_trim ) {\n                                                \n    \"\"\"\n    mkdir -p output\n    AdapterRemoval --file1 ${r1} --basename ${base}.se --gzip --threads ${task.cpus} --qualitymax ${params.qualitymax} ${preserve5p} --adapter1 \"\" --adapter2 \"\"\n    mv *.settings *.se.truncated.gz output/\n    \"\"\"\n    }",
+        "nb_lignes_script": 114,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_fastp_for_adapterremoval",
+            "ch_adapterlist"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_output_from_adapterremoval_r1",
+            "ch_output_from_adapterremoval_r2",
+            "ch_adapterremoval_logs"
+        ],
+        "nb_outputs": 3,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}_L${lane}\"",
+            "publishDir \"${params.outdir}/adapterremoval\", mode: params.publish_dir_mode"
+        ],
+        "when": "!params.skip_adapterremoval",
+        "stub": ""
+    },
+    "post_ar_fastq_trimming": {
+        "name_process": "post_ar_fastq_trimming",
+        "string_process": "\nprocess post_ar_fastq_trimming {\n  label 'mc_small'\n  tag \"${libraryid}\"\n  publishDir \"${params.outdir}/post_ar_fastq_trimmed\", mode: params.publish_dir_mode\n\n  when: params.run_post_ar_trimming\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(r1), path(r2) from ch_adapterremoval_for_post_ar_trimming\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_R1_postartrimmed.fq.gz\") into ch_post_ar_trimming_for_lanemerge_r1\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_R2_postartrimmed.fq.gz\") optional true into ch_post_ar_trimming_for_lanemerge_r2\n\n  script:\n  if ( seqtype == 'SE' | (seqtype == 'PE' && !params.skip_collapse) ) {\n  \"\"\"\n  fastp --in1 ${r1} --trim_front1 ${params.post_ar_trim_front} --trim_tail1 ${params.post_ar_trim_tail} -A -G -Q -L -w ${task.cpus} --out1 \"${libraryid}\"_L\"${lane}\"_R1_postartrimmed.fq.gz\n  \"\"\"\n  } else if ( seqtype == 'PE' && params.skip_collapse ) {\n  \"\"\"\n  fastp --in1 ${r1} --in2 ${r2}  --trim_front1 ${params.post_ar_trim_front} --trim_tail1 ${params.post_ar_trim_tail} --trim_front2 ${params.post_ar_trim_front2} --trim_tail2 ${params.post_ar_trim_tail2} -A -G -Q -L -w ${task.cpus} --out1 \"${libraryid}\"_L\"${lane}\"_R1_postartrimmed.fq.gz --out2 \"${libraryid}\"_L\"${lane}\"_R2_postartrimmed.fq.gz\n  \"\"\"\n  }\n\n}",
+        "nb_lignes_process": 25,
+        "string_script": "  if ( seqtype == 'SE' | (seqtype == 'PE' && !params.skip_collapse) ) {\n  \"\"\"\n  fastp --in1 ${r1} --trim_front1 ${params.post_ar_trim_front} --trim_tail1 ${params.post_ar_trim_tail} -A -G -Q -L -w ${task.cpus} --out1 \"${libraryid}\"_L\"${lane}\"_R1_postartrimmed.fq.gz\n  \"\"\"\n  } else if ( seqtype == 'PE' && params.skip_collapse ) {\n  \"\"\"\n  fastp --in1 ${r1} --in2 ${r2}  --trim_front1 ${params.post_ar_trim_front} --trim_tail1 ${params.post_ar_trim_tail} --trim_front2 ${params.post_ar_trim_front2} --trim_tail2 ${params.post_ar_trim_tail2} -A -G -Q -L -w ${task.cpus} --out1 \"${libraryid}\"_L\"${lane}\"_R1_postartrimmed.fq.gz --out2 \"${libraryid}\"_L\"${lane}\"_R2_postartrimmed.fq.gz\n  \"\"\"\n  }",
+        "nb_lignes_script": 8,
+        "language_script": "bash",
+        "tools": [
+            "fastPHASE"
+        ],
+        "inputs": [
+            "ch_adapterremoval_for_post_ar_trimming"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_post_ar_trimming_for_lanemerge_r1",
+            "ch_post_ar_trimming_for_lanemerge_r2"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/post_ar_fastq_trimmed\", mode: params.publish_dir_mode when: params.run_post_ar_trimming"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "lanemerge": {
+        "name_process": "lanemerge",
+        "string_process": "\nprocess lanemerge {\n  label 'sc_tiny'\n  tag \"${libraryid}\"\n  publishDir \"${params.outdir}/lanemerging\", mode: params.publish_dir_mode\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(r1), path(r2) from ch_branched_for_lanemerge_ready.dump(tag: \"lange_merge_input\")\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_R1_lanemerged.fq.gz\") into ch_lanemerge_for_mapping_r1\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_R2_lanemerged.fq.gz\") optional true into ch_lanemerge_for_mapping_r2\n\n  script:\n  if ( seqtype == 'PE' && ( params.skip_collapse || params.skip_adapterremoval ) ){\n  lane = 0\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  cat ${r2} > \"${libraryid}\"_R2_lanemerged.fq.gz\n  \"\"\"\n  } else {\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  \"\"\"\n  }\n\n}",
+        "nb_lignes_process": 25,
+        "string_script": "  if ( seqtype == 'PE' && ( params.skip_collapse || params.skip_adapterremoval ) ){\n  lane = 0\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  cat ${r2} > \"${libraryid}\"_R2_lanemerged.fq.gz\n  \"\"\"\n  } else {\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  \"\"\"\n  }",
+        "nb_lignes_script": 10,
+        "language_script": "bash",
+        "tools": [
+            "GLANET"
+        ],
+        "inputs": [
+            "ch_branched_for_lanemerge_ready"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_lanemerge_for_mapping_r1",
+            "ch_lanemerge_for_mapping_r2"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/lanemerging\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "lanemerge_hostremoval_fastq": {
+        "name_process": "lanemerge_hostremoval_fastq",
+        "string_process": "\nprocess lanemerge_hostremoval_fastq {\n  label 'sc_tiny'\n  tag \"${libraryid}\"\n\n  when: \n  params.hostremoval_input_fastq\n\n  input:\n  tuple samplename, libraryid, lane, colour, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_input_for_lanemerge_hostremovalfastq.groupTuple(by: [0,1,3,4,5,6,7])\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*.fq.gz\") into ch_fastqlanemerge_for_hostremovalfastq\n\n  script:\n  if ( seqtype == 'PE' ){\n  lane = 0\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  cat ${r2} > \"${libraryid}\"_R2_lanemerged.fq.gz\n  \"\"\"\n  } else {\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  \"\"\"\n  }\n\n}",
+        "nb_lignes_process": 26,
+        "string_script": "  if ( seqtype == 'PE' ){\n  lane = 0\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  cat ${r2} > \"${libraryid}\"_R2_lanemerged.fq.gz\n  \"\"\"\n  } else {\n  \"\"\"\n  cat ${r1} > \"${libraryid}\"_R1_lanemerged.fq.gz\n  \"\"\"\n  }",
+        "nb_lignes_script": 10,
+        "language_script": "bash",
+        "tools": [
+            "GLANET"
+        ],
+        "inputs": [
+            "ch_input_for_lanemerge_hostremovalfastq"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_fastqlanemerge_for_hostremovalfastq"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"${libraryid}\""
+        ],
+        "when": "params.hostremoval_input_fastq",
+        "stub": ""
+    },
+    "fastqc_after_clipping": {
+        "name_process": "fastqc_after_clipping",
+        "string_process": "\nprocess fastqc_after_clipping {\n    label 'mc_small'\n    tag \"${libraryid}_L${lane}\"\n    publishDir \"${params.outdir}/fastqc/after_clipping\", mode: params.publish_dir_mode,\n        saveAs: { filename ->\n                      filename.indexOf(\".zip\") > 0 ? \"zips/$filename\" : \"$filename\"\n                }\n\n\n    when: !params.skip_adapterremoval && !params.skip_fastqc\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_inlinebarcoderemoval_for_fastqc_after_clipping\n\n    output:\n    path(\"*_fastqc.{zip,html}\") into ch_fastqc_after_clipping\n\n    script:\n    if ( params.skip_collapse && seqtype == 'PE' ) {\n    \"\"\"\n    fastqc -t ${task.cpus} -q ${r1} ${r2}\n    \"\"\"\n    } else {\n    \"\"\"\n    fastqc -t ${task.cpus} -q ${r1}\n    \"\"\"\n    }\n\n}",
+        "nb_lignes_process": 28,
+        "string_script": "    if ( params.skip_collapse && seqtype == 'PE' ) {\n    \"\"\"\n    fastqc -t ${task.cpus} -q ${r1} ${r2}\n    \"\"\"\n    } else {\n    \"\"\"\n    fastqc -t ${task.cpus} -q ${r1}\n    \"\"\"\n    }",
+        "nb_lignes_script": 8,
+        "language_script": "bash",
+        "tools": [
+            "FastQC"
+        ],
+        "inputs": [
+            "ch_inlinebarcoderemoval_for_fastqc_after_clipping"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_fastqc_after_clipping"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}_L${lane}\"",
+            "publishDir \"${params.outdir}/fastqc/after_clipping\", mode: params.publish_dir_mode , saveAs: { filename -> filename.indexOf(\".zip\") > 0 ? \"zips/$filename\" : \"$filename\" } when: !params.skip_adapterremoval && !params.skip_fastqc"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "bwa": {
+        "name_process": "bwa",
+        "string_process": "\nprocess bwa {\n    label 'mc_medium'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/mapping/bwa\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(r1), path(r2) from ch_lanemerge_for_bwa.dump(tag: \"bwa_input_reads\")\n    path index from bwa_index.collect().dump(tag: \"input_index\")\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.mapped.bam\"), path(\"*.{bai,csi}\") into ch_output_from_bwa   \n\n    when: \n    params.mapper == 'bwaaln'\n\n    script:\n    def size = params.large_ref ? '-c' : ''\n    def fasta = \"${index}/${fasta_base}\"\n\n                                                             \n    if ( seqtype == 'PE' && ( params.skip_collapse || params.skip_adapterremoval ) ){\n    \"\"\"\n    bwa aln -t ${task.cpus} $fasta ${r1} -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -o ${params.bwaalno} -f ${libraryid}.r1.sai\n    bwa aln -t ${task.cpus} $fasta ${r2} -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -o ${params.bwaalno} -f ${libraryid}.r2.sai\n    bwa sampe -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $fasta ${libraryid}.r1.sai ${libraryid}.r2.sai ${r1} ${r2} | samtools sort -@ ${task.cpus - 1} -O bam - > ${libraryid}_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    } else {\n                              \n    \"\"\"\n    bwa aln -t ${task.cpus} ${fasta} ${r1} -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -o ${params.bwaalno} -f ${libraryid}.sai\n    bwa samse -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $fasta ${libraryid}.sai $r1 | samtools sort -@ ${task.cpus - 1} -O bam - > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    }\n    \n}",
+        "nb_lignes_process": 36,
+        "string_script": "    def size = params.large_ref ? '-c' : ''\n    def fasta = \"${index}/${fasta_base}\"\n\n                                                             \n    if ( seqtype == 'PE' && ( params.skip_collapse || params.skip_adapterremoval ) ){\n    \"\"\"\n    bwa aln -t ${task.cpus} $fasta ${r1} -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -o ${params.bwaalno} -f ${libraryid}.r1.sai\n    bwa aln -t ${task.cpus} $fasta ${r2} -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -o ${params.bwaalno} -f ${libraryid}.r2.sai\n    bwa sampe -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $fasta ${libraryid}.r1.sai ${libraryid}.r2.sai ${r1} ${r2} | samtools sort -@ ${task.cpus - 1} -O bam - > ${libraryid}_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    } else {\n                              \n    \"\"\"\n    bwa aln -t ${task.cpus} ${fasta} ${r1} -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -o ${params.bwaalno} -f ${libraryid}.sai\n    bwa samse -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $fasta ${libraryid}.sai $r1 | samtools sort -@ ${task.cpus - 1} -O bam - > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    }",
+        "nb_lignes_script": 18,
+        "language_script": "bash",
+        "tools": [
+            "BWA",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_lanemerge_for_bwa",
+            "bwa_index"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_output_from_bwa"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/mapping/bwa\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.mapper == 'bwaaln'",
+        "stub": ""
+    },
+    "bwamem": {
+        "name_process": "bwamem",
+        "string_process": "\nprocess bwamem {\n    label 'mc_medium'\n    tag \"$libraryid\"\n    publishDir \"${params.outdir}/mapping/bwamem\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_lanemerge_for_bwamem\n    path index from bwa_index_bwamem.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.mapped.bam\"), path(\"*.{bai,csi}\") into ch_output_from_bwamem\n\n    when: \n    params.mapper == 'bwamem'\n\n    script:\n    def split_cpus = Math.floor(task.cpus/2)\n    def fasta = \"${index}/${fasta_base}\"\n    def size = params.large_ref ? '-c' : ''\n\n    if (!params.single_end && params.skip_collapse){\n    \"\"\"\n    bwa mem -t ${split_cpus} $fasta $r1 $r2 -R \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" | samtools sort -@ ${split_cpus} -O bam - > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index ${size} -@ ${task.cpus} \"${libraryid}\".mapped.bam\n    \"\"\"\n    } else {\n    \"\"\"\n    bwa mem -t ${split_cpus} $fasta $r1 -R \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" | samtools sort -@ ${split_cpus} -O bam - > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index -@ ${task.cpus} \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size} \n    \"\"\"\n    }\n    \n}",
+        "nb_lignes_process": 32,
+        "string_script": "    def split_cpus = Math.floor(task.cpus/2)\n    def fasta = \"${index}/${fasta_base}\"\n    def size = params.large_ref ? '-c' : ''\n\n    if (!params.single_end && params.skip_collapse){\n    \"\"\"\n    bwa mem -t ${split_cpus} $fasta $r1 $r2 -R \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" | samtools sort -@ ${split_cpus} -O bam - > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index ${size} -@ ${task.cpus} \"${libraryid}\".mapped.bam\n    \"\"\"\n    } else {\n    \"\"\"\n    bwa mem -t ${split_cpus} $fasta $r1 -R \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" | samtools sort -@ ${split_cpus} -O bam - > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index -@ ${task.cpus} \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size} \n    \"\"\"\n    }",
+        "nb_lignes_script": 14,
+        "language_script": "bash",
+        "tools": [
+            "BWA",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_lanemerge_for_bwamem",
+            "bwa_index_bwamem"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_output_from_bwamem"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"$libraryid\"",
+            "publishDir \"${params.outdir}/mapping/bwamem\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.mapper == 'bwamem'",
+        "stub": ""
+    },
+    "circulargenerator": {
+        "name_process": "circulargenerator",
+        "string_process": "\nprocess circulargenerator{\n    label 'sc_medium'\n    tag \"$prefix\"\n    publishDir \"${params.outdir}/reference_genome/circularmapper_index\", mode: params.publish_dir_mode, saveAs: { filename -> \n            if (params.save_reference) filename \n            else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename\n            else null\n    }\n\n\n    input:\n    file fasta from ch_fasta_for_circulargenerator\n\n    output:\n    file \"${prefix}.{amb,ann,bwt,sa,pac}\" into ch_circularmapper_indices\n    file \"*_elongated\" into ch_circularmapper_elongatedfasta\n\n    when: \n    params.mapper == 'circularmapper'\n\n    script:\n    prefix = \"${fasta.baseName}_${params.circularextension}.fasta\"\n    \"\"\"\n    circulargenerator -Xmx${task.memory.toGiga()}g -e ${params.circularextension} -i $fasta -s ${params.circulartarget}\n    bwa index $prefix\n    \"\"\"\n\n}",
+        "nb_lignes_process": 27,
+        "string_script": "    prefix = \"${fasta.baseName}_${params.circularextension}.fasta\"\n    \"\"\"\n    circulargenerator -Xmx${task.memory.toGiga()}g -e ${params.circularextension} -i $fasta -s ${params.circulartarget}\n    bwa index $prefix\n    \"\"\"",
+        "nb_lignes_script": 4,
+        "language_script": "bash",
+        "tools": [
+            "BWA"
+        ],
+        "inputs": [
+            "ch_fasta_for_circulargenerator"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_circularmapper_indices",
+            "ch_circularmapper_elongatedfasta"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_medium'",
+            "tag \"$prefix\"",
+            "publishDir \"${params.outdir}/reference_genome/circularmapper_index\", mode: params.publish_dir_mode, saveAs: { filename -> if (params.save_reference) filename else if(!params.save_reference && filename == \"where_are_my_files.txt\") filename else null }"
+        ],
+        "when": "params.mapper == 'circularmapper'",
+        "stub": ""
+    },
+    "circularmapper": {
+        "name_process": "circularmapper",
+        "string_process": "\nprocess circularmapper{\n    label 'mc_medium'\n    tag \"$libraryid\"\n    publishDir \"${params.outdir}/mapping/circularmapper\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_lanemerge_for_cm\n    file index from ch_circularmapper_indices.collect()\n    file fasta from ch_fasta_for_circularmapper.collect()\n    file elongated from ch_circularmapper_elongatedfasta.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*.mapped.bam\"), file(\"*.{bai,csi}\") into ch_output_from_cm\n\n    when: \n    params.mapper == 'circularmapper'\n\n    script:\n    def filter = params.circularfilter ? '-f true -x true' : ''\n    def elongated_root = \"${fasta.baseName}_${params.circularextension}.fasta\"\n    def size = params.large_ref ? '-c' : ''\n\n    if (!params.single_end && params.skip_collapse ){\n    \"\"\"\n    bwa aln -t ${task.cpus} $elongated_root $r1 -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -f ${libraryid}.r1.sai\n    bwa aln -t ${task.cpus} $elongated_root $r2 -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -f ${libraryid}.r2.sai\n    bwa sampe -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $elongated_root ${libraryid}.r1.sai ${libraryid}.r2.sai $r1 $r2 > tmp.out\n    realignsamfile -Xmx${task.memory.toGiga()}g -e ${params.circularextension} -i tmp.out -r $fasta $filter \n    samtools sort -@ ${task.cpus} -O bam tmp_realigned.bam > ${libraryid}_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size} \n    \"\"\"\n    } else {\n    \"\"\" \n    bwa aln -t ${task.cpus} $elongated_root $r1 -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -f ${libraryid}.sai\n    bwa samse -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $elongated_root ${libraryid}.sai $r1 > tmp.out\n    realignsamfile -Xmx${task.memory.toGiga()}g -e ${params.circularextension} -i tmp.out -r $fasta $filter \n    samtools sort -@ ${task.cpus} -O bam tmp_realigned.bam > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    }\n    \n}",
+        "nb_lignes_process": 41,
+        "string_script": "    def filter = params.circularfilter ? '-f true -x true' : ''\n    def elongated_root = \"${fasta.baseName}_${params.circularextension}.fasta\"\n    def size = params.large_ref ? '-c' : ''\n\n    if (!params.single_end && params.skip_collapse ){\n    \"\"\"\n    bwa aln -t ${task.cpus} $elongated_root $r1 -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -f ${libraryid}.r1.sai\n    bwa aln -t ${task.cpus} $elongated_root $r2 -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -f ${libraryid}.r2.sai\n    bwa sampe -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $elongated_root ${libraryid}.r1.sai ${libraryid}.r2.sai $r1 $r2 > tmp.out\n    realignsamfile -Xmx${task.memory.toGiga()}g -e ${params.circularextension} -i tmp.out -r $fasta $filter \n    samtools sort -@ ${task.cpus} -O bam tmp_realigned.bam > ${libraryid}_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size} \n    \"\"\"\n    } else {\n    \"\"\" \n    bwa aln -t ${task.cpus} $elongated_root $r1 -n ${params.bwaalnn} -l ${params.bwaalnl} -k ${params.bwaalnk} -f ${libraryid}.sai\n    bwa samse -r \"@RG\\\\tID:ILLUMINA-${libraryid}\\\\tSM:${libraryid}\\\\tPL:illumina\\\\tPU:ILLUMINA-${libraryid}-${seqtype}\" $elongated_root ${libraryid}.sai $r1 > tmp.out\n    realignsamfile -Xmx${task.memory.toGiga()}g -e ${params.circularextension} -i tmp.out -r $fasta $filter \n    samtools sort -@ ${task.cpus} -O bam tmp_realigned.bam > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    }",
+        "nb_lignes_script": 21,
+        "language_script": "bash",
+        "tools": [
+            "BWA",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_lanemerge_for_cm",
+            "ch_circularmapper_indices",
+            "ch_fasta_for_circularmapper",
+            "ch_circularmapper_elongatedfasta"
+        ],
+        "nb_inputs": 4,
+        "outputs": [
+            "ch_output_from_cm"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"$libraryid\"",
+            "publishDir \"${params.outdir}/mapping/circularmapper\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.mapper == 'circularmapper'",
+        "stub": ""
+    },
+    "bowtie2": {
+        "name_process": "bowtie2",
+        "string_process": "\nprocess bowtie2 {\n    label 'mc_medium'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/mapping/bt2\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(r1), file(r2) from ch_lanemerge_for_bt2\n    path index from bt2_index.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.mapped.bam\"), path(\"*.{bai,csi}\") into ch_output_from_bt2\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_bt2.log\") into ch_bt2_for_multiqc\n\n    when: \n    params.mapper == 'bowtie2'\n\n    script:\n    def split_cpus = Math.floor(task.cpus/2)\n    def size = params.large_ref ? '-c' : ''\n    def fasta = \"${index}/${fasta_base}\"\n    def trim5 = params.bt2_trim5 != 0 ? \"--trim5 ${params.bt2_trim5}\" : \"\"\n    def trim3 = params.bt2_trim3 != 0 ? \"--trim3 ${params.bt2_trim3}\" : \"\"\n    def bt2n = params.bt2n != 0 ? \"-N ${params.bt2n}\" : \"\"\n    def bt2l = params.bt2l != 0 ? \"-L ${params.bt2l}\" : \"\"\n\n    if ( \"${params.bt2_alignmode}\" == \"end-to-end\"  ) {\n      switch ( \"${params.bt2_sensitivity}\" ) {\n        case \"no-preset\":\n        sensitivity = \"\"; break\n        case \"very-fast\":\n        sensitivity = \"--very-fast\"; break\n        case \"fast\":\n        sensitivity = \"--fast\"; break\n        case \"sensitive\":\n        sensitivity = \"--sensitive\"; break\n        case \"very-sensitive\":\n        sensitivity = \"--very-sensitive\"; break\n        default:\n        sensitivity = \"\"; break\n        }\n      } else if (\"${params.bt2_alignmode}\" == \"local\") {\n      switch ( \"${params.bt2_sensitivity}\" ) {\n        case \"no-preset\":\n        sensitivity = \"\"; break\n        case \"very-fast\":\n        sensitivity = \"--very-fast-local\"; break\n        case \"fast\":\n        sensitivity = \"--fast-local\"; break\n        case \"sensitive\":\n        sensitivity = \"--sensitive-local\"; break\n        case \"very-sensitive\":\n        sensitivity = \"--very-sensitive-local\"; break\n        default:\n        sensitivity = \"\"; break\n\n        }\n      }\n\n                                                             \n    if ( seqtype == 'PE' && ( params.skip_collapse || params.skip_adapterremoval ) ){\n    \"\"\"\n    bowtie2 -x ${fasta} -1 ${r1} -2 ${r2} -p ${split_cpus} ${sensitivity} ${bt2n} ${bt2l} ${trim5} ${trim3} --maxins ${params.bt2_maxins} --rg-id ILLUMINA-${libraryid} --rg SM:${libraryid} --rg PL:illumina --rg PU:ILLUMINA-${libraryid}-${seqtype} 2> \"${libraryid}\"_bt2.log | samtools sort -@ ${split_cpus} -O bam > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    } else {\n                               \n    \"\"\"\n    bowtie2 -x ${fasta} -U ${r1} -p ${split_cpus} ${sensitivity} ${bt2n} ${bt2l} ${trim5} ${trim3} --rg-id ILLUMINA-${libraryid} --rg SM:${libraryid} --rg PL:illumina --rg PU:ILLUMINA-${libraryid}-${seqtype} 2> \"${libraryid}\"_bt2.log | samtools sort -@ ${split_cpus} -O bam > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    }\n    \n}",
+        "nb_lignes_process": 72,
+        "string_script": "    def split_cpus = Math.floor(task.cpus/2)\n    def size = params.large_ref ? '-c' : ''\n    def fasta = \"${index}/${fasta_base}\"\n    def trim5 = params.bt2_trim5 != 0 ? \"--trim5 ${params.bt2_trim5}\" : \"\"\n    def trim3 = params.bt2_trim3 != 0 ? \"--trim3 ${params.bt2_trim3}\" : \"\"\n    def bt2n = params.bt2n != 0 ? \"-N ${params.bt2n}\" : \"\"\n    def bt2l = params.bt2l != 0 ? \"-L ${params.bt2l}\" : \"\"\n\n    if ( \"${params.bt2_alignmode}\" == \"end-to-end\"  ) {\n      switch ( \"${params.bt2_sensitivity}\" ) {\n        case \"no-preset\":\n        sensitivity = \"\"; break\n        case \"very-fast\":\n        sensitivity = \"--very-fast\"; break\n        case \"fast\":\n        sensitivity = \"--fast\"; break\n        case \"sensitive\":\n        sensitivity = \"--sensitive\"; break\n        case \"very-sensitive\":\n        sensitivity = \"--very-sensitive\"; break\n        default:\n        sensitivity = \"\"; break\n        }\n      } else if (\"${params.bt2_alignmode}\" == \"local\") {\n      switch ( \"${params.bt2_sensitivity}\" ) {\n        case \"no-preset\":\n        sensitivity = \"\"; break\n        case \"very-fast\":\n        sensitivity = \"--very-fast-local\"; break\n        case \"fast\":\n        sensitivity = \"--fast-local\"; break\n        case \"sensitive\":\n        sensitivity = \"--sensitive-local\"; break\n        case \"very-sensitive\":\n        sensitivity = \"--very-sensitive-local\"; break\n        default:\n        sensitivity = \"\"; break\n\n        }\n      }\n\n                                                             \n    if ( seqtype == 'PE' && ( params.skip_collapse || params.skip_adapterremoval ) ){\n    \"\"\"\n    bowtie2 -x ${fasta} -1 ${r1} -2 ${r2} -p ${split_cpus} ${sensitivity} ${bt2n} ${bt2l} ${trim5} ${trim3} --maxins ${params.bt2_maxins} --rg-id ILLUMINA-${libraryid} --rg SM:${libraryid} --rg PL:illumina --rg PU:ILLUMINA-${libraryid}-${seqtype} 2> \"${libraryid}\"_bt2.log | samtools sort -@ ${split_cpus} -O bam > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    } else {\n                               \n    \"\"\"\n    bowtie2 -x ${fasta} -U ${r1} -p ${split_cpus} ${sensitivity} ${bt2n} ${bt2l} ${trim5} ${trim3} --rg-id ILLUMINA-${libraryid} --rg SM:${libraryid} --rg PL:illumina --rg PU:ILLUMINA-${libraryid}-${seqtype} 2> \"${libraryid}\"_bt2.log | samtools sort -@ ${split_cpus} -O bam > \"${libraryid}\"_\"${seqtype}\".mapped.bam\n    samtools index \"${libraryid}\"_\"${seqtype}\".mapped.bam ${size}\n    \"\"\"\n    }",
+        "nb_lignes_script": 53,
+        "language_script": "bash",
+        "tools": [
+            "oswitch",
+            "CASE",
+            "BreakSeq",
+            "Rbowtie2",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_lanemerge_for_bt2",
+            "bt2_index"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_output_from_bt2",
+            "ch_bt2_for_multiqc"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/mapping/bt2\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.mapper == 'bowtie2'",
+        "stub": ""
+    },
+    "hostremoval_input_fastq": {
+        "name_process": "hostremoval_input_fastq",
+        "string_process": "\nprocess hostremoval_input_fastq {\n    label 'mc_medium'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/hostremoved_fastq\", mode: params.publish_dir_mode\n\n    when: \n    params.hostremoval_input_fastq\n\n    input: \n    tuple samplename, libraryid, seqtype, organism, strandedness, udg, file(r1), file(r2), file(bam), file(bai) from ch_synced_for_hostremovalfastq\n\n    output:\n    tuple samplename, libraryid, seqtype, organism, strandedness, udg, file(\"*.fq.gz\") into ch_output_from_hostremovalfastq\n\n    script:\n    if ( seqtype == 'SE' ) {\n        out_fwd = bam.baseName+'.hostremoved.fq.gz'\n        \"\"\"\n        samtools index $bam\n        extract_map_reads.py $bam ${r1} -m ${params.hostremoval_mode} -of $out_fwd -p ${task.cpus}\n        \"\"\"\n    } else {\n        out_fwd = bam.baseName+'.hostremoved.fwd.fq.gz'\n        out_rev = bam.baseName+'.hostremoved.rev.fq.gz'\n        \"\"\"\n        samtools index $bam\n        extract_map_reads.py $bam ${r1} -rev ${r2} -m  ${params.hostremoval_mode} -of $out_fwd -or $out_rev -p ${task.cpus}\n        \"\"\" \n    }\n    \n}",
+        "nb_lignes_process": 30,
+        "string_script": "    if ( seqtype == 'SE' ) {\n        out_fwd = bam.baseName+'.hostremoved.fq.gz'\n        \"\"\"\n        samtools index $bam\n        extract_map_reads.py $bam ${r1} -m ${params.hostremoval_mode} -of $out_fwd -p ${task.cpus}\n        \"\"\"\n    } else {\n        out_fwd = bam.baseName+'.hostremoved.fwd.fq.gz'\n        out_rev = bam.baseName+'.hostremoved.rev.fq.gz'\n        \"\"\"\n        samtools index $bam\n        extract_map_reads.py $bam ${r1} -rev ${r2} -m  ${params.hostremoval_mode} -of $out_fwd -or $out_rev -p ${task.cpus}\n        \"\"\" \n    }",
+        "nb_lignes_script": 13,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_synced_for_hostremovalfastq"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_output_from_hostremovalfastq"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/hostremoved_fastq\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.hostremoval_input_fastq",
+        "stub": ""
+    },
+    "seqtype_merge": {
+        "name_process": "seqtype_merge",
+        "string_process": " process seqtype_merge {\n\n    label 'sc_tiny'\n    tag \"$libraryid\"\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_branched_for_seqtypemerge.merge_me\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*_seqtypemerged_rg.bam\"), file(\"*_seqtypemerged_rg*.{bai,csi}\")  into ch_seqtypemerge_for_filtering\n\n    script:\n    def size = params.large_ref ? '-c' : ''\n    \"\"\"\n    samtools merge ${libraryid}_seqtypemerged.bam ${bam}\n    ## Have to set validation as lenient because of BWA issue: \"I see a read stands out the end of a chromosome and is flagged as unmapped (flag 0x4). [...]\" http://bio-bwa.sourceforge.net/\n    picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=${libraryid}_seqtypemerged.bam O=${libraryid}_seqtypemerged_rg.bam RGID=1 RGLB=\"${libraryid}_seqtypemerged\" RGPL=illumina RGPU=4410 RGSM=\"${libraryid}_seqtypemerged\" VALIDATION_STRINGENCY=LENIENT\n    samtools index ${libraryid}_seqtypemerged_rg.bam ${size}\n    \"\"\"\n    \n  }",
+        "nb_lignes_process": 19,
+        "string_script": "    def size = params.large_ref ? '-c' : ''\n    \"\"\"\n    samtools merge ${libraryid}_seqtypemerged.bam ${bam}\n    ## Have to set validation as lenient because of BWA issue: \"I see a read stands out the end of a chromosome and is flagged as unmapped (flag 0x4). [...]\" http://bio-bwa.sourceforge.net/\n    picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=${libraryid}_seqtypemerged.bam O=${libraryid}_seqtypemerged_rg.bam RGID=1 RGLB=\"${libraryid}_seqtypemerged\" RGPL=illumina RGPU=4410 RGSM=\"${libraryid}_seqtypemerged\" VALIDATION_STRINGENCY=LENIENT\n    samtools index ${libraryid}_seqtypemerged_rg.bam ${size}\n    \"\"\"",
+        "nb_lignes_script": 6,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools",
+            "Picard"
+        ],
+        "inputs": [
+            "ch_branched_for_seqtypemerge"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_seqtypemerge_for_filtering"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"$libraryid\""
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "samtools_flagstat": {
+        "name_process": "samtools_flagstat",
+        "string_process": "\nprocess samtools_flagstat {\n    label 'sc_tiny'\n    tag \"$libraryid\"\n    publishDir \"${params.outdir}/samtools/stats\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_seqtypemerged_for_samtools_flagstat\n\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*stats\") into ch_flagstat_for_multiqc,ch_flagstat_for_endorspy\n\n    script:\n    \"\"\"\n    samtools flagstat $bam > ${libraryid}_flagstat.stats\n    \"\"\"\n}",
+        "nb_lignes_process": 16,
+        "string_script": "    \"\"\"\n    samtools flagstat $bam > ${libraryid}_flagstat.stats\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_seqtypemerged_for_samtools_flagstat"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_flagstat_for_multiqc",
+            "ch_flagstat_for_endorspy"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"$libraryid\"",
+            "publishDir \"${params.outdir}/samtools/stats\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "samtools_filter": {
+        "name_process": "samtools_filter",
+        "string_process": "\nprocess samtools_filter {\n    label 'mc_medium'\n    tag \"$libraryid\"\n    publishDir \"${params.outdir}/samtools/filter\", mode: params.publish_dir_mode,\n    saveAs: {filename ->\n            if (filename.indexOf(\".fq.gz\") > 0) \"$filename\"\n            else if (filename.indexOf(\".unmapped.bam\") > 0) \"$filename\"\n            else if (filename.indexOf(\".filtered.bam\")) \"$filename\"\n            else null\n    }\n\n    when: \n    params.run_bam_filtering\n\n    input: \n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_seqtypemerged_for_samtools_filter\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*filtered.bam\"), file(\"*.{bai,csi}\") into ch_output_from_filtering\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*.unmapped.fastq.gz\") optional true into ch_bam_filtering_for_metagenomic,ch_metagenomic_for_skipentropyfilter\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*.unmapped.bam\") optional true\n\n    script:\n    \n    def size = params.large_ref ? '-c' : ''\n    \n                                                           \n    if ( \"${params.bam_unmapped_type}\" == \"keep\"  && params.bam_filter_minreadlength == 0 ) {\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"discard\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"bam\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"fastq\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n\n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus - 1} > ${libraryid}.unmapped.fastq.gz\n        rm ${libraryid}.unmapped.bam\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"both\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus -1} > ${libraryid}.unmapped.fastq.gz\n        \"\"\"\n                                                        \n    } else if ( \"${params.bam_unmapped_type}\" == \"keep\" && params.bam_filter_minreadlength != 0 ) {\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"discard\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"bam\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"fastq\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n\n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus - 1} > ${libraryid}.unmapped.fastq.gz\n        rm ${libraryid}.unmapped.bam\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"both\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus} > ${libraryid}.unmapped.fastq.gz\n        \"\"\"\n    }\n}",
+        "nb_lignes_process": 104,
+        "string_script": "    def size = params.large_ref ? '-c' : ''\n    \n                                                           \n    if ( \"${params.bam_unmapped_type}\" == \"keep\"  && params.bam_filter_minreadlength == 0 ) {\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"discard\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"bam\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"fastq\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n\n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus - 1} > ${libraryid}.unmapped.fastq.gz\n        rm ${libraryid}.unmapped.bam\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"both\" && params.bam_filter_minreadlength == 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > ${libraryid}.filtered.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus -1} > ${libraryid}.unmapped.fastq.gz\n        \"\"\"\n                                                        \n    } else if ( \"${params.bam_unmapped_type}\" == \"keep\" && params.bam_filter_minreadlength != 0 ) {\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"discard\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"bam\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"fastq\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n\n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus - 1} > ${libraryid}.unmapped.fastq.gz\n        rm ${libraryid}.unmapped.bam\n        \"\"\"\n    } else if ( \"${params.bam_unmapped_type}\" == \"both\" && params.bam_filter_minreadlength != 0 ){\n        \"\"\"\n        samtools view -h ${bam} -@ ${task.cpus} -f4 -b > ${libraryid}.unmapped.bam\n        samtools view -h ${bam} -@ ${task.cpus} -F4 -q ${params.bam_mapping_quality_threshold} -b > tmp_mapped.bam\n        filter_bam_fragment_length.py -a -l ${params.bam_filter_minreadlength} -o ${libraryid} tmp_mapped.bam\n        samtools index ${libraryid}.filtered.bam ${size}\n        \n        ## FASTQ\n        samtools fastq -tn ${libraryid}.unmapped.bam | pigz -p ${task.cpus} > ${libraryid}.unmapped.fastq.gz\n        \"\"\"\n    }",
+        "nb_lignes_script": 79,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_seqtypemerged_for_samtools_filter"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_output_from_filtering",
+            "ch_bam_filtering_for_metagenomic",
+            "ch_metagenomic_for_skipentropyfilter",
+            "samplename"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"$libraryid\"",
+            "publishDir \"${params.outdir}/samtools/filter\", mode: params.publish_dir_mode , saveAs: {filename -> if (filename.indexOf(\".fq.gz\") > 0) \"$filename\" else if (filename.indexOf(\".unmapped.bam\") > 0) \"$filename\" else if (filename.indexOf(\".filtered.bam\")) \"$filename\" else null }"
+        ],
+        "when": "params.run_bam_filtering",
+        "stub": ""
+    },
+    "samtools_flagstat_after_filter": {
+        "name_process": "samtools_flagstat_after_filter",
+        "string_process": "\nprocess samtools_flagstat_after_filter {\n    label 'sc_tiny'\n    tag \"$libraryid\"\n    publishDir \"${params.outdir}/samtools/filtered_stats\", mode: params.publish_dir_mode\n\n    when:\n    params.run_bam_filtering\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_filtering_for_flagstat\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.stats\") into ch_bam_filtered_flagstat_for_multiqc, ch_bam_filtered_flagstat_for_endorspy\n\n    script:\n    \"\"\"\n    samtools flagstat $bam > ${libraryid}_postfilterflagstat.stats\n    \"\"\"\n}",
+        "nb_lignes_process": 18,
+        "string_script": "    \"\"\"\n    samtools flagstat $bam > ${libraryid}_postfilterflagstat.stats\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_filtering_for_flagstat"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_bam_filtered_flagstat_for_multiqc",
+            "ch_bam_filtered_flagstat_for_endorspy"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"$libraryid\"",
+            "publishDir \"${params.outdir}/samtools/filtered_stats\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_bam_filtering",
+        "stub": ""
+    },
+    "endorSpy": {
+        "name_process": "endorSpy",
+        "string_process": "\nprocess endorSpy {\n    label 'sc_tiny'\n    tag \"$libraryid\"\n    publishDir \"${params.outdir}/endorspy\", mode: params.publish_dir_mode\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(stats), path(poststats) from ch_allflagstats_for_endorspy\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.json\") into ch_endorspy_for_multiqc\n\n    script:\n    if (params.run_bam_filtering) {\n      \"\"\"\n      endorS.py -o json -n ${libraryid} ${stats} ${poststats}\n      \"\"\"\n    } else {\n      \"\"\"\n      endorS.py -o json -n ${libraryid} ${stats}\n      \"\"\"\n    }\n}",
+        "nb_lignes_process": 21,
+        "string_script": "    if (params.run_bam_filtering) {\n      \"\"\"\n      endorS.py -o json -n ${libraryid} ${stats} ${poststats}\n      \"\"\"\n    } else {\n      \"\"\"\n      endorS.py -o json -n ${libraryid} ${stats}\n      \"\"\"\n    }",
+        "nb_lignes_script": 8,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_allflagstats_for_endorspy"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_endorspy_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"$libraryid\"",
+            "publishDir \"${params.outdir}/endorspy\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "dedup": {
+        "name_process": "dedup",
+        "string_process": "\nprocess dedup{\n    label 'mc_small'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/deduplication/\", mode: params.publish_dir_mode,\n        saveAs: {filename -> \"${libraryid}/$filename\"}\n\n    when:\n    !params.skip_deduplication && params.dedupper == 'dedup'\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_filtering_for_dedup\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.hist\") into ch_hist_for_preseq\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.json\") into ch_dedup_results_for_multiqc\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${libraryid}_rmdup.bam\"), path(\"*.{bai,csi}\") into ch_output_from_dedup, ch_dedup_for_libeval\n\n    script:\n    def treat_merged = params.dedup_all_merged ? '-m' : ''\n    def size = params.large_ref ? '-c' : ''\n    \n    if ( bam.baseName != libraryid ) {\n                                                 \n    \"\"\"\n    mv ${bam} ${libraryid}.bam\n    dedup -Xmx${task.memory.toGiga()}g -i ${libraryid}.bam $treat_merged -o . -u \n    mv *.log dedup.log\n    samtools sort -@ ${task.cpus} \"${libraryid}\"_rmdup.bam -o \"${libraryid}\"_rmdup.bam\n    samtools index \"${libraryid}\"_rmdup.bam ${size}\n    \"\"\"\n    } else {\n    \"\"\"\n    dedup -Xmx${task.memory.toGiga()}g -i ${libraryid}.bam $treat_merged -o . -u \n    mv *.log dedup.log\n    samtools sort -@ ${task.cpus} \"${libraryid}\"_rmdup.bam -o \"${libraryid}\"_rmdup.bam\n    samtools index \"${libraryid}\"_rmdup.bam ${size}\n    \"\"\"\n    }\n}",
+        "nb_lignes_process": 38,
+        "string_script": "    def treat_merged = params.dedup_all_merged ? '-m' : ''\n    def size = params.large_ref ? '-c' : ''\n    \n    if ( bam.baseName != libraryid ) {\n                                                 \n    \"\"\"\n    mv ${bam} ${libraryid}.bam\n    dedup -Xmx${task.memory.toGiga()}g -i ${libraryid}.bam $treat_merged -o . -u \n    mv *.log dedup.log\n    samtools sort -@ ${task.cpus} \"${libraryid}\"_rmdup.bam -o \"${libraryid}\"_rmdup.bam\n    samtools index \"${libraryid}\"_rmdup.bam ${size}\n    \"\"\"\n    } else {\n    \"\"\"\n    dedup -Xmx${task.memory.toGiga()}g -i ${libraryid}.bam $treat_merged -o . -u \n    mv *.log dedup.log\n    samtools sort -@ ${task.cpus} \"${libraryid}\"_rmdup.bam -o \"${libraryid}\"_rmdup.bam\n    samtools index \"${libraryid}\"_rmdup.bam ${size}\n    \"\"\"\n    }",
+        "nb_lignes_script": 19,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_filtering_for_dedup"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_hist_for_preseq",
+            "ch_dedup_results_for_multiqc",
+            "ch_output_from_dedup",
+            "ch_dedup_for_libeval"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/deduplication/\", mode: params.publish_dir_mode , saveAs: {filename -> \"${libraryid}/$filename\"}"
+        ],
+        "when": "!params.skip_deduplication && params.dedupper == 'dedup'",
+        "stub": ""
+    },
+    "markduplicates": {
+        "name_process": "markduplicates",
+        "string_process": "\nprocess markduplicates{\n    label 'mc_small'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/deduplication/\", mode: params.publish_dir_mode,\n        saveAs: {filename -> \"${libraryid}/$filename\"}\n\n    when:\n    !params.skip_deduplication && params.dedupper == 'markduplicates'\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_filtering_for_markdup\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.metrics\") into ch_markdup_results_for_multiqc\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${libraryid}_rmdup.bam\"), path(\"*.{bai,csi}\") into ch_output_from_markdup, ch_markdup_for_libeval\n\n    script:\n    def size = params.large_ref ? '-c' : ''\n\n    if ( bam.baseName != libraryid ) {\n                                                 \n    \"\"\"\n    mv ${bam} ${libraryid}.bam\n    picard -Xmx${task.memory.toMega()}M MarkDuplicates INPUT=${libraryid}.bam OUTPUT=${libraryid}_rmdup.bam REMOVE_DUPLICATES=TRUE AS=TRUE METRICS_FILE=\"${libraryid}_rmdup.metrics\" VALIDATION_STRINGENCY=SILENT\n    samtools index ${libraryid}_rmdup.bam ${size}\n    \"\"\"\n    } else {\n    \"\"\"\n    picard -Xmx${task.memory.toMega()}M MarkDuplicates INPUT=${libraryid}.bam OUTPUT=${libraryid}_rmdup.bam REMOVE_DUPLICATES=TRUE AS=TRUE METRICS_FILE=\"${libraryid}_rmdup.metrics\" VALIDATION_STRINGENCY=SILENT\n    samtools index ${libraryid}_rmdup.bam ${size}\n    \"\"\"\n    }\n\n}",
+        "nb_lignes_process": 33,
+        "string_script": "    def size = params.large_ref ? '-c' : ''\n\n    if ( bam.baseName != libraryid ) {\n                                                 \n    \"\"\"\n    mv ${bam} ${libraryid}.bam\n    picard -Xmx${task.memory.toMega()}M MarkDuplicates INPUT=${libraryid}.bam OUTPUT=${libraryid}_rmdup.bam REMOVE_DUPLICATES=TRUE AS=TRUE METRICS_FILE=\"${libraryid}_rmdup.metrics\" VALIDATION_STRINGENCY=SILENT\n    samtools index ${libraryid}_rmdup.bam ${size}\n    \"\"\"\n    } else {\n    \"\"\"\n    picard -Xmx${task.memory.toMega()}M MarkDuplicates INPUT=${libraryid}.bam OUTPUT=${libraryid}_rmdup.bam REMOVE_DUPLICATES=TRUE AS=TRUE METRICS_FILE=\"${libraryid}_rmdup.metrics\" VALIDATION_STRINGENCY=SILENT\n    samtools index ${libraryid}_rmdup.bam ${size}\n    \"\"\"\n    }",
+        "nb_lignes_script": 14,
+        "language_script": "bash",
+        "tools": [
+            "Picard",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_filtering_for_markdup"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_markdup_results_for_multiqc",
+            "ch_output_from_markdup",
+            "ch_markdup_for_libeval"
+        ],
+        "nb_outputs": 3,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/deduplication/\", mode: params.publish_dir_mode , saveAs: {filename -> \"${libraryid}/$filename\"}"
+        ],
+        "when": "!params.skip_deduplication && params.dedupper == 'markduplicates'",
+        "stub": ""
+    },
+    "library_merge": {
+        "name_process": "library_merge",
+        "string_process": "\nprocess library_merge {\n  label 'sc_tiny'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/merged_bams/initial\", mode: params.publish_dir_mode\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_fixedinput_for_librarymerging.dump(tag: \"library_merge_input\")\n\n  output:\n  tuple samplename, val(\"${samplename}_libmerged\"), lane, seqtype, organism, strandedness, udg, path(\"*_libmerged_rg_rmdup.bam\"), path(\"*_libmerged_rg_rmdup.bam.{bai,csi}\") into ch_output_from_librarymerging\n\n  script:\n  def size = params.large_ref ? '-c' : ''\n  \"\"\"\n  samtools merge ${samplename}_libmerged_rmdup.bam ${bam}\n  ## Have to set validation as lenient because of BWA issue: \"I see a read stands out the end of a chromosome and is flagged as unmapped (flag 0x4). [...]\" http://bio-bwa.sourceforge.net/\n  picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=${samplename}_libmerged_rmdup.bam O=${samplename}_libmerged_rg_rmdup.bam RGID=1 RGLB=\"${samplename}_merged\" RGPL=illumina RGPU=4410 RGSM=\"${samplename}_merged\" VALIDATION_STRINGENCY=LENIENT\n  samtools index ${samplename}_libmerged_rg_rmdup.bam ${size}\n  \"\"\"\n}",
+        "nb_lignes_process": 19,
+        "string_script": "  def size = params.large_ref ? '-c' : ''\n  \"\"\"\n  samtools merge ${samplename}_libmerged_rmdup.bam ${bam}\n  ## Have to set validation as lenient because of BWA issue: \"I see a read stands out the end of a chromosome and is flagged as unmapped (flag 0x4). [...]\" http://bio-bwa.sourceforge.net/\n  picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=${samplename}_libmerged_rmdup.bam O=${samplename}_libmerged_rg_rmdup.bam RGID=1 RGLB=\"${samplename}_merged\" RGPL=illumina RGPU=4410 RGSM=\"${samplename}_merged\" VALIDATION_STRINGENCY=LENIENT\n  samtools index ${samplename}_libmerged_rg_rmdup.bam ${size}\n  \"\"\"",
+        "nb_lignes_script": 6,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools",
+            "Picard"
+        ],
+        "inputs": [
+            "ch_fixedinput_for_librarymerging"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_output_from_librarymerging"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/merged_bams/initial\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "preseq": {
+        "name_process": "preseq",
+        "string_process": "\nprocess preseq {\n    label 'sc_tiny'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/preseq\", mode: params.publish_dir_mode\n\n    when:\n    !params.skip_preseq\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(input) from ch_input_for_preseq\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${input.baseName}.preseq\") into ch_preseq_for_multiqc\n\n    script:\n    pe_mode = params.skip_collapse && seqtype == \"PE\" ? '-P' : ''\n    if(!params.skip_deduplication && params.preseq_mode == 'c_curve' && params.dedupper == \"dedup\"){\n    \"\"\"\n    preseq c_curve -s ${params.preseq_step_size} -o ${input.baseName}.preseq -H ${input}\n    \"\"\"\n    } else if( !params.skip_deduplication && params.preseq_mode == 'c_curve' && params.dedupper == \"markduplicates\"){\n    \"\"\"\n    preseq c_curve -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode}\n    \"\"\"\n    } else if ( params.skip_deduplication && params.preseq_mode == 'c_curve' ) {\n    \"\"\"\n    preseq c_curve -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode}\n    \"\"\"\n    } else if(!params.skip_deduplication && params.preseq_mode == 'lc_extrap' && params.dedupper == \"dedup\"){\n    \"\"\"\n    preseq lc_extrap -s ${params.preseq_step_size} -o ${input.baseName}.preseq -H ${input} -n ${params.preseq_bootstrap} -e ${params.preseq_maxextrap} -cval ${params.preseq_cval} -x ${params.preseq_terms}\n    \"\"\"\n    } else if( !params.skip_deduplication && params.preseq_mode == 'lc_extrap' && params.dedupper == \"markduplicates\"){\n    \"\"\"\n    preseq lc_extrap -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode} -n ${params.preseq_bootstrap} -e ${params.preseq_maxextrap} -cval ${params.preseq_cval} -x ${params.preseq_terms}\n    \"\"\"\n    } else if ( params.skip_deduplication && params.preseq_mode == 'lc_extrap' ) {\n    \"\"\"\n    preseq lc_extrap -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode} -n ${params.preseq_bootstrap} -e ${params.preseq_maxextrap} -cval ${params.preseq_cval} -x ${params.preseq_terms}\n    \"\"\"\n    }\n}",
+        "nb_lignes_process": 41,
+        "string_script": "    pe_mode = params.skip_collapse && seqtype == \"PE\" ? '-P' : ''\n    if(!params.skip_deduplication && params.preseq_mode == 'c_curve' && params.dedupper == \"dedup\"){\n    \"\"\"\n    preseq c_curve -s ${params.preseq_step_size} -o ${input.baseName}.preseq -H ${input}\n    \"\"\"\n    } else if( !params.skip_deduplication && params.preseq_mode == 'c_curve' && params.dedupper == \"markduplicates\"){\n    \"\"\"\n    preseq c_curve -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode}\n    \"\"\"\n    } else if ( params.skip_deduplication && params.preseq_mode == 'c_curve' ) {\n    \"\"\"\n    preseq c_curve -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode}\n    \"\"\"\n    } else if(!params.skip_deduplication && params.preseq_mode == 'lc_extrap' && params.dedupper == \"dedup\"){\n    \"\"\"\n    preseq lc_extrap -s ${params.preseq_step_size} -o ${input.baseName}.preseq -H ${input} -n ${params.preseq_bootstrap} -e ${params.preseq_maxextrap} -cval ${params.preseq_cval} -x ${params.preseq_terms}\n    \"\"\"\n    } else if( !params.skip_deduplication && params.preseq_mode == 'lc_extrap' && params.dedupper == \"markduplicates\"){\n    \"\"\"\n    preseq lc_extrap -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode} -n ${params.preseq_bootstrap} -e ${params.preseq_maxextrap} -cval ${params.preseq_cval} -x ${params.preseq_terms}\n    \"\"\"\n    } else if ( params.skip_deduplication && params.preseq_mode == 'lc_extrap' ) {\n    \"\"\"\n    preseq lc_extrap -s ${params.preseq_step_size} -o ${input.baseName}.preseq -B ${input} ${pe_mode} -n ${params.preseq_bootstrap} -e ${params.preseq_maxextrap} -cval ${params.preseq_cval} -x ${params.preseq_terms}\n    \"\"\"\n    }",
+        "nb_lignes_script": 25,
+        "language_script": "bash",
+        "tools": [
+            "preseq"
+        ],
+        "inputs": [
+            "ch_input_for_preseq"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_preseq_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/preseq\", mode: params.publish_dir_mode"
+        ],
+        "when": "!params.skip_preseq",
+        "stub": ""
+    },
+    "bedtools": {
+        "name_process": "bedtools",
+        "string_process": "\nprocess bedtools {\n  label 'mc_small'\n  tag \"${libraryid}\"\n  publishDir \"${params.outdir}/bedtools\", mode: params.publish_dir_mode\n\n  when:\n  params.run_bedtools_coverage\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_rmdup_for_bedtools\n  file anno_file from ch_anno_for_bedtools.collect()\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*\")\n\n  script:\n  \"\"\"\n  bedtools coverage -nonamecheck -a ${anno_file} -b $bam | pigz -p ${task.cpus - 1} > \"${bam.baseName}\".breadth.gz\n  bedtools coverage -nonamecheck -a ${anno_file} -b $bam -mean | pigz -p ${task.cpus - 1} > \"${bam.baseName}\".depth.gz\n  \"\"\"\n}",
+        "nb_lignes_process": 20,
+        "string_script": "  \"\"\"\n  bedtools coverage -nonamecheck -a ${anno_file} -b $bam | pigz -p ${task.cpus - 1} > \"${bam.baseName}\".breadth.gz\n  bedtools coverage -nonamecheck -a ${anno_file} -b $bam -mean | pigz -p ${task.cpus - 1} > \"${bam.baseName}\".depth.gz\n  \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [
+            "BEDTools"
+        ],
+        "inputs": [
+            "ch_rmdup_for_bedtools",
+            "ch_anno_for_bedtools"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "samplename"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/bedtools\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_bedtools_coverage",
+        "stub": ""
+    },
+    "damageprofiler": {
+        "name_process": "damageprofiler",
+        "string_process": "\nprocess damageprofiler {\n    label 'sc_small'\n    tag \"${libraryid}\"\n\n    publishDir \"${params.outdir}/damageprofiler\", mode: params.publish_dir_mode\n\n    when:\n    !params.skip_damage_calculation\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_rmdup_for_damageprofiler\n    file fasta from ch_fasta_for_damageprofiler.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${base}/*.txt\") optional true\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${base}/*.log\")\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${base}/*.pdf\") optional true\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"${base}/*.json\") optional true into ch_damageprofiler_results\n\n    script:\n    base = \"${bam.baseName}\"\n    \"\"\"\n    damageprofiler -Xmx${task.memory.toGiga()}g -i $bam -r $fasta -l ${params.damageprofiler_length} -t ${params.damageprofiler_threshold} -o . -yaxis_damageplot ${params.damageprofiler_yaxis}\n    \"\"\"\n}",
+        "nb_lignes_process": 24,
+        "string_script": "    base = \"${bam.baseName}\"\n    \"\"\"\n    damageprofiler -Xmx${task.memory.toGiga()}g -i $bam -r $fasta -l ${params.damageprofiler_length} -t ${params.damageprofiler_threshold} -o . -yaxis_damageplot ${params.damageprofiler_yaxis}\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [
+            "BASE"
+        ],
+        "inputs": [
+            "ch_rmdup_for_damageprofiler",
+            "ch_fasta_for_damageprofiler"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "samplename",
+            "samplename",
+            "samplename",
+            "ch_damageprofiler_results"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/damageprofiler\", mode: params.publish_dir_mode"
+        ],
+        "when": "!params.skip_damage_calculation",
+        "stub": ""
+    },
+    "mapdamage_rescaling": {
+        "name_process": "mapdamage_rescaling",
+        "string_process": "\nprocess mapdamage_rescaling {\n\n    label 'sc_small'\n    tag \"${libraryid}\"\n\n    publishDir \"${params.outdir}/damage_rescaling\", mode: params.publish_dir_mode\n\n    when:\n    params.run_mapdamage_rescaling\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_rmdup_for_damagerescaling\n    file fasta from ch_fasta_for_damagerescaling.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_rescaled.bam\"), path(\"*rescaled.bam.{bai,csi}\") into ch_output_from_damagerescaling\n\n    script:\n    def base = \"${bam.baseName}\"\n    def singlestranded = strandedness == \"single\" ? '--single-stranded' : ''\n    def size = params.large_ref ? '-c' : ''\n    \"\"\"\n    mapDamage -i ${bam} -r ${fasta} --rescale --rescale-out ${base}_rescaled.bam --rescale-length-5p ${params.rescale_length_5p} --rescale-length-3p=${params.rescale_length_3p} ${singlestranded}\n    samtools index ${base}_rescaled.bam ${size}\n    \"\"\"\n\n}",
+        "nb_lignes_process": 26,
+        "string_script": "    def base = \"${bam.baseName}\"\n    def singlestranded = strandedness == \"single\" ? '--single-stranded' : ''\n    def size = params.large_ref ? '-c' : ''\n    \"\"\"\n    mapDamage -i ${bam} -r ${fasta} --rescale --rescale-out ${base}_rescaled.bam --rescale-length-5p ${params.rescale_length_5p} --rescale-length-3p=${params.rescale_length_3p} ${singlestranded}\n    samtools index ${base}_rescaled.bam ${size}\n    \"\"\"",
+        "nb_lignes_script": 6,
+        "language_script": "bash",
+        "tools": [
+            "MapDamage",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_rmdup_for_damagerescaling",
+            "ch_fasta_for_damagerescaling"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_output_from_damagerescaling"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/damage_rescaling\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_mapdamage_rescaling",
+        "stub": ""
+    },
+    "pmdtools": {
+        "name_process": "pmdtools",
+        "string_process": "\nprocess pmdtools {\n    label 'mc_medium'\n    tag \"${libraryid}\"\n    publishDir \"${params.outdir}/pmdtools\", mode: params.publish_dir_mode\n\n    when: params.run_pmdtools\n\n    input: \n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_rmdup_for_pmdtools\n    file fasta from ch_fasta_for_pmdtools.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.pmd.bam\"), path(\"*.pmd.bam.{bai,csi}\") into ch_output_from_pmdtools\n    file \"*.cpg.range*.txt\"\n\n    script:\n                                                      \n    def treatment = udg ? (udg == 'half' ? '--UDGhalf' : '--CpG') : '--UDGminus'\n    if(params.snpcapture_bed){\n        snpcap = (params.pmdtools_reference_mask) ? \"--refseq ${params.pmdtools_reference_mask}\" : ''\n        log.info\"######No reference mask specified for PMDtools, therefore ignoring that for downstream analysis!\"\n    } else {\n        snpcap = ''\n    }\n    def size = params.large_ref ? '-c' : ''\n    def platypus = params.pmdtools_platypus ? '--platypus' : ''\n    \"\"\"\n    #Run Filtering step \n    samtools calmd ${bam} ${fasta} | pmdtools --threshold ${params.pmdtools_threshold} ${treatment} ${snpcap} --header | samtools view -Sb - > \"${libraryid}\".pmd.bam\n    \n    #Run Calc Range step\n    ## To allow early shut off of pipe: https://github.com/nextflow-io/nextflow/issues/1564\n    trap 'if [[ \\$? == 141 ]]; then echo \"Shutting samtools early due to -n parameter\" && samtools index ${libraryid}.pmd.bam ${size}; exit 0; fi' EXIT\n    samtools calmd ${bam} ${fasta} | pmdtools --deamination ${platypus} --range ${params.pmdtools_range} ${treatment} ${snpcap} -n ${params.pmdtools_max_reads} > \"${libraryid}\".cpg.range.\"${params.pmdtools_range}\".txt\n    \n    samtools index ${libraryid}.pmd.bam ${size}\n    \"\"\"\n}",
+        "nb_lignes_process": 37,
+        "string_script": "    def treatment = udg ? (udg == 'half' ? '--UDGhalf' : '--CpG') : '--UDGminus'\n    if(params.snpcapture_bed){\n        snpcap = (params.pmdtools_reference_mask) ? \"--refseq ${params.pmdtools_reference_mask}\" : ''\n        log.info\"######No reference mask specified for PMDtools, therefore ignoring that for downstream analysis!\"\n    } else {\n        snpcap = ''\n    }\n    def size = params.large_ref ? '-c' : ''\n    def platypus = params.pmdtools_platypus ? '--platypus' : ''\n    \"\"\"\n    #Run Filtering step \n    samtools calmd ${bam} ${fasta} | pmdtools --threshold ${params.pmdtools_threshold} ${treatment} ${snpcap} --header | samtools view -Sb - > \"${libraryid}\".pmd.bam\n    \n    #Run Calc Range step\n    ## To allow early shut off of pipe: https://github.com/nextflow-io/nextflow/issues/1564\n    trap 'if [[ \\$? == 141 ]]; then echo \"Shutting samtools early due to -n parameter\" && samtools index ${libraryid}.pmd.bam ${size}; exit 0; fi' EXIT\n    samtools calmd ${bam} ${fasta} | pmdtools --deamination ${platypus} --range ${params.pmdtools_range} ${treatment} ${snpcap} -n ${params.pmdtools_max_reads} > \"${libraryid}\".cpg.range.\"${params.pmdtools_range}\".txt\n    \n    samtools index ${libraryid}.pmd.bam ${size}\n    \"\"\"",
+        "nb_lignes_script": 19,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools",
+            "TRAP"
+        ],
+        "inputs": [
+            "ch_rmdup_for_pmdtools",
+            "ch_fasta_for_pmdtools"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_output_from_pmdtools"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/pmdtools\", mode: params.publish_dir_mode when: params.run_pmdtools"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "bam_trim": {
+        "name_process": "bam_trim",
+        "string_process": "\nprocess bam_trim {\n    label 'mc_small'\n    tag \"${libraryid}\" \n    publishDir \"${params.outdir}/trimmed_bam\", mode: params.publish_dir_mode\n\n    when: params.run_trim_bam\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_bamutils_decision.totrim\n\n    output: \n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*.trimmed.bam\"), file(\"*.trimmed.bam.{bai,csi}\") into ch_trimmed_from_bamutils\n\n    script:\n    def softclip = params.bamutils_softclip ? '-c' : '' \n    def size = params.large_ref ? '-c' : ''\n    def left_clipping = udg == \"half\" ? \"${params.bamutils_clip_half_udg_left}\" : \"${params.bamutils_clip_none_udg_left}\"\n    def right_clipping = udg == \"half\" ? \"${params.bamutils_clip_half_udg_right}\" : \"${params.bamutils_clip_none_udg_right}\"\n    \"\"\"\n    bam trimBam $bam tmp.bam -L ${left_clipping} -R ${right_clipping} ${softclip}\n    samtools sort -@ ${task.cpus} tmp.bam -o ${libraryid}.trimmed.bam \n    samtools index ${libraryid}.trimmed.bam ${size}\n    \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "    def softclip = params.bamutils_softclip ? '-c' : '' \n    def size = params.large_ref ? '-c' : ''\n    def left_clipping = udg == \"half\" ? \"${params.bamutils_clip_half_udg_left}\" : \"${params.bamutils_clip_none_udg_left}\"\n    def right_clipping = udg == \"half\" ? \"${params.bamutils_clip_half_udg_right}\" : \"${params.bamutils_clip_none_udg_right}\"\n    \"\"\"\n    bam trimBam $bam tmp.bam -L ${left_clipping} -R ${right_clipping} ${softclip}\n    samtools sort -@ ${task.cpus} tmp.bam -o ${libraryid}.trimmed.bam \n    samtools index ${libraryid}.trimmed.bam ${size}\n    \"\"\"",
+        "nb_lignes_script": 8,
+        "language_script": "bash",
+        "tools": [
+            "BaMM",
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_bamutils_decision"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_trimmed_from_bamutils"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${libraryid}\"",
+            "publishDir \"${params.outdir}/trimmed_bam\", mode: params.publish_dir_mode when: params.run_trim_bam"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "additional_library_merge": {
+        "name_process": "additional_library_merge",
+        "string_process": "\nprocess additional_library_merge {\n  label 'sc_tiny'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/merged_bams/additional\", mode: params.publish_dir_mode\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_trimmed_formerge.merge_me\n\n  output:\n  tuple samplename, val(\"${samplename}_libmerged\"), lane, seqtype, organism, strandedness, udg, path(\"*_libmerged_rg_add.bam\"), path(\"*_libmerged_rg_add.bam.{bai,csi}\") into ch_output_from_trimmerge\n\n  script:\n  def size = params.large_ref ? '-c' : ''\n  \"\"\"\n  samtools merge ${samplename}_libmerged_add.bam ${bam}\n  picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=${samplename}_libmerged_add.bam O=${samplename}_libmerged_rg_add.bam RGID=1 RGLB=\"${samplename}_additionalmerged\" RGPL=illumina RGPU=4410 RGSM=\"${samplename}_additionalmerged\" VALIDATION_STRINGENCY=LENIENT\n  samtools index ${samplename}_libmerged_rg_add.bam ${size}\n  \"\"\"\n}",
+        "nb_lignes_process": 18,
+        "string_script": "  def size = params.large_ref ? '-c' : ''\n  \"\"\"\n  samtools merge ${samplename}_libmerged_add.bam ${bam}\n  picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=${samplename}_libmerged_add.bam O=${samplename}_libmerged_rg_add.bam RGID=1 RGLB=\"${samplename}_additionalmerged\" RGPL=illumina RGPU=4410 RGSM=\"${samplename}_additionalmerged\" VALIDATION_STRINGENCY=LENIENT\n  samtools index ${samplename}_libmerged_rg_add.bam ${size}\n  \"\"\"",
+        "nb_lignes_script": 5,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools",
+            "Picard"
+        ],
+        "inputs": [
+            "ch_trimmed_formerge"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_output_from_trimmerge"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/merged_bams/additional\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "qualimap": {
+        "name_process": "qualimap",
+        "string_process": "\nprocess qualimap {\n    label 'mc_small'\n    tag \"${samplename}\"\n    publishDir \"${params.outdir}/qualimap\", mode: params.publish_dir_mode\n\n    when:\n    !params.skip_qualimap\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_addlibmerge_for_qualimap\n    file fasta from ch_fasta_for_qualimap.collect()\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*\") into ch_qualimap_results\n\n    script:\n    def snpcap = params.snpcapture_bed ? \"-gff ${params.snpcapture_bed}\" : ''\n    \"\"\"\n    qualimap bamqc -bam $bam -nt ${task.cpus} -outdir . -outformat \"HTML\" ${snpcap} --java-mem-size=${task.memory.toGiga()}G\n    \"\"\"\n}",
+        "nb_lignes_process": 20,
+        "string_script": "    def snpcap = params.snpcapture_bed ? \"-gff ${params.snpcapture_bed}\" : ''\n    \"\"\"\n    qualimap bamqc -bam $bam -nt ${task.cpus} -outdir . -outformat \"HTML\" ${snpcap} --java-mem-size=${task.memory.toGiga()}G\n    \"\"\"",
+        "nb_lignes_script": 3,
+        "language_script": "bash",
+        "tools": [
+            "QualiMap"
+        ],
+        "inputs": [
+            "ch_addlibmerge_for_qualimap",
+            "ch_fasta_for_qualimap"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_qualimap_results"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/qualimap\", mode: params.publish_dir_mode"
+        ],
+        "when": "!params.skip_qualimap",
+        "stub": ""
+    },
+    "genotyping_ug": {
+        "name_process": "genotyping_ug",
+        "string_process": "\nprocess genotyping_ug {\n  label 'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode, pattern: '*{.vcf.gz,.realign.bam,realign.bai}'\n\n  when:\n  params.run_genotyping && params.genotyping_tool == 'ug'\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_damagemanipulation_for_genotyping_ug\n  file fasta from ch_fasta_for_genotyping_ug.collect()\n  file fai from ch_fai_for_ug.collect()\n  file dict from ch_dict_for_ug.collect()\n\n  output: \n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*vcf.gz\") into ch_ug_for_multivcfanalyzer,ch_ug_for_vcf2genome,ch_ug_for_bcftools_stats\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(\"*.realign.{bam,bai}\") optional true\n\n  script:\n  def defaultbasequalities = !params.gatk_ug_defaultbasequalities ? '' : \" --defaultBaseQualities ${params.gatk_ug_defaultbasequalities}\" \n  def keep_realign = params.gatk_ug_keep_realign_bam ? \"samtools index ${samplename}.realign.bam\" : \"rm ${samplename}.realign.{bam,bai}\"\n  if (!params.gatk_dbsnp)\n    \"\"\"\n    samtools index -b ${bam}\n    gatk3 -Xmx${task.memory.toGiga()}g -T RealignerTargetCreator -R ${fasta} -I ${bam} -nt ${task.cpus} -o ${samplename}.intervals ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T IndelRealigner -R ${fasta} -I ${bam} -targetIntervals ${samplename}.intervals -o ${samplename}.realign.bam ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T UnifiedGenotyper -R ${fasta} -I ${samplename}.realign.bam -o ${samplename}.unifiedgenotyper.vcf -nt ${task.cpus} --genotype_likelihoods_model ${params.gatk_ug_genotype_model} -stand_call_conf ${params.gatk_call_conf} --sample_ploidy ${params.gatk_ploidy} -dcov ${params.gatk_downsample} --output_mode ${params.gatk_ug_out_mode} ${defaultbasequalities}\n    \n    $keep_realign\n    \n    bgzip -@ ${task.cpus} ${samplename}.unifiedgenotyper.vcf\n    \"\"\"\n  else if (params.gatk_dbsnp)\n    \"\"\"\n    samtools index ${bam}\n    gatk3 -Xmx${task.memory.toGiga()}g -T RealignerTargetCreator -R ${fasta} -I ${bam} -nt ${task.cpus} -o ${samplename}.intervals ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T IndelRealigner -R ${fasta} -I ${bam} -targetIntervals ${samplenane}.intervals -o ${samplename}.realign.bam ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T UnifiedGenotyper -R ${fasta} -I ${samplename}.realign.bam -o ${samplename}.unifiedgenotyper.vcf -nt ${task.cpus} --dbsnp ${params.gatk_dbsnp} --genotype_likelihoods_model ${params.gatk_ug_genotype_model} -stand_call_conf ${params.gatk_call_conf} --sample_ploidy ${params.gatk_ploidy} -dcov ${params.gatk_downsample} --output_mode ${params.gatk_ug_out_mode} ${defaultbasequalities}\n    \n    $keep_realign\n    \n    bgzip -@  ${task.cpus} ${samplename}.unifiedgenotyper.vcf\n    \"\"\"\n}",
+        "nb_lignes_process": 43,
+        "string_script": "  def defaultbasequalities = !params.gatk_ug_defaultbasequalities ? '' : \" --defaultBaseQualities ${params.gatk_ug_defaultbasequalities}\" \n  def keep_realign = params.gatk_ug_keep_realign_bam ? \"samtools index ${samplename}.realign.bam\" : \"rm ${samplename}.realign.{bam,bai}\"\n  if (!params.gatk_dbsnp)\n    \"\"\"\n    samtools index -b ${bam}\n    gatk3 -Xmx${task.memory.toGiga()}g -T RealignerTargetCreator -R ${fasta} -I ${bam} -nt ${task.cpus} -o ${samplename}.intervals ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T IndelRealigner -R ${fasta} -I ${bam} -targetIntervals ${samplename}.intervals -o ${samplename}.realign.bam ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T UnifiedGenotyper -R ${fasta} -I ${samplename}.realign.bam -o ${samplename}.unifiedgenotyper.vcf -nt ${task.cpus} --genotype_likelihoods_model ${params.gatk_ug_genotype_model} -stand_call_conf ${params.gatk_call_conf} --sample_ploidy ${params.gatk_ploidy} -dcov ${params.gatk_downsample} --output_mode ${params.gatk_ug_out_mode} ${defaultbasequalities}\n    \n    $keep_realign\n    \n    bgzip -@ ${task.cpus} ${samplename}.unifiedgenotyper.vcf\n    \"\"\"\n  else if (params.gatk_dbsnp)\n    \"\"\"\n    samtools index ${bam}\n    gatk3 -Xmx${task.memory.toGiga()}g -T RealignerTargetCreator -R ${fasta} -I ${bam} -nt ${task.cpus} -o ${samplename}.intervals ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T IndelRealigner -R ${fasta} -I ${bam} -targetIntervals ${samplenane}.intervals -o ${samplename}.realign.bam ${defaultbasequalities}\n    gatk3 -Xmx${task.memory.toGiga()}g -T UnifiedGenotyper -R ${fasta} -I ${samplename}.realign.bam -o ${samplename}.unifiedgenotyper.vcf -nt ${task.cpus} --dbsnp ${params.gatk_dbsnp} --genotype_likelihoods_model ${params.gatk_ug_genotype_model} -stand_call_conf ${params.gatk_call_conf} --sample_ploidy ${params.gatk_ploidy} -dcov ${params.gatk_downsample} --output_mode ${params.gatk_ug_out_mode} ${defaultbasequalities}\n    \n    $keep_realign\n    \n    bgzip -@  ${task.cpus} ${samplename}.unifiedgenotyper.vcf\n    \"\"\"",
+        "nb_lignes_script": 23,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_damagemanipulation_for_genotyping_ug",
+            "ch_fasta_for_genotyping_ug",
+            "ch_fai_for_ug",
+            "ch_dict_for_ug"
+        ],
+        "nb_inputs": 4,
+        "outputs": [
+            "ch_ug_for_multivcfanalyzer",
+            "ch_ug_for_vcf2genome",
+            "ch_ug_for_bcftools_stats",
+            "samplename"
+        ],
+        "nb_outputs": 4,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode, pattern: '*{.vcf.gz,.realign.bam,realign.bai}'"
+        ],
+        "when": "params.run_genotyping && params.genotyping_tool == 'ug'",
+        "stub": ""
+    },
+    "genotyping_hc": {
+        "name_process": "genotyping_hc",
+        "string_process": "\nprocess genotyping_hc {\n  label 'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode\n\n  when:\n  params.run_genotyping && params.genotyping_tool == 'hc'\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_damagemanipulation_for_genotyping_hc\n  file fasta from ch_fasta_for_genotyping_hc.collect()\n  file fai from ch_fai_for_hc.collect()\n  file dict from ch_dict_for_hc.collect()\n\n  output: \n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*vcf.gz\") into ch_hc_for_bcftools_stats\n\n  script:\n  if (!params.gatk_dbsnp)\n    \"\"\"\n    gatk HaplotypeCaller --java-options \"-Xmx${task.memory.toGiga()}G\" -R ${fasta} -I ${bam} -O ${samplename}.haplotypecaller.vcf -stand-call-conf ${params.gatk_call_conf} --sample-ploidy ${params.gatk_ploidy} --output-mode ${params.gatk_hc_out_mode} --emit-ref-confidence ${params.gatk_hc_emitrefconf}\n    bgzip -@ ${task.cpus} ${samplename}.haplotypecaller.vcf\n    \"\"\"\n\n  else if (params.gatk_dbsnp)\n    \"\"\"\n    gatk HaplotypeCaller --java-options \"-Xmx${task.memory.toGiga()}G\" -R ${fasta} -I ${bam} -O ${samplename}.haplotypecaller.vcf --dbsnp ${params.gatk_dbsnp} -stand-call-conf ${params.gatk_call_conf} --sample_ploidy ${params.gatk_ploidy} --output_mode ${params.gatk_hc_out_mode} --emit-ref-confidence ${params.gatk_hc_emitrefconf}\n    bgzip -@  ${task.cpus} ${samplename}.haplotypecaller.vcf\n    \"\"\"\n}",
+        "nb_lignes_process": 29,
+        "string_script": "  if (!params.gatk_dbsnp)\n    \"\"\"\n    gatk HaplotypeCaller --java-options \"-Xmx${task.memory.toGiga()}G\" -R ${fasta} -I ${bam} -O ${samplename}.haplotypecaller.vcf -stand-call-conf ${params.gatk_call_conf} --sample-ploidy ${params.gatk_ploidy} --output-mode ${params.gatk_hc_out_mode} --emit-ref-confidence ${params.gatk_hc_emitrefconf}\n    bgzip -@ ${task.cpus} ${samplename}.haplotypecaller.vcf\n    \"\"\"\n\n  else if (params.gatk_dbsnp)\n    \"\"\"\n    gatk HaplotypeCaller --java-options \"-Xmx${task.memory.toGiga()}G\" -R ${fasta} -I ${bam} -O ${samplename}.haplotypecaller.vcf --dbsnp ${params.gatk_dbsnp} -stand-call-conf ${params.gatk_call_conf} --sample_ploidy ${params.gatk_ploidy} --output_mode ${params.gatk_hc_out_mode} --emit-ref-confidence ${params.gatk_hc_emitrefconf}\n    bgzip -@  ${task.cpus} ${samplename}.haplotypecaller.vcf\n    \"\"\"",
+        "nb_lignes_script": 10,
+        "language_script": "bash",
+        "tools": [
+            "GATK"
+        ],
+        "inputs": [
+            "ch_damagemanipulation_for_genotyping_hc",
+            "ch_fasta_for_genotyping_hc",
+            "ch_fai_for_hc",
+            "ch_dict_for_hc"
+        ],
+        "nb_inputs": 4,
+        "outputs": [
+            "ch_hc_for_bcftools_stats"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_genotyping && params.genotyping_tool == 'hc'",
+        "stub": ""
+    },
+    "genotyping_freebayes": {
+        "name_process": "genotyping_freebayes",
+        "string_process": "\nprocess genotyping_freebayes {\n  label 'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode\n\n  when:\n  params.run_genotyping && params.genotyping_tool == 'freebayes'\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_damagemanipulation_for_genotyping_freebayes\n  file fasta from ch_fasta_for_genotyping_freebayes.collect()\n  file fai from ch_fai_for_freebayes.collect()\n  file dict from ch_dict_for_freebayes.collect()\n\n  output: \n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*vcf.gz\") into ch_fb_for_bcftools_stats\n  \n  script:\n  def skip_coverage = \"${params.freebayes_g}\" == 0 ? \"\" : \"-g ${params.freebayes_g}\"\n  \"\"\"\n  freebayes -f ${fasta} -p ${params.freebayes_p} -C ${params.freebayes_C} ${skip_coverage} ${bam} > ${samplename}.freebayes.vcf\n  bgzip -@  ${task.cpus} ${samplename}.freebayes.vcf\n  \"\"\"\n}",
+        "nb_lignes_process": 23,
+        "string_script": "  def skip_coverage = \"${params.freebayes_g}\" == 0 ? \"\" : \"-g ${params.freebayes_g}\"\n  \"\"\"\n  freebayes -f ${fasta} -p ${params.freebayes_p} -C ${params.freebayes_C} ${skip_coverage} ${bam} > ${samplename}.freebayes.vcf\n  bgzip -@  ${task.cpus} ${samplename}.freebayes.vcf\n  \"\"\"",
+        "nb_lignes_script": 4,
+        "language_script": "bash",
+        "tools": [
+            "FreeBayes"
+        ],
+        "inputs": [
+            "ch_damagemanipulation_for_genotyping_freebayes",
+            "ch_fasta_for_genotyping_freebayes",
+            "ch_fai_for_freebayes",
+            "ch_dict_for_freebayes"
+        ],
+        "nb_inputs": 4,
+        "outputs": [
+            "ch_fb_for_bcftools_stats"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_genotyping && params.genotyping_tool == 'freebayes'",
+        "stub": ""
+    },
+    "genotyping_pileupcaller": {
+        "name_process": "genotyping_pileupcaller",
+        "string_process": "\nprocess genotyping_pileupcaller {\n  label 'mc_small'\n  tag \"${strandedness}\"\n  publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode\n\n  when:\n  params.run_genotyping && params.genotyping_tool == 'pileupcaller'\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, bam, bai from ch_prepped_for_pileupcaller_double.mix(ch_prepped_for_pileupcaller_single)\n  file fasta from ch_fasta_for_genotyping_pileupcaller.collect()\n  file fai from ch_fai_for_pileupcaller.collect()\n  file dict from ch_dict_for_pileupcaller.collect()\n  path(bed) from ch_bed_for_pileupcaller.collect()\n  path(snp) from ch_snp_for_pileupcaller.collect().dump(tag: \"pileupcaller_snp_file\")\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"pileupcaller.${strandedness}.*\") into ch_for_eigenstrat_snp_coverage\n\n  script:\n  def use_bed = bed.getName() != 'nf-core_eager_dummy.txt' ? \"-l ${bed}\" : ''\n  def use_snp = snp.getName() != 'nf-core_eager_dummy2.txt' ? \"-f ${snp}\" : ''\n\n  def transitions_mode = strandedness == \"single\" ? \"\" : \"${params.pileupcaller_transitions_mode}\" == 'SkipTransitions' ? \"--skipTransitions\" : \"${params.pileupcaller_transitions_mode}\" == 'TransitionsMissing' ? \"--transitionsMissing\" : \"\"\n  def caller = \"--${params.pileupcaller_method}\"\n  def ssmode = strandedness == \"single\" ? \"--singleStrandMode\" : \"\"\n  def bam_list = bam.flatten().join(\" \")\n  def sample_names = samplename.flatten().join(\",\")\n  \"\"\"\n  samtools mpileup -B -q 30 -Q 30 ${use_bed} -f ${fasta} ${bam_list} | pileupCaller ${caller} ${ssmode} ${transitions_mode} --sampleNames ${sample_names} ${use_snp} -e pileupcaller.${strandedness}\n  \"\"\"\n}",
+        "nb_lignes_process": 31,
+        "string_script": "  def use_bed = bed.getName() != 'nf-core_eager_dummy.txt' ? \"-l ${bed}\" : ''\n  def use_snp = snp.getName() != 'nf-core_eager_dummy2.txt' ? \"-f ${snp}\" : ''\n\n  def transitions_mode = strandedness == \"single\" ? \"\" : \"${params.pileupcaller_transitions_mode}\" == 'SkipTransitions' ? \"--skipTransitions\" : \"${params.pileupcaller_transitions_mode}\" == 'TransitionsMissing' ? \"--transitionsMissing\" : \"\"\n  def caller = \"--${params.pileupcaller_method}\"\n  def ssmode = strandedness == \"single\" ? \"--singleStrandMode\" : \"\"\n  def bam_list = bam.flatten().join(\" \")\n  def sample_names = samplename.flatten().join(\",\")\n  \"\"\"\n  samtools mpileup -B -q 30 -Q 30 ${use_bed} -f ${fasta} ${bam_list} | pileupCaller ${caller} ${ssmode} ${transitions_mode} --sampleNames ${sample_names} ${use_snp} -e pileupcaller.${strandedness}\n  \"\"\"",
+        "nb_lignes_script": 10,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_prepped_for_pileupcaller_double",
+            "ch_prepped_for_pileupcaller_single",
+            "ch_fasta_for_genotyping_pileupcaller",
+            "ch_fai_for_pileupcaller",
+            "ch_dict_for_pileupcaller",
+            "ch_bed_for_pileupcaller",
+            "ch_snp_for_pileupcaller"
+        ],
+        "nb_inputs": 7,
+        "outputs": [
+            "ch_for_eigenstrat_snp_coverage"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${strandedness}\"",
+            "publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_genotyping && params.genotyping_tool == 'pileupcaller'",
+        "stub": ""
+    },
+    "eigenstrat_snp_coverage": {
+        "name_process": "eigenstrat_snp_coverage",
+        "string_process": "\nprocess eigenstrat_snp_coverage {\n  label 'mc_tiny'\n  tag \"${strandedness}\"\n  publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode\n  \n  when:\n  params.run_genotyping && params.genotyping_tool == 'pileupcaller'\n  \n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*\") from ch_for_eigenstrat_snp_coverage.dump(tag:'eigenstrat_input')\n  \n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.json\") into ch_eigenstrat_snp_cov_for_multiqc\n  path(\"*_eigenstrat_coverage.txt\")\n  \n  script:\n     \n                                                                                                               \n  \"\"\"\n  eigenstrat_snp_coverage -i pileupcaller.${strandedness} -s \".txt\" >${strandedness}_eigenstrat_coverage.txt -j ${strandedness}_eigenstrat_coverage_mqc.json\n  \"\" \n    \n  \"\"\"\n  eigenstrat_snp_coverage -i pileupcaller.${strandedness} -s \".txt\" >${strandedness}_eigenstrat_coverage.txt\n  parse_snp_cov.py ${strandedness}_eigenstrat_coverage.txt\n  \"\"\"\n}",
+        "nb_lignes_process": 26,
+        "string_script": "  \"\"\"\n  eigenstrat_snp_coverage -i pileupcaller.${strandedness} -s \".txt\" >${strandedness}_eigenstrat_coverage.txt -j ${strandedness}_eigenstrat_coverage_mqc.json\n  \"\" \n    \n  \"\"\"\n  eigenstrat_snp_coverage -i pileupcaller.${strandedness} -s \".txt\" >${strandedness}_eigenstrat_coverage.txt\n  parse_snp_cov.py ${strandedness}_eigenstrat_coverage.txt\n  \"\"\"",
+        "nb_lignes_script": 7,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_for_eigenstrat_snp_coverage"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_eigenstrat_snp_cov_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_tiny'",
+            "tag \"${strandedness}\"",
+            "publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_genotyping && params.genotyping_tool == 'pileupcaller'",
+        "stub": ""
+    },
+    "genotyping_angsd": {
+        "name_process": "genotyping_angsd",
+        "string_process": "\nprocess genotyping_angsd {\n  label 'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode\n\n  when:\n  params.run_genotyping && params.genotyping_tool == 'angsd'\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, file(bam), file(bai) from ch_damagemanipulation_for_genotyping_angsd\n  file fasta from ch_fasta_for_genotyping_angsd.collect()\n  file fai from ch_fai_for_angsd.collect()\n  file dict from ch_dict_for_angsd.collect()\n\n  output: \n  path(\"${samplename}*\")\n  \n  script:\n  switch ( \"${params.angsd_glmodel}\" ) {\n    case \"samtools\":\n    angsd_glmodel = \"1\"; break\n    case \"gatk\":\n    angsd_glmodel = \"2\"; break\n    case \"soapsnp\":\n    angsd_glmodel = \"3\"; break\n    case \"syk\":\n    angsd_glmodel = \"4\"; break\n  }\n\n  switch ( \"${params.angsd_glformat}\" ) {\n    case \"text\":\n    angsd_glformat = \"4\"; break\n    case \"binary\":\n    angsd_glformat = \"1\"; break\n    case \"beagle\":\n    angsd_glformat = \"2\"; break\n    case \"binary_three\":\n    angsd_glformat = \"3\"; break\n  }\n  \n  def angsd_fasta = !params.angsd_createfasta ? '' : params.angsd_fastamethod == 'random' ? '-doFasta 1 -doCounts 1' : '-doFasta 2 -doCounts 1' \n  def angsd_majorminor = params.angsd_glformat != \"beagle\" ? '' : '-doMajorMinor 1'\n  \"\"\"\n  echo ${bam} > bam.filelist\n  mkdir angsd\n  angsd -bam bam.filelist -nThreads ${task.cpus} -GL ${angsd_glmodel} -doGlF ${angsd_glformat} ${angsd_majorminor} ${angsd_fasta} -out ${samplename}.angsd\n  \"\"\"\n}",
+        "nb_lignes_process": 47,
+        "string_script": "  switch ( \"${params.angsd_glmodel}\" ) {\n    case \"samtools\":\n    angsd_glmodel = \"1\"; break\n    case \"gatk\":\n    angsd_glmodel = \"2\"; break\n    case \"soapsnp\":\n    angsd_glmodel = \"3\"; break\n    case \"syk\":\n    angsd_glmodel = \"4\"; break\n  }\n\n  switch ( \"${params.angsd_glformat}\" ) {\n    case \"text\":\n    angsd_glformat = \"4\"; break\n    case \"binary\":\n    angsd_glformat = \"1\"; break\n    case \"beagle\":\n    angsd_glformat = \"2\"; break\n    case \"binary_three\":\n    angsd_glformat = \"3\"; break\n  }\n  \n  def angsd_fasta = !params.angsd_createfasta ? '' : params.angsd_fastamethod == 'random' ? '-doFasta 1 -doCounts 1' : '-doFasta 2 -doCounts 1' \n  def angsd_majorminor = params.angsd_glformat != \"beagle\" ? '' : '-doMajorMinor 1'\n  \"\"\"\n  echo ${bam} > bam.filelist\n  mkdir angsd\n  angsd -bam bam.filelist -nThreads ${task.cpus} -GL ${angsd_glmodel} -doGlF ${angsd_glformat} ${angsd_majorminor} ${angsd_fasta} -out ${samplename}.angsd\n  \"\"\"",
+        "nb_lignes_script": 28,
+        "language_script": "bash",
+        "tools": [
+            "oswitch",
+            "CASE",
+            "BreakSeq",
+            "ANGSD"
+        ],
+        "inputs": [
+            "ch_damagemanipulation_for_genotyping_angsd",
+            "ch_fasta_for_genotyping_angsd",
+            "ch_fai_for_angsd",
+            "ch_dict_for_angsd"
+        ],
+        "nb_inputs": 4,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/genotyping\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_genotyping && params.genotyping_tool == 'angsd'",
+        "stub": ""
+    },
+    "bcftools_stats": {
+        "name_process": "bcftools_stats",
+        "string_process": "\nprocess bcftools_stats {\n  label  'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/bcftools/stats\", mode: params.publish_dir_mode\n\n  when: \n  params.run_bcftools_stats\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(vcf) from ch_ug_for_bcftools_stats.mix(ch_hc_for_bcftools_stats,ch_fb_for_bcftools_stats)\n  file fasta from ch_fasta_for_bcftools_stats.collect()\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.vcf.stats\") into ch_bcftools_stats_for_multiqc\n\n  script:\n  \"\"\"\n  bcftools stats *.vcf.gz -F ${fasta} > ${samplename}.vcf.stats\n  \"\"\"\n}",
+        "nb_lignes_process": 19,
+        "string_script": "  \"\"\"\n  bcftools stats *.vcf.gz -F ${fasta} > ${samplename}.vcf.stats\n  \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [
+            "BCFtools"
+        ],
+        "inputs": [
+            "ch_ug_for_bcftools_stats",
+            "ch_hc_for_bcftools_stats",
+            "ch_fb_for_bcftools_stats",
+            "ch_fasta_for_bcftools_stats"
+        ],
+        "nb_inputs": 4,
+        "outputs": [
+            "ch_bcftools_stats_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/bcftools/stats\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_bcftools_stats",
+        "stub": ""
+    },
+    "vcf2genome": {
+        "name_process": "vcf2genome",
+        "string_process": "\nprocess vcf2genome {\n  label  'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/consensus_sequence\", mode: params.publish_dir_mode\n\n  when: \n  params.run_vcf2genome\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(vcf) from ch_ug_for_vcf2genome\n  file fasta from ch_fasta_for_vcf2genome.collect()\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.fasta.gz\")\n\n  script:\n  def out = !params.vcf2genome_outfile ? \"${samplename}.fasta\" : \"${params.vcf2genome_outfile}\"\n  def fasta_head = !params.vcf2genome_header ? \"${samplename}\" : \"${params.vcf2genome_header}\"\n  \"\"\"\n  pigz -d -f -p ${task.cpus} ${vcf}\n  vcf2genome -Xmx${task.memory.toGiga()}g -draft ${out} -draftname \"${fasta_head}\" -in ${vcf.baseName} -minc ${params.vcf2genome_minc} -minfreq ${params.vcf2genome_minfreq} -minq ${params.vcf2genome_minq} -ref ${fasta} -refMod ${out}_refmod.fasta -uncertain ${out}_uncertainty.fasta\n  pigz -f -p ${task.cpus} ${out}*\n  bgzip -@ ${task.cpus} *.vcf\n  \"\"\"\n}",
+        "nb_lignes_process": 24,
+        "string_script": "  def out = !params.vcf2genome_outfile ? \"${samplename}.fasta\" : \"${params.vcf2genome_outfile}\"\n  def fasta_head = !params.vcf2genome_header ? \"${samplename}\" : \"${params.vcf2genome_header}\"\n  \"\"\"\n  pigz -d -f -p ${task.cpus} ${vcf}\n  vcf2genome -Xmx${task.memory.toGiga()}g -draft ${out} -draftname \"${fasta_head}\" -in ${vcf.baseName} -minc ${params.vcf2genome_minc} -minfreq ${params.vcf2genome_minfreq} -minq ${params.vcf2genome_minq} -ref ${fasta} -refMod ${out}_refmod.fasta -uncertain ${out}_uncertainty.fasta\n  pigz -f -p ${task.cpus} ${out}*\n  bgzip -@ ${task.cpus} *.vcf\n  \"\"\"",
+        "nb_lignes_script": 7,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_ug_for_vcf2genome",
+            "ch_fasta_for_vcf2genome"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "samplename"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/consensus_sequence\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_vcf2genome",
+        "stub": ""
+    },
+    "multivcfanalyzer": {
+        "name_process": "multivcfanalyzer",
+        "string_process": "\nprocess multivcfanalyzer {\n  label  'mc_small'\n  publishDir \"${params.outdir}/multivcfanalyzer\", mode: params.publish_dir_mode\n\n  when:\n  params.genotyping_tool == 'ug' && params.run_multivcfanalyzer && params.gatk_ploidy.toString() == '2'\n\n  input:\n  file vcf from ch_vcfs_for_multivcfanalyzer\n  file fasta from ch_fasta_for_multivcfanalyzer\n\n  output:\n  file('fullAlignment.fasta.gz')\n  file('info.txt.gz')\n  file('snpAlignment.fasta.gz')\n  file('snpAlignmentIncludingRefGenome.fasta.gz')\n  file('snpStatistics.tsv.gz')\n  file('snpTable.tsv.gz')\n  file('snpTableForSnpEff.tsv.gz')\n  file('snpTableWithUncertaintyCalls.tsv.gz')\n  file('structureGenotypes.tsv.gz')\n  file('structureGenotypes_noMissingData-Columns.tsv.gz')\n  file('MultiVCFAnalyzer.json') optional true into ch_multivcfanalyzer_for_multiqc\n\n  script:\n  def write_freqs = params.write_allele_frequencies ? \"T\" : \"F\"\n  \"\"\"\n  pigz -d -f -p ${task.cpus} ${vcf}\n  multivcfanalyzer -Xmx${task.memory.toGiga()}g ${params.snp_eff_results} ${fasta} ${params.reference_gff_annotations} . ${write_freqs} ${params.min_genotype_quality} ${params.min_base_coverage} ${params.min_allele_freq_hom} ${params.min_allele_freq_het} ${params.reference_gff_exclude} *.vcf\n  pigz -p ${task.cpus} *.tsv *.txt snpAlignment.fasta snpAlignmentIncludingRefGenome.fasta fullAlignment.fasta\n  bgzip -@ ${task.cpus} *.vcf\n  \"\"\"\n }",
+        "nb_lignes_process": 32,
+        "string_script": "  def write_freqs = params.write_allele_frequencies ? \"T\" : \"F\"\n  \"\"\"\n  pigz -d -f -p ${task.cpus} ${vcf}\n  multivcfanalyzer -Xmx${task.memory.toGiga()}g ${params.snp_eff_results} ${fasta} ${params.reference_gff_annotations} . ${write_freqs} ${params.min_genotype_quality} ${params.min_base_coverage} ${params.min_allele_freq_hom} ${params.min_allele_freq_het} ${params.reference_gff_exclude} *.vcf\n  pigz -p ${task.cpus} *.tsv *.txt snpAlignment.fasta snpAlignmentIncludingRefGenome.fasta fullAlignment.fasta\n  bgzip -@ ${task.cpus} *.vcf\n  \"\"\"",
+        "nb_lignes_script": 6,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_vcfs_for_multivcfanalyzer",
+            "ch_fasta_for_multivcfanalyzer"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_multivcfanalyzer_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "publishDir \"${params.outdir}/multivcfanalyzer\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.genotyping_tool == 'ug' && params.run_multivcfanalyzer && params.gatk_ploidy.toString() == '2'",
+        "stub": ""
+    },
+    "mtnucratio": {
+        "name_process": "mtnucratio",
+        "string_process": " process mtnucratio {\n  label 'sc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/mtnucratio\", mode: params.publish_dir_mode\n\n  when: \n  params.run_mtnucratio\n\n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_rmdup_formtnucratio\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.mtnucratio\")\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*.json\") into ch_mtnucratio_for_multiqc\n\n  script:\n  \"\"\"\n  mtnucratio -Xmx${task.memory.toGiga()}g ${bam} \"${params.mtnucratio_header}\"\n  \"\"\"\n }",
+        "nb_lignes_process": 18,
+        "string_script": "  \"\"\"\n  mtnucratio -Xmx${task.memory.toGiga()}g ${bam} \"${params.mtnucratio_header}\"\n  \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_rmdup_formtnucratio"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "samplename",
+            "ch_mtnucratio_for_multiqc"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/mtnucratio\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_mtnucratio",
+        "stub": ""
+    },
+    "sexdeterrmine_prep": {
+        "name_process": "sexdeterrmine_prep",
+        "string_process": "\nprocess sexdeterrmine_prep {\n  label 'sc_small'\n  \n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(bam), path(bai) from ch_for_sexdeterrmine_prep\n  \n  output:\n  file \"*_{single,double}strand.bam\" into ch_prepped_for_sexdeterrmine\n\n  when:\n  params.run_sexdeterrmine\n\n  script:\n  \"\"\"\n  mv ${bam} ${bam.baseName}_${strandedness}strand.bam\n  \"\"\"\n\n}",
+        "nb_lignes_process": 17,
+        "string_script": "  \"\"\"\n  mv ${bam} ${bam.baseName}_${strandedness}strand.bam\n  \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_for_sexdeterrmine_prep"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_prepped_for_sexdeterrmine"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'"
+        ],
+        "when": "params.run_sexdeterrmine",
+        "stub": ""
+    },
+    "sexdeterrmine": {
+        "name_process": "sexdeterrmine",
+        "string_process": "\nprocess sexdeterrmine {\n    label 'mc_small'\n    publishDir \"${params.outdir}/sex_determination\", mode: params.publish_dir_mode\n\n    input:\n    path bam from ch_prepped_for_sexdeterrmine.collect()\n    path(bed) from ch_bed_for_sexdeterrmine\n\n    output:\n    file \"SexDet.txt\"\n    file \"*.json\" into ch_sexdet_for_multiqc\n\n    when:\n    params.run_sexdeterrmine\n    \n    script:\n    def filter = bed.getName() != 'nf-core_eager_dummy.txt' ? \"-b $bed\" : ''\n    \"\"\"\n    ls *.bam >> bamlist.txt\n    samtools depth -aa -q30 -Q30 $filter -f bamlist.txt | sexdeterrmine -f bamlist.txt > SexDet.txt\n    \"\"\"\n}",
+        "nb_lignes_process": 21,
+        "string_script": "    def filter = bed.getName() != 'nf-core_eager_dummy.txt' ? \"-b $bed\" : ''\n    \"\"\"\n    ls *.bam >> bamlist.txt\n    samtools depth -aa -q30 -Q30 $filter -f bamlist.txt | sexdeterrmine -f bamlist.txt > SexDet.txt\n    \"\"\"",
+        "nb_lignes_script": 4,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools"
+        ],
+        "inputs": [
+            "ch_prepped_for_sexdeterrmine",
+            "ch_bed_for_sexdeterrmine"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_sexdet_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "publishDir \"${params.outdir}/sex_determination\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_sexdeterrmine",
+        "stub": ""
+    },
+    "nuclear_contamination": {
+        "name_process": "nuclear_contamination",
+        "string_process": " process nuclear_contamination{\n    label 'sc_small'\n    tag \"${samplename}\"\n    publishDir \"${params.outdir}/nuclear_contamination\", mode: params.publish_dir_mode\n\n    when:\n    params.run_nuclear_contamination\n\n    input:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(input), path(bai) from ch_for_nuclear_contamination\n\n    output:\n    tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path('*.X.contamination.out') into ch_from_nuclear_contamination\n\n    script:\n    \"\"\"\n    samtools index ${input}\n    angsd -i ${input} -r ${params.contamination_chrom_name}:5000000-154900000 -doCounts 1 -iCounts 1 -minMapQ 30 -minQ 30 -out ${libraryid}.doCounts\n    contamination -a ${libraryid}.doCounts.icnts.gz -h ${projectDir}/assets/angsd_resources/HapMapChrX.gz 2> ${libraryid}.X.contamination.out\n    \"\"\"\n }",
+        "nb_lignes_process": 19,
+        "string_script": "    \"\"\"\n    samtools index ${input}\n    angsd -i ${input} -r ${params.contamination_chrom_name}:5000000-154900000 -doCounts 1 -iCounts 1 -minMapQ 30 -minQ 30 -out ${libraryid}.doCounts\n    contamination -a ${libraryid}.doCounts.icnts.gz -h ${projectDir}/assets/angsd_resources/HapMapChrX.gz 2> ${libraryid}.X.contamination.out\n    \"\"\"",
+        "nb_lignes_script": 4,
+        "language_script": "bash",
+        "tools": [
+            "SAMtools",
+            "ANGSD",
+            "contaminationX"
+        ],
+        "inputs": [
+            "ch_for_nuclear_contamination"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_from_nuclear_contamination"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/nuclear_contamination\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_nuclear_contamination",
+        "stub": ""
+    },
+    "print_nuclear_contamination": {
+        "name_process": "print_nuclear_contamination",
+        "string_process": "\nprocess print_nuclear_contamination{\n    label 'sc_tiny'\n    publishDir \"${params.outdir}/nuclear_contamination\", mode: params.publish_dir_mode\n\n    when:\n    params.run_nuclear_contamination\n\n    input:\n    path Contam from ch_from_nuclear_contamination.map { it[7] }.collect()\n\n    output:\n    file 'nuclear_contamination.txt'\n    file 'nuclear_contamination_mqc.json' into ch_nuclear_contamination_for_multiqc\n\n    script:\n    \"\"\"\n    print_x_contamination.py ${Contam.join(' ')}\n    \"\"\"\n }",
+        "nb_lignes_process": 18,
+        "string_script": "    \"\"\"\n    print_x_contamination.py ${Contam.join(' ')}\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_from_nuclear_contamination"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_nuclear_contamination_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "publishDir \"${params.outdir}/nuclear_contamination\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_nuclear_contamination",
+        "stub": ""
+    },
+    "metagenomic_complexity_filter": {
+        "name_process": "metagenomic_complexity_filter",
+        "string_process": "\nprocess metagenomic_complexity_filter {\n  label 'mc_small'\n  tag \"${samplename}\"\n  publishDir \"${params.outdir}/metagenomic_complexity_filter/\", mode: params.publish_dir_mode\n\n  when:\n  params.metagenomic_complexity_filter\n  \n  input:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(fastq) from ch_bam_filtering_for_metagenomic\n\n\n  output:\n  tuple samplename, libraryid, lane, seqtype, organism, strandedness, udg, path(\"*_lowcomplexityremoved.fq.gz\") into ch_lowcomplexityfiltered_for_metagenomic\n  path(\"*_bbduk.stats\") into ch_metagenomic_complexity_filter_for_multiqc\n\n  script:\n  \"\"\"\n  bbduk.sh -Xmx${task.memory.toGiga()}g in=${fastq} threads=${task.cpus} entropymask=f entropy=${params.metagenomic_complexity_entropy} out=${fastq}_lowcomplexityremoved.fq.gz 2> ${fastq}_bbduk.stats\n  \"\"\"\n\n}",
+        "nb_lignes_process": 21,
+        "string_script": "  \"\"\"\n  bbduk.sh -Xmx${task.memory.toGiga()}g in=${fastq} threads=${task.cpus} entropymask=f entropy=${params.metagenomic_complexity_entropy} out=${fastq}_lowcomplexityremoved.fq.gz 2> ${fastq}_bbduk.stats\n  \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_bam_filtering_for_metagenomic"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_lowcomplexityfiltered_for_metagenomic",
+            "ch_metagenomic_complexity_filter_for_multiqc"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "tag \"${samplename}\"",
+            "publishDir \"${params.outdir}/metagenomic_complexity_filter/\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.metagenomic_complexity_filter",
+        "stub": ""
+    },
+    "malt": {
+        "name_process": "malt",
+        "string_process": "\nprocess malt {\n  label 'mc_small'\n  publishDir \"${params.outdir}/metagenomic_classification/malt\", mode: params.publish_dir_mode\n\n  when:\n  params.run_metagenomic_screening && params.run_bam_filtering && params.bam_unmapped_type == 'fastq' && params.metagenomic_tool == 'malt'\n\n  input:\n  file fastqs from ch_input_for_metagenomic_malt.map { it[7] }.collect()\n  file db from ch_db_for_malt\n\n  output:\n  path(\"*.rma6\") into ch_rma_for_maltExtract\n  path(\"*.sam.gz\") optional true\n  path(\"malt.log\") into ch_malt_for_multiqc\n\n  script:\n  if ( \"${params.malt_min_support_mode}\" == \"percent\" ) {\n    min_supp = \"-supp ${params.malt_min_support_percent}\" \n  } else if ( \"${params.malt_min_support_mode}\" == \"reads\" ) {\n    min_supp = \"-sup ${params.metagenomic_min_support_reads}\"\n  }\n  def sam_out = params.malt_sam_output ? \"-a . -f SAM\" : \"\"\n  \"\"\"\n  malt-run \\\n  -J-Xmx${task.memory.toGiga()}g \\\n  -t ${task.cpus} \\\n  -v \\\n  -o . \\\n  -d ${db} \\\n  ${sam_out} \\\n  -id ${params.percent_identity} \\\n  -m ${params.malt_mode} \\\n  -at ${params.malt_alignment_mode} \\\n  -top ${params.malt_top_percent} \\\n  ${min_supp} \\\n  -mq ${params.malt_max_queries} \\\n  --memoryMode ${params.malt_memory_mode} \\\n  -i ${fastqs.join(' ')} |&tee malt.log\n  \"\"\"\n}",
+        "nb_lignes_process": 40,
+        "string_script": "  if ( \"${params.malt_min_support_mode}\" == \"percent\" ) {\n    min_supp = \"-supp ${params.malt_min_support_percent}\" \n  } else if ( \"${params.malt_min_support_mode}\" == \"reads\" ) {\n    min_supp = \"-sup ${params.metagenomic_min_support_reads}\"\n  }\n  def sam_out = params.malt_sam_output ? \"-a . -f SAM\" : \"\"\n  \"\"\"\n  malt-run \\\n  -J-Xmx${task.memory.toGiga()}g \\\n  -t ${task.cpus} \\\n  -v \\\n  -o . \\\n  -d ${db} \\\n  ${sam_out} \\\n  -id ${params.percent_identity} \\\n  -m ${params.malt_mode} \\\n  -at ${params.malt_alignment_mode} \\\n  -top ${params.malt_top_percent} \\\n  ${min_supp} \\\n  -mq ${params.malt_max_queries} \\\n  --memoryMode ${params.malt_memory_mode} \\\n  -i ${fastqs.join(' ')} |&tee malt.log\n  \"\"\"",
+        "nb_lignes_script": 22,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_input_for_metagenomic_malt",
+            "ch_db_for_malt"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_rma_for_maltExtract",
+            "ch_malt_for_multiqc"
+        ],
+        "nb_outputs": 2,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "publishDir \"${params.outdir}/metagenomic_classification/malt\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_metagenomic_screening && params.run_bam_filtering && params.bam_unmapped_type == 'fastq' && params.metagenomic_tool == 'malt'",
+        "stub": ""
+    },
+    "maltextract": {
+        "name_process": "maltextract",
+        "string_process": "\nprocess maltextract {\n  label 'mc_medium'\n  publishDir \"${params.outdir}/maltextract/\", mode: params.publish_dir_mode\n\n  when: \n  params.run_maltextract && params.metagenomic_tool == 'malt'\n\n  input:\n  file rma6 from ch_rma_for_maltExtract.collect()\n  file taxon_list from ch_taxonlist_for_maltextract\n  file ncbifiles from ch_ncbifiles_for_maltextract\n  \n  output:\n  path \"results/\" type('dir')\n  file \"results/*_Wevid.json\" optional true into ch_hops_for_multiqc \n\n  script:\n  def destack = params.maltextract_destackingoff ? \"--destackingOff\" : \"\"\n  def downsam = params.maltextract_downsamplingoff ? \"--downSampOff\" : \"\"\n  def dupremo = params.maltextract_duplicateremovaloff ? \"--dupRemOff\" : \"\"\n  def matches = params.maltextract_matches ? \"--matches\" : \"\"\n  def megsum = params.maltextract_megansummary ? \"--meganSummary\" : \"\"\n  def topaln = params.maltextract_topalignment ?  \"--useTopAlignment\" : \"\"\n  def ss = params.single_stranded ? \"--singleStranded\" : \"\"\n  \"\"\"\n  MaltExtract \\\n  -Xmx${task.memory.toGiga()}g \\\n  -t ${taxon_list} \\\n  -i ${rma6.join(' ')} \\\n  -o results/ \\\n  -r ${ncbifiles} \\\n  -p ${task.cpus} \\\n  -f ${params.maltextract_filter} \\\n  -a ${params.maltextract_toppercent} \\\n  --minPI ${params.maltextract_percentidentity} \\\n  ${destack} \\\n  ${downsam} \\\n  ${dupremo} \\\n  ${matches} \\\n  ${megsum} \\\n  ${topaln} \\\n  ${ss}\n\n  postprocessing.AMPS.r -r results/ -m ${params.maltextract_filter} -t ${task.cpus} -n ${taxon_list} -j\n  \"\"\"\n}",
+        "nb_lignes_process": 45,
+        "string_script": "  def destack = params.maltextract_destackingoff ? \"--destackingOff\" : \"\"\n  def downsam = params.maltextract_downsamplingoff ? \"--downSampOff\" : \"\"\n  def dupremo = params.maltextract_duplicateremovaloff ? \"--dupRemOff\" : \"\"\n  def matches = params.maltextract_matches ? \"--matches\" : \"\"\n  def megsum = params.maltextract_megansummary ? \"--meganSummary\" : \"\"\n  def topaln = params.maltextract_topalignment ?  \"--useTopAlignment\" : \"\"\n  def ss = params.single_stranded ? \"--singleStranded\" : \"\"\n  \"\"\"\n  MaltExtract \\\n  -Xmx${task.memory.toGiga()}g \\\n  -t ${taxon_list} \\\n  -i ${rma6.join(' ')} \\\n  -o results/ \\\n  -r ${ncbifiles} \\\n  -p ${task.cpus} \\\n  -f ${params.maltextract_filter} \\\n  -a ${params.maltextract_toppercent} \\\n  --minPI ${params.maltextract_percentidentity} \\\n  ${destack} \\\n  ${downsam} \\\n  ${dupremo} \\\n  ${matches} \\\n  ${megsum} \\\n  ${topaln} \\\n  ${ss}\n\n  postprocessing.AMPS.r -r results/ -m ${params.maltextract_filter} -t ${task.cpus} -n ${taxon_list} -j\n  \"\"\"",
+        "nb_lignes_script": 27,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_rma_for_maltExtract",
+            "ch_taxonlist_for_maltextract",
+            "ch_ncbifiles_for_maltextract"
+        ],
+        "nb_inputs": 3,
+        "outputs": [
+            "ch_hops_for_multiqc"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_medium'",
+            "publishDir \"${params.outdir}/maltextract/\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_maltextract && params.metagenomic_tool == 'malt'",
+        "stub": ""
+    },
+    "decomp_kraken": {
+        "name_process": "decomp_kraken",
+        "string_process": " process decomp_kraken {\n    input:\n    path(ckdb) from comp_kraken\n    \n    output:\n    path(dbname) into ch_krakendb\n    \n    script:\n    dbname = ckdb.toString() - '.tar.gz'\n    \"\"\"\n    tar xvzf $ckdb\n    mkdir -p $dbname\n    mv *.k2d $dbname || echo \"nothing to do\"\n    \"\"\"\n  }",
+        "nb_lignes_process": 13,
+        "string_script": "    dbname = ckdb.toString() - '.tar.gz'\n    \"\"\"\n    tar xvzf $ckdb\n    mkdir -p $dbname\n    mv *.k2d $dbname || echo \"nothing to do\"\n    \"\"\"",
+        "nb_lignes_script": 5,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "comp_kraken"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_krakendb"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [],
+        "when": "",
+        "stub": ""
+    },
+    "kraken": {
+        "name_process": "kraken",
+        "string_process": "\nprocess kraken {\n  tag \"$prefix\"\n  label 'mc_huge'\n  publishDir \"${params.outdir}/metagenomic_classification/kraken\", mode: params.publish_dir_mode\n\n  when:\n  params.run_metagenomic_screening && params.run_bam_filtering && params.bam_unmapped_type == 'fastq' && params.metagenomic_tool == 'kraken'\n\n  input:\n  path(fastq) from ch_input_for_metagenomic_kraken.map { it[7] }\n  path(krakendb) from ch_krakendb\n\n  output:\n  file \"*.kraken.out\" into ch_kraken_out\n  tuple prefix, path(\"*.kraken2_report\") into ch_kraken_report, ch_kraken_for_multiqc\n\n  script:\n  prefix = fastq.baseName\n  out = prefix+\".kraken.out\"\n  kreport = prefix+\".kraken2_report\"\n  kreport_old = prefix+\".kreport\"\n\n  \"\"\"\n  kraken2 --db ${krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport $fastq\n  cut -f1-3,6-8 $kreport > $kreport_old\n  \"\"\"\n}",
+        "nb_lignes_process": 26,
+        "string_script": "  prefix = fastq.baseName\n  out = prefix+\".kraken.out\"\n  kreport = prefix+\".kraken2_report\"\n  kreport_old = prefix+\".kreport\"\n\n  \"\"\"\n  kraken2 --db ${krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport $fastq\n  cut -f1-3,6-8 $kreport > $kreport_old\n  \"\"\"",
+        "nb_lignes_script": 8,
+        "language_script": "bash",
+        "tools": [
+            "Ragout",
+            "kraken2"
+        ],
+        "inputs": [
+            "ch_input_for_metagenomic_kraken",
+            "ch_krakendb"
+        ],
+        "nb_inputs": 2,
+        "outputs": [
+            "ch_kraken_out",
+            "ch_kraken_report",
+            "ch_kraken_for_multiqc"
+        ],
+        "nb_outputs": 3,
+        "name_workflow": "George",
+        "directive": [
+            "tag \"$prefix\"",
+            "label 'mc_huge'",
+            "publishDir \"${params.outdir}/metagenomic_classification/kraken\", mode: params.publish_dir_mode"
+        ],
+        "when": "params.run_metagenomic_screening && params.run_bam_filtering && params.bam_unmapped_type == 'fastq' && params.metagenomic_tool == 'kraken'",
+        "stub": ""
+    },
+    "kraken_parse": {
+        "name_process": "kraken_parse",
+        "string_process": "\nprocess kraken_parse {\n  tag \"$name\"\n  errorStrategy 'ignore'\n\n  input:\n  tuple val(name), path(kraken_r) from ch_kraken_report\n\n  output:\n  path('*_kraken_parsed.csv') into ch_kraken_parsed\n\n  script:\n  read_out = name+\".read_kraken_parsed.csv\"\n  kmer_out =  name+\".kmer_kraken_parsed.csv\"\n  \"\"\"\n  kraken_parse.py -c ${params.metagenomic_min_support_reads} -or $read_out -ok $kmer_out $kraken_r\n  \"\"\"    \n}",
+        "nb_lignes_process": 16,
+        "string_script": "  read_out = name+\".read_kraken_parsed.csv\"\n  kmer_out =  name+\".kmer_kraken_parsed.csv\"\n  \"\"\"\n  kraken_parse.py -c ${params.metagenomic_min_support_reads} -or $read_out -ok $kmer_out $kraken_r\n  \"\"\"",
+        "nb_lignes_script": 4,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_kraken_report"
+        ],
+        "nb_inputs": 1,
+        "outputs": [
+            "ch_kraken_parsed"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "tag \"$name\"",
+            "errorStrategy 'ignore'"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "kraken_merge": {
+        "name_process": "kraken_merge",
+        "string_process": "\nprocess kraken_merge {\n  publishDir \"${params.outdir}/metagenomic_classification/kraken\", mode: params.publish_dir_mode\n\n  input:\n  file csv_count from ch_kraken_parsed.collect()\n\n  output:\n  path('*.csv')\n\n  script:\n  read_out = \"kraken_read_count.csv\"\n  kmer_out = \"kraken_kmer_duplication.csv\"\n  \"\"\"\n  merge_kraken_res.py -or $read_out -ok $kmer_out\n  \"\"\"    \n}",
+        "nb_lignes_process": 15,
+        "string_script": "  read_out = \"kraken_read_count.csv\"\n  kmer_out = \"kraken_kmer_duplication.csv\"\n  \"\"\"\n  merge_kraken_res.py -or $read_out -ok $kmer_out\n  \"\"\"",
+        "nb_lignes_script": 4,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_kraken_parsed"
+        ],
+        "nb_inputs": 1,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "George",
+        "directive": [
+            "publishDir \"${params.outdir}/metagenomic_classification/kraken\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "output_documentation": {
+        "name_process": "output_documentation",
+        "string_process": "\nprocess output_documentation {\n    label 'sc_tiny'\n    publishDir \"${params.outdir}/documentation\", mode: params.publish_dir_mode\n\n    input:\n    file output_docs from ch_output_docs\n    file images from ch_output_docs_images\n\n    output:\n    file \"results_description.html\"\n\n    script:\n    \"\"\"\n    markdown_to_html.py $output_docs -o results_description.html\n    \"\"\"\n}",
+        "nb_lignes_process": 15,
+        "string_script": "    \"\"\"\n    markdown_to_html.py $output_docs -o results_description.html\n    \"\"\"",
+        "nb_lignes_script": 2,
+        "language_script": "bash",
+        "tools": [],
+        "inputs": [
+            "ch_output_docs",
+            "ch_output_docs_images"
+        ],
+        "nb_inputs": 2,
+        "outputs": [],
+        "nb_outputs": 0,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_tiny'",
+            "publishDir \"${params.outdir}/documentation\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "get_software_versions": {
+        "name_process": "get_software_versions",
+        "string_process": "\nprocess get_software_versions {\n  label 'mc_small'\n    publishDir \"${params.outdir}/pipeline_info\", mode: params.publish_dir_mode,\n        saveAs: { filename ->\n                      if (filename.indexOf(\".csv\") > 0) filename\n                      else null\n                }\n\n    output:\n    file 'software_versions_mqc.yaml' into software_versions_yaml\n    file \"software_versions.csv\"\n\n    script:\n    \"\"\"\n    echo $workflow.manifest.version &> v_pipeline.txt\n    echo $workflow.nextflow.version &> v_nextflow.txt\n    \n    fastqc --version &> v_fastqc.txt 2>&1 || true\n    AdapterRemoval --version  &> v_adapterremoval.txt 2>&1 || true\n    fastp --version &> v_fastp.txt 2>&1 || true\n    bwa &> v_bwa.txt 2>&1 || true\n    circulargenerator --help | head -n 1 &> v_circulargenerator.txt 2>&1 || true\n    samtools --version &> v_samtools.txt 2>&1 || true\n    dedup -v &> v_dedup.txt 2>&1 || true\n    ## bioconda recipe of picard is incorrectly set up and extra warning made with stderr, this ugly command ensures only version exported\n    ( exec 7>&1; picard MarkDuplicates --version 2>&1 >&7 | grep -v '/' >&2 ) 2> v_markduplicates.txt || true\n    qualimap --version &> v_qualimap.txt 2>&1 || true\n    preseq &> v_preseq.txt 2>&1 || true\n    gatk --version 2>&1 | head -n 1 > v_gatk.txt 2>&1 || true\n    gatk3 --version 2>&1 | head -n 1 > v_gatk3.txt 2>&1 || true\n    freebayes --version &> v_freebayes.txt 2>&1 || true\n    bedtools --version &> v_bedtools.txt 2>&1 || true\n    damageprofiler --version &> v_damageprofiler.txt 2>&1 || true\n    bam --version &> v_bamutil.txt 2>&1 || true\n    pmdtools --version &> v_pmdtools.txt 2>&1 || true\n    angsd -h |& head -n 1 | cut -d ' ' -f3-4 &> v_angsd.txt 2>&1 || true \n    multivcfanalyzer --help | head -n 1 &> v_multivcfanalyzer.txt 2>&1 || true\n    malt-run --help |& tail -n 3 | head -n 1 | cut -f 2 -d'(' | cut -f 1 -d ',' &> v_malt.txt 2>&1 || true\n    MaltExtract --help | head -n 2 | tail -n 1 &> v_maltextract.txt 2>&1 || true\n    multiqc --version &> v_multiqc.txt 2>&1 || true\n    vcf2genome -h |& head -n 1 &> v_vcf2genome.txt || true\n    mtnucratio --help &> v_mtnucratiocalculator.txt || true\n    sexdeterrmine --version &> v_sexdeterrmine.txt || true\n    kraken2 --version | head -n 1 &> v_kraken.txt || true\n    endorS.py --version &> v_endorSpy.txt || true\n    pileupCaller --version &> v_sequencetools.txt 2>&1 || true\n    bowtie2 --version | grep -a 'bowtie2-.* -fdebug' > v_bowtie2.txt || true\n    eigenstrat_snp_coverage --version | cut -d ' ' -f2 >v_eigenstrat_snp_coverage.txt || true\n    mapDamage --version > v_mapdamage.txt || true\n    bbduk.sh | grep 'Last modified' | cut -d ' ' -f 3-99 > v_bbduk.txt || true\n    bcftools --version | grep 'bcftools' | cut -d ' ' -f 2 > v_bcftools.txt || true\n    scrape_software_versions.py &> software_versions_mqc.yaml\n    \"\"\"\n}",
+        "nb_lignes_process": 53,
+        "string_script": "    \"\"\"\n    echo $workflow.manifest.version &> v_pipeline.txt\n    echo $workflow.nextflow.version &> v_nextflow.txt\n    \n    fastqc --version &> v_fastqc.txt 2>&1 || true\n    AdapterRemoval --version  &> v_adapterremoval.txt 2>&1 || true\n    fastp --version &> v_fastp.txt 2>&1 || true\n    bwa &> v_bwa.txt 2>&1 || true\n    circulargenerator --help | head -n 1 &> v_circulargenerator.txt 2>&1 || true\n    samtools --version &> v_samtools.txt 2>&1 || true\n    dedup -v &> v_dedup.txt 2>&1 || true\n    ## bioconda recipe of picard is incorrectly set up and extra warning made with stderr, this ugly command ensures only version exported\n    ( exec 7>&1; picard MarkDuplicates --version 2>&1 >&7 | grep -v '/' >&2 ) 2> v_markduplicates.txt || true\n    qualimap --version &> v_qualimap.txt 2>&1 || true\n    preseq &> v_preseq.txt 2>&1 || true\n    gatk --version 2>&1 | head -n 1 > v_gatk.txt 2>&1 || true\n    gatk3 --version 2>&1 | head -n 1 > v_gatk3.txt 2>&1 || true\n    freebayes --version &> v_freebayes.txt 2>&1 || true\n    bedtools --version &> v_bedtools.txt 2>&1 || true\n    damageprofiler --version &> v_damageprofiler.txt 2>&1 || true\n    bam --version &> v_bamutil.txt 2>&1 || true\n    pmdtools --version &> v_pmdtools.txt 2>&1 || true\n    angsd -h |& head -n 1 | cut -d ' ' -f3-4 &> v_angsd.txt 2>&1 || true \n    multivcfanalyzer --help | head -n 1 &> v_multivcfanalyzer.txt 2>&1 || true\n    malt-run --help |& tail -n 3 | head -n 1 | cut -f 2 -d'(' | cut -f 1 -d ',' &> v_malt.txt 2>&1 || true\n    MaltExtract --help | head -n 2 | tail -n 1 &> v_maltextract.txt 2>&1 || true\n    multiqc --version &> v_multiqc.txt 2>&1 || true\n    vcf2genome -h |& head -n 1 &> v_vcf2genome.txt || true\n    mtnucratio --help &> v_mtnucratiocalculator.txt || true\n    sexdeterrmine --version &> v_sexdeterrmine.txt || true\n    kraken2 --version | head -n 1 &> v_kraken.txt || true\n    endorS.py --version &> v_endorSpy.txt || true\n    pileupCaller --version &> v_sequencetools.txt 2>&1 || true\n    bowtie2 --version | grep -a 'bowtie2-.* -fdebug' > v_bowtie2.txt || true\n    eigenstrat_snp_coverage --version | cut -d ' ' -f2 >v_eigenstrat_snp_coverage.txt || true\n    mapDamage --version > v_mapdamage.txt || true\n    bbduk.sh | grep 'Last modified' | cut -d ' ' -f 3-99 > v_bbduk.txt || true\n    bcftools --version | grep 'bcftools' | cut -d ' ' -f 2 > v_bcftools.txt || true\n    scrape_software_versions.py &> software_versions_mqc.yaml\n    \"\"\"",
+        "nb_lignes_script": 39,
+        "language_script": "bash",
+        "tools": [
+            "FastQC",
+            "fastPHASE",
+            "BWA",
+            "SAMtools",
+            "Picard",
+            "QualiMap",
+            "preseq",
+            "GATK",
+            "FreeBayes",
+            "BEDTools",
+            "BaMM",
+            "ANGSD",
+            "MultiQC",
+            "kraken2",
+            "Rbowtie2",
+            "MapDamage",
+            "BCFtools"
+        ],
+        "inputs": [],
+        "nb_inputs": 0,
+        "outputs": [
+            "software_versions_yaml"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'mc_small'",
+            "publishDir \"${params.outdir}/pipeline_info\", mode: params.publish_dir_mode , saveAs: { filename -> if (filename.indexOf(\".csv\") > 0) filename else null }"
+        ],
+        "when": "",
+        "stub": ""
+    },
+    "multiqc": {
+        "name_process": "multiqc",
+        "string_process": "\nprocess multiqc {\n    label 'sc_medium'\n\n    publishDir \"${params.outdir}/multiqc\", mode: params.publish_dir_mode\n\n    input:\n    file multiqc_config from ch_multiqc_config\n    file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])\n    file software_versions_mqc from software_versions_yaml.collect().ifEmpty([])\n    file logo from ch_eager_logo\n    file ('fastqc_raw/*') from ch_prefastqc_for_multiqc.collect().ifEmpty([])\n    path('fastqc/*') from ch_fastqc_after_clipping.collect().ifEmpty([])\n    file ('adapter_removal/*') from ch_adapterremoval_logs.collect().ifEmpty([])\n    file ('mapping/bt2/*') from ch_bt2_for_multiqc.collect().ifEmpty([])\n    file ('flagstat/*') from ch_flagstat_for_multiqc.collect().ifEmpty([])\n    file ('flagstat_filtered/*') from ch_bam_filtered_flagstat_for_multiqc.collect().ifEmpty([])\n    file ('preseq/*') from ch_preseq_for_multiqc.collect().ifEmpty([])\n    file ('damageprofiler/dmgprof*/*') from ch_damageprofiler_results.collect().ifEmpty([])\n    file ('qualimap/qualimap*/*') from ch_qualimap_results.collect().ifEmpty([])\n    file ('markdup/*') from ch_markdup_results_for_multiqc.collect().ifEmpty([])\n    file ('dedup*/*') from ch_dedup_results_for_multiqc.collect().ifEmpty([])\n    file ('fastp/*') from ch_fastp_for_multiqc.collect().ifEmpty([])\n    file ('sexdeterrmine/*') from ch_sexdet_for_multiqc.collect().ifEmpty([])\n    file ('mutnucratio/*') from ch_mtnucratio_for_multiqc.collect().ifEmpty([])\n    file ('endorspy/*') from ch_endorspy_for_multiqc.collect().ifEmpty([])\n    file ('multivcfanalyzer/*') from ch_multivcfanalyzer_for_multiqc.collect().ifEmpty([])\n    file ('fastp_lowcomplexityfilter/*') from ch_metagenomic_complexity_filter_for_multiqc.collect().ifEmpty([])\n    file ('malt/*') from ch_malt_for_multiqc.collect().ifEmpty([])\n    file ('kraken/*') from ch_kraken_for_multiqc.collect().ifEmpty([])\n    file ('hops/*') from ch_hops_for_multiqc.collect().ifEmpty([])\n    file ('nuclear_contamination/*') from ch_nuclear_contamination_for_multiqc.collect().ifEmpty([])\n    file ('genotyping/*') from ch_eigenstrat_snp_cov_for_multiqc.collect().ifEmpty([])\n    file ('bcftools_stats') from ch_bcftools_stats_for_multiqc.collect().ifEmpty([])\n    file workflow_summary from ch_workflow_summary.collectFile(name: \"workflow_summary_mqc.yaml\")\n\n    output:\n    file \"*multiqc_report.html\" into ch_multiqc_report\n    file \"*_data\"\n\n    script:\n    rtitle = ''\n    rfilename = ''\n    if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {\n        rtitle = \"--title \\\"${workflow.runName}\\\"\"\n        rfilename = \"--filename \" + workflow.runName.replaceAll('\\\\W','_').replaceAll('_+','_') + \"_multiqc_report\"\n    }\n    \n    def custom_config_file = params.multiqc_config ? \"--config $mqc_custom_config\" : ''\n    \"\"\"\n    multiqc -f $rtitle $rfilename $multiqc_config $custom_config_file .\n    \"\"\"\n}",
+        "nb_lignes_process": 51,
+        "string_script": "    rtitle = ''\n    rfilename = ''\n    if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {\n        rtitle = \"--title \\\"${workflow.runName}\\\"\"\n        rfilename = \"--filename \" + workflow.runName.replaceAll('\\\\W','_').replaceAll('_+','_') + \"_multiqc_report\"\n    }\n    \n    def custom_config_file = params.multiqc_config ? \"--config $mqc_custom_config\" : ''\n    \"\"\"\n    multiqc -f $rtitle $rfilename $multiqc_config $custom_config_file .\n    \"\"\"",
+        "nb_lignes_script": 10,
+        "language_script": "bash",
+        "tools": [
+            "MultiQC"
+        ],
+        "inputs": [
+            "ch_multiqc_config",
+            "ch_multiqc_custom_config",
+            "software_versions_yaml",
+            "ch_eager_logo",
+            "ch_prefastqc_for_multiqc",
+            "ch_fastqc_after_clipping",
+            "ch_adapterremoval_logs",
+            "ch_bt2_for_multiqc",
+            "ch_flagstat_for_multiqc",
+            "ch_bam_filtered_flagstat_for_multiqc",
+            "ch_preseq_for_multiqc",
+            "ch_damageprofiler_results",
+            "ch_qualimap_results",
+            "ch_markdup_results_for_multiqc",
+            "ch_dedup_results_for_multiqc",
+            "ch_fastp_for_multiqc",
+            "ch_sexdet_for_multiqc",
+            "ch_mtnucratio_for_multiqc",
+            "ch_endorspy_for_multiqc",
+            "ch_multivcfanalyzer_for_multiqc",
+            "ch_metagenomic_complexity_filter_for_multiqc",
+            "ch_malt_for_multiqc",
+            "ch_kraken_for_multiqc",
+            "ch_hops_for_multiqc",
+            "ch_nuclear_contamination_for_multiqc",
+            "ch_eigenstrat_snp_cov_for_multiqc",
+            "ch_bcftools_stats_for_multiqc",
+            "ch_workflow_summary"
+        ],
+        "nb_inputs": 28,
+        "outputs": [
+            "ch_multiqc_report"
+        ],
+        "nb_outputs": 1,
+        "name_workflow": "George",
+        "directive": [
+            "label 'sc_medium'",
+            "publishDir \"${params.outdir}/multiqc\", mode: params.publish_dir_mode"
+        ],
+        "when": "",
+        "stub": ""
+    }
+}
