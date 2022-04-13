@@ -10,16 +10,16 @@ sudo python3 setup.py install
 ```
 NFanalyzer 'address/to_folder/to_workflow' 'address/to_save' --name 'New_Analysis' --mode 'single'
 ```
-![Example](Pictures/1.png){width=450}
+![Example](Pictures/1.png)
 
 * Single mode (DSL1 workflow) : 
 ```
 NFanalyzer 'address/to_folder/to_workflow' 'address/to_save' --name 'New_Analysis' --mode 'single'
 ```
-![Example](Pictures/2.png){width=450}
+![Example](Pictures/2.png)
 
 * Multi mode :
 ```
 NFanalyzer 'address/to_folder/to_workflows' 'address/to_save' --name 'New_Analysis' --mode 'multi'
 ```
-![Example](Pictures/3.png){width=450}
+![Example](Pictures/3.png)
