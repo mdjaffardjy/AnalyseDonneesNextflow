@@ -1,6 +1,6 @@
 # ProSim
 
-In this repository is presented the tool __ProSim__, which allows users to compare processes (in the forme of a json file : output of __Nextflow Analyzer__) folowing different hypotheses. These different hypotheses are presente in the [Jupyter notebook](mesure_similarity.ipynb).
+In this directory is presented the tool __ProSim__, which allows users to compare processes (in the forme of a json file : output of __Nextflow Analyzer__) folowing different hypotheses. These different hypotheses are presente in the [Jupyter notebook](mesure_similarity.ipynb).
 
 The results of __Prosim__ are presented in different _csv(s)_ files in the form of matrixes.
 
