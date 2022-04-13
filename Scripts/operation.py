@@ -234,6 +234,17 @@ class Operation:
             self.origin= self.origin.remove(t)
         print(self.origin)
     
+    #Sometimes users modify a channel such as c.map{...}.set(c)
+    #Creates a loop because c is in the origin and gives -> we want to remove this 
+    #We only want it be in the gives
+    def simplify_gives_origin(self):
+        to_remove=[]
+        for o in self.origin:
+            if o in self.gives:
+                to_remove.append(o)
+        for o in to_remove:
+            self.origin.remove(o)
+    
 
     def initialise_operation(self):
         if(not self.intia):
@@ -248,6 +259,7 @@ class Operation:
                 self.check_factory()
             else:
                 self.extract_affectation()
+            self.simplify_gives_origin()
             self.intia=True
         #self.check_same_value()
 
