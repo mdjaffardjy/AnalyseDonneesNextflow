@@ -6,6 +6,9 @@ sudo python3 setup.py install
 ```
 
 ## To run :
+
+See [here](Docs/Examples%20Nextflow%20Analyzer.pdf) for a more explicit explanation on how to run the analyzer
+
 * Single mode (DSL1 workflow) : 
 ```
 NFanalyzer 'address/to_folder/to_workflow' 'address/to_save' --name 'New_Analysis' --mode 'single'
