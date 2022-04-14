@@ -133,6 +133,11 @@ def main():
                         print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
                         workflow_DSL1_not_analyzed+=1
                         workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
+                    #Error in operation 'loop'
+                    elif (str(inst) in "was found in the origin and gives of the operartion"):
+                        print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
+                        workflow_DSL1_not_analyzed+=1
+                        workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
                     #Unknown Error 
                     else:
                         print('\x1b[1;37;41m' + f"Couldn't analyse Workflow : {str(inst)}"+ '\x1b[0m')
@@ -171,6 +176,11 @@ def main():
                         print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
                         workflow_DSL2_not_analyzed+=1
                         workflow_DSL2_not_analyzed_tab.append([f, str(inst)])
+                    #Error in operation 'loop'
+                    elif (str(inst) in "was found in the origin and gives of the operartion"):
+                        print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
+                        workflow_DSL1_not_analyzed+=1
+                        workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
                     #Unknown Error 
                     else:
                         print('\x1b[1;37;41m' + f"Couldn't analyse Workflow : {str(inst)}"+ '\x1b[0m')

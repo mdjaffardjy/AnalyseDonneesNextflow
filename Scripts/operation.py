@@ -2,6 +2,7 @@
 # Written by Clémence Sebe and George Marchment
 # October 2021 - April 2022
 
+from logging import raiseExceptions
 import re
 
 # P for Pointer -> like the name of the variable
@@ -236,14 +237,14 @@ class Operation:
     
     #Sometimes users modify a channel such as c.map{...}.set(c)
     #Creates a loop because c is in the origin and gives -> we want to remove this 
-    #We only want it be in the gives
-    def simplify_gives_origin(self):
-        to_remove=[]
+    #Channels shoudn't be able to be modified
+    #So we raise an error
+    def check_gives_origin(self):
+        if(self.full_string==None):
+            self.full_string = self.string
         for o in self.origin:
             if o in self.gives:
-                to_remove.append(o)
-        for o in to_remove:
-            self.origin.remove(o)
+                raise Exception(f'"{o[0]}" was found in the origin and gives of the operartion "{self.full_string}"')
     
 
     def initialise_operation(self):
@@ -259,7 +260,7 @@ class Operation:
                 self.check_factory()
             else:
                 self.extract_affectation()
-            self.simplify_gives_origin()
+            self.check_gives_origin()
             self.intia=True
         #self.check_same_value()
 
