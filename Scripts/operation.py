@@ -244,7 +244,7 @@ class Operation:
             self.full_string = self.string
         for o in self.origin:
             if o in self.gives:
-                raise Exception(f'"{o[0]}" was found in the origin and gives of the operartion "{self.full_string}"')
+                raise Exception(f'"{o[0]}" was found in the origin and gives of the operartion "{self.full_string}" 6')
     
 
     def initialise_operation(self):

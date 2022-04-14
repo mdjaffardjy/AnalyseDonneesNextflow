@@ -455,7 +455,7 @@ class Process:
         if len(self.process_work) != 0:
             #print("ERROR in ", self.name , " - Something is wrong ! - self.process_work is not empty : ", self.process_work)
             #Exception(f"COULDN'T ANALYZE THE PROCESS : {self.name}")
-            raise Exception(f"Couldn't analyze the process : {self.name}")
+            raise Exception(f"Couldn't analyze the process : {self.name} 7")
             #raise Exception(f"Couldn't analyze the process")
             self.allAnalyse = False
 
