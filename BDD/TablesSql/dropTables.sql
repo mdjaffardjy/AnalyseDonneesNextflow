@@ -1,18 +1,16 @@
 DROP TABLE topic_wf CASCADE; 
 
+DROP TABLE wf_nextflow CASCADE;
+
 DROP TABLE contributor CASCADE; 
 
 DROP TABLE person_git_comp CASCADE; 
 
 DROP TABLE similarity_process CASCADE; 
 
-DROP TABLE channel CASCADE; 
+DROP TABLE link_process_channel CASCADE;  
 
-DROP TABLE process_have_channel CASCADE;  
-
-DROP TABLE operation_wf CASCADE; 
-
-DROP TABLE channel_have_operation CASCADE;  
+DROP TABLE link_channel_operation CASCADE;
 
 DROP TABLE tools_have_topic CASCADE; 
 
@@ -32,6 +30,10 @@ DROP TABLE operation_tool CASCADE;
 
 DROP TABLE tool CASCADE; 
 
+DROP TABLE channel CASCADE; 
+
+DROP TABLE operation_wf CASCADE; 
+
 DROP TABLE process CASCADE; 
 
 DROP TABLE workflow CASCADE; 
@@ -41,6 +43,8 @@ DROP TABLE person_git CASCADE;
 ------------------------------------
 
 drop type type_system CASCADE; 
+
+drop type type_dsl;
 
 drop type type_p CASCADE;
 

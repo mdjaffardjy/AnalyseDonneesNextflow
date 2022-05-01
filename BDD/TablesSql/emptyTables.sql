@@ -1,18 +1,16 @@
 DELETE FROM topic_wf; 
 
+DELETE FROM wf_nextflow;
+
 DELETE FROM contributor; 
 
 DELETE FROM person_git_comp; 
 
 DELETE FROM similarity_process; 
 
-DELETE FROM channel; 
+DELETE FROM link_process_channel; 
 
-DELETE FROM process_have_channel; 
-
-DELETE FROM operation_wf; 
-
-DELETE FROM channel_have_operation; 
+DELETE FROM link_channel_operation; 
 
 DELETE FROM tools_have_topic; 
 
@@ -31,6 +29,10 @@ DELETE FROM tools_have_operation;
 DELETE FROM operation_tool; 
 
 DELETE FROM tool; 
+
+DELETE FROM channel;
+
+DELETE FROM operation_wf; 
 
 DELETE FROM process; 
 

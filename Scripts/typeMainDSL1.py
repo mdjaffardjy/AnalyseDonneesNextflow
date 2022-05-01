@@ -3,6 +3,7 @@
 # October 2021 - April 2022
 
 import re
+from typing import get_origin
 import graphviz
 
 from .typeMain import * 
@@ -400,12 +401,22 @@ class TypeMainDSL1(TypeMain):
     #Method that saves the operations
     def save_operations(self, name='operations_extracted'):
         myText = open(name+'.nf','w')
+        dict = {}
         for c in self.operations:
             #myText.write(str(c.get_gives())+' <- '+c.get_string()+'\n\n')
             myText.write(c.get_id()+ ' string : '+c.get_full_string()+'\n')
             myText.write(c.get_id()+' origin : '+  str(c.get_origin())+'\n')
             myText.write(c.get_id() +' gives  : '+  str(c.get_gives())+'\n\n\n')
+
+            dict[c.get_id()] = {}
+            dict[c.get_id()]['string'] = c.get_full_string()
+            dict[c.get_id()]['origin'] = c.get_origin()
+            dict[c.get_id()]['gives'] = c.get_gives() 
+
         myText.close()
+
+        with open(name+'.json', "w") as outfile:
+            json.dump(dict, outfile, indent=4)
 
     #Return the sting of the formated operations
     def get_operations_formated(self):

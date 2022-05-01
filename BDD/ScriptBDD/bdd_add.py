@@ -3,9 +3,10 @@ from .bdd_person import *
 from .bdd_workflow import *
 from .bdd_process import *
 from .bdd_tools import *
-import glob2
+from .bdd_channel import *
+from .bdd_operation import * 
 
-def addGlobalInformation(name_wf,tabAdressJson,cur,conn):
+def addGlobalInformation(name_wf,tabAdressJson, dsl,cur,conn):
     """
     In this fonction : add the global information on a workflow
     Information extract from github
@@ -63,6 +64,8 @@ def addGlobalInformation(name_wf,tabAdressJson,cur,conn):
     info_workflow['system_wf'] =wf[name_wf]['languages']
     info_workflow['archived'] =wf[name_wf]['archived']
 
+    info_workflow['dsl'] = dsl
+
     info_workflow['login_owner_wf'] =wf[name_wf]['owner']
 
     info_workflow['topics'] = wf[name_wf]['topics']
@@ -76,7 +79,7 @@ def addGlobalInformation(name_wf,tabAdressJson,cur,conn):
     return idWf
 
 # -----------------------------------------------------
-def addWorkflowExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
+def addProcessExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
     with open('processes_info.json') as json_processes:
         process = json.load(json_processes)
     
@@ -99,6 +102,13 @@ def addWorkflowExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
         proc = ProcessBD(info_process, idWf)
         id_proc = proc.insertBDProcess(cur)
 
+        channel = {}
+        channel['inputs'] = process[p]['inputs']
+        channel['outputs'] = process[p]['outputs']
+
+        cha = ChannelBD(channel, id_proc, idWf)
+        cha.insertBDChannel(cur)
+
 
         temp = process[p]
         key = str(idWf) + "/" + str(id_proc)
@@ -107,6 +117,22 @@ def addWorkflowExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
     
     conn.commit()
     return dicoAllProcess
+
+# ---------------------------------------------------------------------------------------------------------------------
+def addOperation(idWf,cur,conn):
+    with open('operations_extracted.json') as json_ope:
+        operation = json.load(json_ope)
+
+    for o in operation:
+        ope = {}
+        ope['string'] = operation[o]['string']
+        ope['origin'] = operation[o]['origin']
+        ope['gives'] = operation[o]['gives'] 
+
+        oo = OperationBD(ope, idWf)
+        oo.insertBDOperation(cur)
+        
+    conn.commit()
 
 # ---------------------------------------------------------------------------------------------------------------------
 def addTools(name_wf,idWf,cur,conn):

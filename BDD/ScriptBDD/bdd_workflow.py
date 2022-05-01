@@ -19,6 +19,11 @@ class WorkflowBD:
         self.system_wf = info_workflow['system_wf'] 
         self.archived  = info_workflow['archived'] 
 
+        if info_workflow['dsl'] != 0:
+            self.dsl = str(info_workflow['dsl'])
+        else:
+            self.dsl = None
+
         self.login_owner_wf = info_workflow['login_owner_wf']
 
         self.topics = info_workflow['topics']
@@ -49,6 +54,7 @@ class WorkflowBD:
             for l in self.system_wf:
                 if l == 'Nextflow':
                     language = 'Nextflow'
+            
             #add in the database
             requete = f"""
                     INSERT INTO workflow 
@@ -70,9 +76,27 @@ class WorkflowBD:
                             'dateJ':datetime.date(int(dateJ[0]), int(dateJ[1]), int(dateJ[2])),
                             'description':self.description_wf, 'nbF':self.nb_forks, 'nbStars':self.nb_stars, 
                             'nbW':self.nb_watchers,'nbS':self.nb_subscribers, 'system': language,
-                            'archived':self.archived, 'login':self.login_owner_wf})
+                            'archived':self.archived,'login':self.login_owner_wf})
             #extract the id of the wf
             idWf = cur.fetchone()[0]
+
+
+            if self.dsl != None:
+                #if we know the structure (14avril : if dsl1 + Nextflow) -> to change later
+                if self.dsl == '1':
+                    with open("structure_worklow", 'r') as struct:
+                        structure = struct.read()
+                else:
+                    structure = ''
+
+                #add the dsl 1 or 2 and structure for nextflow wf
+                requete = f"""
+                        INSERT INTO wf_nextflow
+                        (id_wf, dsl, structure)
+                        VALUES
+                        (%(idW)s, %(dsl)s, %(struct)s)
+                        """
+                cur.execute(requete, {'idW':idWf, 'dsl':self.dsl, 'struct':structure})
 
             #create the table topics and had information
             for t in self.topics:

@@ -45,6 +45,7 @@ CREATE TABLE person_git_comp (
 -- Enum about the wf system
 CREATE TYPE type_system AS ENUM ('Nextflow', 'SnakeMake');
 
+
 CREATE TABLE workflow (
     name_full VARCHAR(200),   -- name of the owner + / + name of the workflow
     id_wf INT,                -- auto-increment 
@@ -72,6 +73,21 @@ CREATE TABLE workflow (
     CONSTRAINT unique_git_url UNIQUE (git_url),
     CONSTRAINT fk_wf_owner FOREIGN KEY (login_owner_wf) REFERENCES person_git(login_git)
 );
+
+/************************************************************************
+ * Table wf_Nextflow : dsl 1 or 2 + structure if we know
+ ************************************************************************
+*/
+CREATE TYPE type_dsl AS ENUM ('1','2');
+
+CREATE TABLE wf_nextflow(
+    id_wf INT,        -- id of the wf
+    dsl type_dsl,     -- to know if the dsl is written in dsl 1 or 2
+    structure TEXT,   -- if we know the text of the wf structure (dsl1 in Nextflow)
+    CONSTRAINT pk_wf_nextflow PRIMARY KEY (id_wf)
+);
+
+-- Same for snakemake with just the structure
 
 /* Sequence pour id automatique id of the worflow */
 CREATE SEQUENCE seq_id_wf START WITH 1 INCREMENT BY 1;
@@ -153,10 +169,10 @@ CREATE TYPE type_kind AS ENUM ('input', 'output');
 CREATE TYPE type_c AS ENUM ('P', 'A', 'V', 'S');
 
 CREATE TABLE channel (
-    id_channel INT,            -- id of the channel (auto-increment)
-    string_channel VARCHAR(100),  -- string of the channel
-    type_channel type_c,          -- the channel is a pointer (P), a value (V), an adress (A) or a query for the NCBI SRA (S)
-    kind_channel type_kind,       -- if the channel is used to be as an input of a process or an output    
+    id_channel INT,             -- id of the channel (auto-increment)
+    name_channel VARCHAR(1000),  -- name of the channel
+    id_in_wf INT,               -- id of the wf
+    type_channel type_c,        -- the channel is a pointer (P), a value (V), an adress (A) or a query for the NCBI SRA (S) or Null if we don't know
 
     CONSTRAINT pk_channel PRIMARY KEY (id_channel)
 );
@@ -168,11 +184,12 @@ CREATE SEQUENCE seq_id_channel START WITH 1 INCREMENT BY 1;
  * Table process_have_channel : 
  ************************************************************************
 */
-CREATE TABLE process_have_channel(
-    id_proc INT,     -- id of the process
-    id_channel INT,  -- id of the channel 
+CREATE TABLE link_process_channel(
+    id_proc INT,             -- id of the process
+    id_channel INT,          -- id of the channel 
+    kind_channel type_kind,  -- if the channel is used to be as an input of a process or an output    
 
-    CONSTRAINT pk_process_have_channel PRIMARY KEY (id_proc, id_channel), 
+    CONSTRAINT pk_process_have_channel PRIMARY KEY (id_proc, id_channel, kind_channel), 
     CONSTRAINT fk_id_proc FOREIGN KEY(id_proc) REFERENCES process(id_process),
     CONSTRAINT fk_id_channel FOREIGN KEY(id_channel) REFERENCES channel(id_channel)
 );
@@ -190,9 +207,9 @@ CREATE TYPE type_operation AS ENUM ('distinct', 'filter', 'first', 'last', 'rand
                                     'close', 'dump', 'ifEmpty', 'print', 'println', 'set', 'view');  -- other operators
              
 CREATE TABLE operation_wf(
-    id_ope INT,            -- auto increment  
-    id_in_wf INT,             -- id in the wf
-    name_ope type_operation,  -- type of the operation
+    id_ope INT,                -- auto increment  
+    id_in_wf INT,              -- id in the wf
+    string_ope VARCHAR(65000),  -- string of the operation
 
     CONSTRAINT pk_operation_wf PRIMARY KEY (id_ope)
 );
@@ -204,12 +221,12 @@ CREATE SEQUENCE seq_id_operation_wf START WITH 1 INCREMENT BY 1;
  * Table channel_have_operation : 
  ************************************************************************
 */
-CREATE TABLE channel_have_operation(
+CREATE TABLE link_channel_operation(
     id_channel INT,  -- id of the channel
     id_ope INT,      -- id of the operation 
-    kind type_kind,  -- the type of the channel made
+    kind_ope type_kind,  -- the type of the channel made
 
-    CONSTRAINT pk_channel_have_operation PRIMARY KEY (id_channel, id_ope),
+    CONSTRAINT pk_channel_have_operation PRIMARY KEY (id_channel, id_ope, kind_ope),
     CONSTRAINT fk_operation_c FOREIGN KEY(id_ope) REFERENCES operation_wf(id_ope),
     CONSTRAINT fk_channel_o FOREIGN KEY(id_channel) REFERENCES channel(id_channel)
 

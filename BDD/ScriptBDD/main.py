@@ -29,9 +29,18 @@ def main():
 
     parser = argparse.ArgumentParser()
     #Obligatory
-    parser.add_argument('results_directory') #where are the results files
-    parser.add_argument('json_directory')    #xhere are the json with all the informaiton on the wf and the authors
+    parser.add_argument('--system', default='')  #S ou N for Snakemake or Nextflow
+    parser.add_argument('--results_directory', default='') #where are the results files
+    parser.add_argument('--json_directory', default = '')    #where are the json with all the informaiton on the wf and the authors
     args = parser.parse_args() 
+
+    if args.system == '' :
+        raise Exception('\x1b[1;37;41m' + f'The parameter "system" was not given!!'+ '\x1b[0m')
+    if args.results_directory == '':
+        raise Exception('\x1b[1;37;41m' + f'The parameter "results_directory" was not given!!'+ '\x1b[0m')
+    if args.json_directory == '':
+        raise Exception('\x1b[1;37;41m' + f'The parameter "json_directory" was not given!!'+ '\x1b[0m')
+
 
     #give in input the fold where we can find the 2 different json:
     #each json must contain the word : wf or author
@@ -48,10 +57,7 @@ def main():
                     tabAdressJsonGlobalInfo[1] = s
     for i in range (len(tabAdressJsonGlobalInfo)):
         if tabAdressJsonGlobalInfo[i] == '_':
-            try :
-                t = 1/0
-            except :
-                print("One file is missing : ", tabWords[i])
+            raise Exception ("One file is missing : " + tabWords[i])
 
     #Setting the current directory where the results are
     os.chdir(args.results_directory)
@@ -68,6 +74,7 @@ def main():
             if directory != simRepository:
                 listDirectoryResults.append(directory)
 
+
     #attention : ne pas mettre ceux avec 0 d'outils - on garde seulement ceux avec au minimum un outil ds le wf
     wfNoTools = []
 
@@ -77,11 +84,22 @@ def main():
         idx = temp.index('_')
         temp[idx] = '/'
         nameWf = "".join(temp)
-        
-        #print(nameWf)
+   
         print(str(i+1) + "/" + str(len(listDirectoryResults)) + " : " + nameWf)
-        #listFile = os.listdir(listDirectoryResults[i])
+
         os.chdir(listDirectoryResults[i])
+        listFile = os.listdir(listDirectoryResults[i])
+
+        # pour savoir si on travaille sur un wf Nextflow ecrit en dsl1 ou 2 car on a la structure que pour dsl1
+        #si le wf est ecrit en dsl2 on obtient qu'un fichier resultat avec les process extraits
+        if args.system == 'N' and len(listFile) == 1: 
+            dsl = 2
+        #sinon on obtient plusieurs fichiers car on a aussi pu extraire les channels et la structure
+        elif args.system == 'N' and len(listFile) > 1:
+            dsl = 1
+        else:
+            dsl = 0 #snakemake
+        
 
         with open('processes_info.json') as process_json:
             processes = json.load(process_json)
@@ -94,7 +112,7 @@ def main():
         
         if nbTools != 0:
             #add in the Database
-            dicoAllProcess = addInDatabase(tabAdressJsonGlobalInfo, nameWf, dicoAllProcess)
+            dicoAllProcess = addInDatabase(tabAdressJsonGlobalInfo, nameWf, dsl, dicoAllProcess)
         else:
             wfNoTools.append(nameWf)
             #print('No tools in this workflow : don\'t add in the database\n')
