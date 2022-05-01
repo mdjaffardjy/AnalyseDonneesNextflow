@@ -53,14 +53,14 @@ class TypeMainDSL1(TypeMain):
                 elif(self.string[index]=='\n' and get_next_element_caracter(self.string, index)[0]!='.'):
                     return index
             index+=1
-        return index 
+        raise Exception(f"Couldn't find the end of the channel starting at the position {start} 2")
 
     #Returns the operator corresponding to its ID
     def get_operation(self, id):
         for c in self.operations:
             if id== c.get_id():
                 return c
-        raise Exception('Operation not in list of operations')
+        raise Exception('Operation not in list of operations 3')
 
     
     #Function that return the added operators in either a branch or multimap operator 
@@ -318,7 +318,7 @@ class TypeMainDSL1(TypeMain):
                     elif(self.string[match.span(0)[1]-1]=='{'):
                         end= self.get_end_operation(match.span(0)[1], 1, 0)
                     else: 
-                        raise Exception(f"Don't know what i'm looking at, here : {match.span(0)}")
+                        raise Exception(f"Don't know what i'm looking at, here : {match.span(0)} 4")
                     name= 'OPERATION_'+str(index)
                     code= self.string[start:end]
                     self.operations.append(Operation(name, code))
@@ -842,7 +842,7 @@ class TypeMainDSL1(TypeMain):
             self.save_nb_nodes_edges()
 
         else:
-            raise Exception("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies")
+            raise Exception("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies 5")
         
 
 

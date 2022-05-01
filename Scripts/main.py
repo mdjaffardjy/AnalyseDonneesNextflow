@@ -76,6 +76,7 @@ def main():
     elif(args.mode == 'multi'):
         total, workflow_DSL2_analyzed, workflow_DSL2_not_analyzed, workflow_DSL1_analyzed, workflow_DSL1_not_analyzed= 0, 0, 0, 0, 0, 
         workflow_DSL2_analyzed_tab, workflow_DSL2_not_analyzed_tab, workflow_DSL1_analyzed_tab, workflow_DSL1_not_analyzed_tab = [], [], [], []
+        errors = [0, 0, 0, 0]
         print('')
         print('\x1b[7;33;40m' + 'Multiple Workflow analysis mode was selected' + '\x1b[0m')
         print('')
@@ -119,25 +120,35 @@ def main():
                         os.system('rm -f processes_extracted.nf')
                 except Exception as inst:
                     #Error DSL2
-                    if (str(inst) == "Single file is written in DSL2 : I don't know how to analyze this yet"):
+                    if ("Single file is written in DSL2 : I don't know how to analyze this yet" in str(inst)):
                         print('\x1b[1;37;44m' + str(inst) + '\x1b[0m')
                         workflow_DSL2_not_analyzed+=1
                         workflow_DSL2_not_analyzed_tab.append([names[i], str(inst)])
+                        errors[2]+=1
                     #Error not the same number of curlies
-                    elif (str(inst) == "WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies"):
+                    elif ("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies" in str(inst)):
                         print('\x1b[1;37;45m' + f"Not the same number of open and closing curlies in Workflow : I don't know how to analyze the workflow yet"+ '\x1b[0m')
                         workflow_DSL1_not_analyzed+=1
                         workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
+                        errors[0]+=1
                     #Error with a process
-                    elif (str(inst)[:28] == "Couldn't analyze the process"):
+                    elif ("Couldn't analyze the process" in str(inst)):
                         print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
                         workflow_DSL1_not_analyzed+=1
                         workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
+                        errors[1]+=1
+                    #Error in operation 'loop'
+                    elif ("was found in the origin and gives of the operartion" in str(inst)):
+                        print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
+                        workflow_DSL1_not_analyzed+=1
+                        workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
+                        errors[3]+=1
                     #Unknown Error 
                     else:
                         print('\x1b[1;37;41m' + f"Couldn't analyse Workflow : {str(inst)}"+ '\x1b[0m')
                         workflow_DSL1_not_analyzed+=1
                         workflow_DSL1_not_analyzed_tab.append([names[i], str(inst)])
+                        errors[1]+=1
                 print('')
             
             
@@ -162,12 +173,12 @@ def main():
                     workflow_DSL2_analyzed_tab.append(f)
                 except Exception as inst:
                     #Error not the same number of curlies
-                    if (str(inst) == "WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies"):
+                    if ("WHEN A CURLY OPENS IT NEEDS TO BE CLOSED! : Didn't find the same number of open curlies then closing curlies" in str(inst)):
                         print('\x1b[1;37;45m' + f"Not the same number of open and closing curlies in Workflow : I don't know how to analyze the workflow yet"+ '\x1b[0m')
                         workflow_DSL2_not_analyzed+=1
                         workflow_DSL2_not_analyzed_tab.append([f, str(inst)])
                     #Error with a process
-                    elif (str(inst)[:28] == "Couldn't analyze the process"):
+                    elif ("Couldn't analyze the process" in str(inst)):
                         print('\x1b[1;37;46m' +str(inst)+ '\x1b[0m')
                         workflow_DSL2_not_analyzed+=1
                         workflow_DSL2_not_analyzed_tab.append([f, str(inst)])
@@ -190,7 +201,12 @@ def main():
             s+= f'{workflow_DSL1_analyzed} DSL1_analyzed\n'
             s+= f'{workflow_DSL1_not_analyzed} DSL1_not_analyzed\n'
             s+= f'{workflow_DSL2_analyzed} DSL2_analyzed\n'
-            s+= f'{workflow_DSL2_not_analyzed} DSL2_not_analyzed'
+            s+= f'{workflow_DSL2_not_analyzed} DSL2_not_analyzed\n\n'
+
+            s+= f"{errors[0]} of the workflow_DSL1_not_analyzed was because there wasn't the number of open and closing curlies\n"
+            s+= f"{errors[2]} of the workflows are written in DSL2 but were given as DSL1\n"
+            s+= f"{errors[3]} of the workflow_DSL1_not_analyzed was because there were channels that had 'loops'\n"
+            s+= f"{errors[1]} of the workflow_DSL1_not_analyzed was because the analyzer couldn't analyze the workflow\n"
   
             myText = open('summary'+'.txt','w')
             myText.write(s)
