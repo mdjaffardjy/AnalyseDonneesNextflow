@@ -80,5 +80,3 @@ class OperationBD:
         #Add link between channel and ope
         add(self.origin, 'input', idO, self.idWf, cur)
         add(self.gives, 'output', idO, self.idWf, cur)
-
-#pour retrouver le channel on a nom + idWf

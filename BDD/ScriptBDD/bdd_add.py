@@ -83,8 +83,8 @@ def addProcessExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
     with open('processes_info.json') as json_processes:
         process = json.load(json_processes)
     
-    """with open('channels_extracted.json') as json_channels:
-        channel = json.load(json_channels)"""
+    with open('channels_extracted.json') as json_channels:
+        channel = json.load(json_channels)
 
     for p in process:
         info_process = {}

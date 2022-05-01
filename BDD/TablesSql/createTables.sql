@@ -87,8 +87,6 @@ CREATE TABLE wf_nextflow(
     CONSTRAINT pk_wf_nextflow PRIMARY KEY (id_wf)
 );
 
--- Same for snakemake with just the structure
-
 /* Sequence pour id automatique id of the worflow */
 CREATE SEQUENCE seq_id_wf START WITH 1 INCREMENT BY 1;
 
