@@ -168,8 +168,8 @@ def H_5_1(p1, p2):
 
 #Hypothèse 5.2 : Similarité entre nb d'output
 def H_5_2(p1, p2):
-    num = abs(p1['nb_inputs'] - p2['nb_inputs'])
-    denum = max(max(p1['nb_inputs'], p2['nb_inputs']), 1)
+    num = abs(p1['nb_outputs'] - p2['nb_outputs'])
+    denum = max(max(p1['nb_outputs'], p2['nb_outputs']), 1)
     return 1 - num/denum
 
 #Mesure euclidienne
