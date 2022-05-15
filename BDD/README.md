@@ -10,10 +10,10 @@ To install and run this tool, you first need to be __in this directory__.
 
 ### <ins>Postgrsql Connection file configuration</ins> :
 
-This file is located in the [resources](/resources/) folder. How find the information to complete the documentation :
+This file is located in the [resources](/BDD/resources/) folder. How find the information to complete the documentation :
 
-* In a terminal go on your Postgresql database 
-* Then tap the command : ```\conninfo```
+* In a terminal open a postgresql session: ```psql```
+* Then type the command: ```\conninfo```
 * To finish, put your parameters in the config file and add your password.
 
 ![Example](Pictures/1.png)

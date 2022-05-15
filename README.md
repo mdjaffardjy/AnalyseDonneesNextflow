@@ -7,7 +7,7 @@ In this repository are presented multiple tools :
 
 - The main one __Nextflow analyzer__ allows users to extract information (info on processes or and the structure) of a single or multiple Nextflow workflows. This tool is found here at the root.
 - The second one __ProSim__ allows users to compare processes following different hypotheses, it is presented and is found [here](/Analysis/Similarity%20Processes/) 
-- The final one  __AddInDatabase__ allows users to add in a Postgresql database all the information about a workflow, it is presented and is found [here](/BDD/)
+- The last one  __AddInDatabase__ allows users to add in a Postgresql database all the information about a workflow, it is presented and is found [here](/BDD/)
 
 Main contributors are: 
 - [Clémence Sebe](https://github.com/ClemenceS)
