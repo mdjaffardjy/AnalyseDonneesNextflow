@@ -1,6 +1,6 @@
 [POSTGRESQL]
-dbname=clemence
-user=clemence
+dbname=xxx
+user=xxx
 password=xxx
-host=/var/run/postgresql
+host=xxx
 port=5432
