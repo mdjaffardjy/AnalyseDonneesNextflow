@@ -29,7 +29,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     #Obligatory
-    parser.add_argument('--system', default='')  #S ou N for Snakemake or Nextflow
+    parser.add_argument('--system', default='')  #N for Nextflow - S Snakemake
     parser.add_argument('--results_directory', default='') #where are the results files
     parser.add_argument('--json_directory', default = '')    #where are the json with all the informaiton on the wf and the authors
     args = parser.parse_args() 
@@ -78,44 +78,45 @@ def main():
     #attention : ne pas mettre ceux avec 0 d'outils - on garde seulement ceux avec au minimum un outil ds le wf
     wfNoTools = []
 
-    for i in range (len(listDirectoryResults)):
-        nameWf = listDirectoryResults[i].replace(args.results_directory + '/', '')
-        temp = list(nameWf)
-        idx = temp.index('_')
-        temp[idx] = '/'
-        nameWf = "".join(temp)
-   
-        print(str(i+1) + "/" + str(len(listDirectoryResults)) + " : " + nameWf)
+    if args.system == 'N':
+        for i in range (len(listDirectoryResults)):
+            nameWf = listDirectoryResults[i].replace(args.results_directory + '/', '')
+            temp = list(nameWf)
+            idx = temp.index('_')
+            temp[idx] = '/'
+            nameWf = "".join(temp)
+    
+            print(str(i+1) + "/" + str(len(listDirectoryResults)) + " : " + nameWf)
+            
+            if nameWf != 'nf-core/modules':
 
-        os.chdir(listDirectoryResults[i])
-        listFile = os.listdir(listDirectoryResults[i])
+                os.chdir(listDirectoryResults[i])
+                listFile = os.listdir(listDirectoryResults[i])
 
-        # pour savoir si on travaille sur un wf Nextflow ecrit en dsl1 ou 2 car on a la structure que pour dsl1
-        #si le wf est ecrit en dsl2 on obtient qu'un fichier resultat avec les process extraits
-        if args.system == 'N' and len(listFile) == 1: 
-            dsl = 2
-        #sinon on obtient plusieurs fichiers car on a aussi pu extraire les channels et la structure
-        elif args.system == 'N' and len(listFile) > 1:
-            dsl = 1
-        else:
-            dsl = 0 #snakemake
-        
+                # pour savoir si on travaille sur un wf Nextflow ecrit en dsl1 ou 2 car on a la structure que pour dsl1
+                #si le wf est ecrit en dsl2 on obtient qu'un fichier resultat avec les process extraits
+                if len(listFile) == 1: 
+                    dsl = 2
+                #sinon on obtient plusieurs fichiers car on a aussi pu extraire les channels et la structure
+                elif len(listFile) > 1:
+                    dsl = 1
 
-        with open('processes_info.json') as process_json:
-            processes = json.load(process_json)
-        
-        #Check if we have less one tool in this workflow
-        nbTools = 0
-        for nameProcess in processes:
-            tools = processes[nameProcess]['tools']
-            nbTools += len(tools)
-        
-        if nbTools != 0:
-            #add in the Database
-            dicoAllProcess = addInDatabase(tabAdressJsonGlobalInfo, nameWf, dsl, dicoAllProcess)
-        else:
-            wfNoTools.append(nameWf)
-            #print('No tools in this workflow : don\'t add in the database\n')
+
+                with open('processes_info.json') as process_json:
+                    processes = json.load(process_json)
+                
+                #Check if we have less one tool in this workflow
+                nbTools = 0
+                for nameProcess in processes:
+                    tools = processes[nameProcess]['tools']
+                    nbTools += len(tools)
+                
+                if nbTools != 0:
+                    #add in the Database
+                    dicoAllProcess = addInDatabase(tabAdressJsonGlobalInfo, nameWf, dsl, dicoAllProcess)
+                else:
+                    wfNoTools.append(nameWf)
+                    #print('No tools in this workflow : don\'t add in the database\n')
 
     '''os.chdir(args.results_directory)
     with open("allProcesses.json", 'w') as dicoP:

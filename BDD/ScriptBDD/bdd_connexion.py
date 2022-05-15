@@ -1,13 +1,25 @@
+import glob
 import psycopg
+import configparser 
+
 from .bdd_add import *
+
+config = configparser.ConfigParser()
+config.read("resources/config.txt")
 
 def addInDatabase(tabAdressJson, name_wf, dsl, dicoAllProcess):
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
+        #load the information connexion
+        
         # connect to the PostgreSQL server
         #print('\nConnecting to the PostgreSQL database...')
-        conn = psycopg.connect()  # TODO file pour se connecter a une bd
+        conn = psycopg.connect(dbname = config.get('POSTGRESQL','dbname'),
+                            user = config.get('POSTGRESQL','user'),
+                            password = config.get('POSTGRESQL','password'),
+                            host = config.get('POSTGRESQL','host'),
+                            port = config.get('POSTGRESQL','port'))  
         cur = conn.cursor()
 
         #Add global information about the workflow 

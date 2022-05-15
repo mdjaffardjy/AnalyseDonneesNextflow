@@ -7,11 +7,12 @@ setuptools.setup(
     author_email='clemence.sebe@universite-paris-saclay.fr', 
     description='Add in the database all the information on a workflow', 
     packages = setuptools.find_packages(), 
+    #package_data={'': ['config.txt']},
     entry_points={ 
         'console_scripts': [ 
             'AddInDatabase = ScriptBDD.main:main' 
         ]
-    }, 
+    },
     classifiers=[ 
         'Programming Language :: Python :: 3', 
         'License :: OSI Approved :: MIT License', 

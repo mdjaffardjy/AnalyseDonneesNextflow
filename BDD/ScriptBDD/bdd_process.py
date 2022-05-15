@@ -1,8 +1,3 @@
-import csv
-import json
-import pandas as pd
-import os
-
 nameSimilarity = ['H_1_1', 'H_3', 'H_5_2', 'H_2_3', 'H_2_1', 'euclidienne', 'H_4_1', 'H_5_1', 'H_4_2', 'H_2_2', 'H_1_2']
 
 class ProcessBD:
