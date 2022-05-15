@@ -24,6 +24,17 @@ This file is located in the [resources](/BDD/resources/) folder. How find the in
 sudo python3 setup.py install
 ```
 
+### <ins>Before running </ins> :
+
+In the postgresql session launch the [script](/BDD/TablesSql/createTables.sql) to create the tables :
+
+Command : 
+```\i address_to_the_script_if_not_in_the_same_directory/createTables.sql ```
+
+![Example](Pictures/3.png)
+![Example](Pictures/4.png)
+
+
 ### <ins>To run</ins> :
 
 * The option *--system* : 'N' (Nextflow) 
