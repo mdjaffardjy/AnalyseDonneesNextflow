@@ -2,7 +2,31 @@
 
 In this directory is presented the tool __AddInDatabase__, which allows to fill a database implemented with Postgresql.
 
+<ins>Database Schema :</ins>
+![Schema](Pictures/0.png)
+
 To launch this tool, you need to have the folder containing the results of the __Nextflow analyser__ and a folder with the __global information__ (author and information about the workflow from github)
+
+1. The folder containing the results of the __Nextflow analyser__  must contain all the workflow results folder :
+
+Obtain with the command : 
+```
+NFanalyzer --input "/home/clemence/AnalyseDonneesNextflow/bddFiles" --results_directory "/home/clemence/AnalyseDonneesNextflow"  --name 'Result_Nfanalyser' --mode 'multi'
+```
+
+![Example](Pictures/5.png)
+
+* A workflow written in DSL1 must contain in it repository 7 files:
+
+![Example](Pictures/6.png)
+
+* And a DSL2 workflow contain only 1 file : 
+
+![Example](Pictures/7.png)
+
+2. The __global information__ folder must contain at least 2 files : one with the *wf* in it name and a second with the word *author*. **Warning** : not two distinct files in this directory must contain in their names *wf* or *author*
+
+![Example](Pictures/8.png)
 
 ## Install and Run
 
