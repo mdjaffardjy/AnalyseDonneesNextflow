@@ -560,7 +560,7 @@ class TypeMainDSL1(TypeMain):
             dot.node(id, name, color= '6', shape='doublecircle')#Yellow
 
     #Method that reconstructs the structure of a workflow from the information extracted
-    def get_structure(self,name='structure_worklow'):
+    def get_structure(self,name='structure_workflow'):
         if(self.can_analyse):
             #Start by defining the graphviz diagram
             dot = graphviz.Digraph(filename=name, format='png', comment='structure', node_attr={'colorscheme': 'pastel19', 'style': 'filled'})
