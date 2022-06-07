@@ -168,11 +168,12 @@ CREATE TYPE type_c AS ENUM ('P', 'A', 'V', 'S');
 
 CREATE TABLE channel (
     id_channel INT,             -- id of the channel (auto-increment)
-    name_channel VARCHAR(1000),  -- name of the channel
-    id_in_wf INT,               -- id of the wf
+    name_channel VARCHAR(1000), -- name of the channel
+    id_wf INT,                  -- id of the wf
     type_channel type_c,        -- the channel is a pointer (P), a value (V), an adress (A) or a query for the NCBI SRA (S) or Null if we don't know
 
     CONSTRAINT pk_channel PRIMARY KEY (id_channel)
+    CONSTRAINT fk_channel FOREIGN KEY (id_wf) REFERENCES workflow(id_wf)
 );
 
 /* Sequence pour id automatique channel */
@@ -205,11 +206,12 @@ CREATE TYPE type_operation AS ENUM ('distinct', 'filter', 'first', 'last', 'rand
                                     'close', 'dump', 'ifEmpty', 'print', 'println', 'set', 'view');  -- other operators
              
 CREATE TABLE operation_wf(
-    id_ope INT,                -- auto increment  
-    id_in_wf INT,              -- id in the wf
+    id_ope INT,                 -- auto increment  
+    id_wf INT,                  -- id in the wf
     string_ope VARCHAR(65000),  -- string of the operation
 
     CONSTRAINT pk_operation_wf PRIMARY KEY (id_ope)
+    CONSTRAINT fk_operation_wf REFERENCES workflow(id_wf)
 );
 
 /* Sequence pour id automatique id operation_wf*/
