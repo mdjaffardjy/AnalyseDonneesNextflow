@@ -172,7 +172,7 @@ CREATE TABLE channel (
     id_wf INT,                  -- id of the wf
     type_channel type_c,        -- the channel is a pointer (P), a value (V), an adress (A) or a query for the NCBI SRA (S) or Null if we don't know
 
-    CONSTRAINT pk_channel PRIMARY KEY (id_channel)
+    CONSTRAINT pk_channel PRIMARY KEY (id_channel),
     CONSTRAINT fk_channel FOREIGN KEY (id_wf) REFERENCES workflow(id_wf)
 );
 
@@ -210,7 +210,7 @@ CREATE TABLE operation_wf(
     id_wf INT,                  -- id in the wf
     string_ope VARCHAR(65000),  -- string of the operation
 
-    CONSTRAINT pk_operation_wf PRIMARY KEY (id_ope)
+    CONSTRAINT pk_operation_wf PRIMARY KEY (id_ope),
     CONSTRAINT fk_operation_wf REFERENCES workflow(id_wf)
 );
 
