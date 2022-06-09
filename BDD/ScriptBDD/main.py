@@ -80,17 +80,29 @@ def main():
 
     if args.system == 'N':
         for i in range (len(listDirectoryResults)):
-            nameWf = listDirectoryResults[i].replace(args.results_directory + '/', '')
+            #note : in order to have a correspondance between the folder name and the name of the workflow in the json, the name of the folder needs to be in the form author__workflowName. Also, there can be a difference in the result returned by args.results_directory apparently
+            
+            nameWf = listDirectoryResults[i].replace(args.results_directory, '')
+            nameWf = nameWf.replace('__','/') 
+            
+            print(nameWf)
+            print(listDirectoryResults[i])
+            print(args.results_directory)
+            
+            
+            # previous version by clemence -- TODO : replace the whole thing
+            """
             temp = list(nameWf)
             idx = temp.index('_')
             temp[idx] = '/'
             nameWf = "".join(temp)
+            """
     
             print(str(i+1) + "/" + str(len(listDirectoryResults)) + " : " + nameWf)
-            
             if nameWf != 'nf-core/modules':
 
                 os.chdir(listDirectoryResults[i])
+                #print(os.getcwd())
                 listFile = os.listdir(listDirectoryResults[i])
 
                 # pour savoir si on travaille sur un wf Nextflow ecrit en dsl1 ou 2 car on a la structure que pour dsl1
@@ -100,6 +112,8 @@ def main():
                 #sinon on obtient plusieurs fichiers car on a aussi pu extraire les channels et la structure
                 elif len(listFile) > 1:
                     dsl = 1
+                
+                print("dsl : "+str(dsl))
 
 
                 with open('processes_info.json') as process_json:
@@ -111,6 +125,7 @@ def main():
                     tools = processes[nameProcess]['tools']
                     nbTools += len(tools)
                 
+                print("nb tools : "+str(nbTools))
                 if nbTools != 0:
                     #add in the Database
                     dicoAllProcess = addInDatabase(tabAdressJsonGlobalInfo, nameWf, dsl, dicoAllProcess)
@@ -118,6 +133,24 @@ def main():
                     wfNoTools.append(nameWf)
                     #print('No tools in this workflow : don\'t add in the database\n')
 
+    if args.system == 'S':
+        with open("/home/marinedjaffardjy/Bureau/docker_nextflow_db/BDD/snakemake_infos.json", 'r') as file:
+            wfs_snk = json.load(file)
+        for el in wfs_snk:
+            #note : in order to have a correspondance between the folder name and the name of the workflow in the json, the name of the folder needs to be in the form author__workflowName. Also, there can be a difference in the result returned by args.results_directory apparently
+            
+            if (el["nb_tools"]>0):
+                nameWf = el["name"]
+                print(str(i+1) + " : " + nameWf)
+                dicoAllProcess = addInDatabase_snk(tabAdressJsonGlobalInfo, nameWf, wfs_snk)
+            else:
+                wfNoTools.append(nameWf)
+                print('No tools in this workflow : don\'t add in the database\n')
+
+    '''os.chdir(args.results_directory)
+    with open("allProcesses.json", 'w') as dicoP:
+        json.dump(dicoAllProcess, dicoP, indent=4)'''
+    
     '''os.chdir(args.results_directory)
     with open("allProcesses.json", 'w') as dicoP:
         json.dump(dicoAllProcess, dicoP, indent=4)'''

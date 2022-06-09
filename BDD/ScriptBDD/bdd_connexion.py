@@ -17,9 +17,7 @@ def addInDatabase(tabAdressJson, name_wf, dsl, dicoAllProcess):
         #print('\nConnecting to the PostgreSQL database...')
         conn = psycopg.connect(dbname = config.get('POSTGRESQL','dbname'),
                             user = config.get('POSTGRESQL','user'),
-                            password = config.get('POSTGRESQL','password'),
-                            host = config.get('POSTGRESQL','host'),
-                            port = config.get('POSTGRESQL','port'))  
+                            password = config.get('POSTGRESQL','password'))  
         cur = conn.cursor()
 
         #Add global information about the workflow 
@@ -27,7 +25,7 @@ def addInDatabase(tabAdressJson, name_wf, dsl, dicoAllProcess):
         idWf = addGlobalInformation(name_wf,tabAdressJson, dsl,cur,conn)
 
         #Add information process, channel ...
-        dicoAllProcess = addProcessExtracted(name_wf, idWf, cur,conn, dicoAllProcess)
+        dicoAllProcess = addProcessExtracted(name_wf, dsl, idWf, cur,conn, dicoAllProcess)
 
         #Add operation  
         if dsl == 1:
@@ -35,8 +33,7 @@ def addInDatabase(tabAdressJson, name_wf, dsl, dicoAllProcess):
 
         #Add information about the tool
         addTools(name_wf, idWf, cur,conn) 
-
-
+        conn.commit()
         cur.close()
     except (Exception, psycopg.DatabaseError) as error:
         print("ERROR in the bdd : ")

@@ -79,7 +79,7 @@ def addGlobalInformation(name_wf,tabAdressJson, dsl,cur,conn):
     return idWf
 
 # -----------------------------------------------------
-def addProcessExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
+def addProcessExtracted(name_wf, dsl, idWf, cur,conn, dicoAllProcess):
     with open('processes_info.json') as json_processes:
         process = json.load(json_processes)
     
@@ -98,13 +98,14 @@ def addProcessExtracted(name_wf, idWf, cur,conn, dicoAllProcess):
 
         proc = ProcessBD(info_process, idWf)
         id_proc = proc.insertBDProcess(cur)
+        
+        if dsl ==1:
+            channel = {}
+            channel['inputs'] = process[p]['inputs']
+            channel['outputs'] = process[p]['outputs']
 
-        channel = {}
-        channel['inputs'] = process[p]['inputs']
-        channel['outputs'] = process[p]['outputs']
-
-        cha = ChannelBD(channel, id_proc, idWf)
-        cha.insertBDChannel(cur)
+            cha = ChannelBD(channel, id_proc, idWf)
+            cha.insertBDChannel(cur)
 
 
         temp = process[p]
