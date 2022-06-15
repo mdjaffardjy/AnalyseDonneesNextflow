@@ -123,7 +123,7 @@ CREATE TABLE contributor (
 CREATE TABLE process (
     name_process VARCHAR(300),   -- name_full of the wf and the name of the process
     little_name VARCHAR(100),    -- just the name of the process   ????
-    id_process INT,           -- id of the process (auto-increment)
+    id_process INT,              -- id of the process (auto-increment)
     string TEXT,                 -- the string of the process
     nb_lines INT,                -- the number of lines of the process
 
