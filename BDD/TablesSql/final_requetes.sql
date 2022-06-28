@@ -260,6 +260,13 @@ LIMIT 50;
  LIMIT 50;
 
  /************************************************************************
+ * Nombre de process
+ ************************************************************************
+ */
+ SELECT COUNT(id_process) AS Nb_process
+ FROM process ;
+ 
+ /************************************************************************
  * Nombre d'inputs/outputs/inputs+outpus dans un process
  ************************************************************************
  */
@@ -277,6 +284,27 @@ LIMIT 50;
  FROM ( SELECT little_name AS "Name", nb_inputs, nb_outputs, (nb_inputs + nb_outputs) AS Nb_total
         FROM process
         GROUP BY little_name, nb_inputs, nb_outputs) moyenne ;
+
+
+ /************************************************************************
+ * Ratio opérations / process par workflow
+ ************************************************************************
+ */
+
+ SELECT workflow.name_wf AS final_wf, (nb_ope.Nb_ope / nb_pro.Nb_process) AS ratio_proc_ope
+ FROM workflow, (
+               SELECT workflow.name_wf AS Workflow, COUNT(process.id_wf) AS Nb_process
+               FROM workflow, process
+               WHERE workflow.id_wf = process.id_wf
+               GROUP BY workflow.name_wf ) nb_pro, (
+               SELECT workflow.name_wf AS Wf, COUNT(operation_wf.id_ope) AS Nb_ope
+               FROM workflow, operation_wf
+               WHERE workflow.id_wf = operation_wf.id_wf
+               GROUP BY workflow.name_wf ) nb_ope
+ WHERE workflow.name_wf = nb_pro.Workflow
+ AND workflow.name_wf = nb_ope.Wf
+ GROUP BY final_wf, ratio_proc_ope
+ ORDER BY ratio_proc_ope DESC ; 
 
  /************************************************************************
  * Outils des process avec le plus d'inputs/outputs

@@ -2068,4 +2068,4 @@ Channel with too many inputs/outputs :
  In workflow :1285; Channel :54637 too many inputs/outputs :{'workflow': 1285, 'process': [54636, 54641], 'operation': [104385, 104386]}
  In workflow :1285; Channel :54644 too many inputs/outputs :{'workflow': 1285, 'process': [54643, 54646], 'operation': [104387]}
  In workflow :1285; Channel :54645 too many inputs/outputs :{'workflow': 1285, 'process': [54643, 54646], 'operation': [104388]}
- In workflow :1285; Channel :54638 too many inputs/outputs :{'workflow': 1285, 'process': [54636, 54641], 'operation': [104390, 104392]}
+ In workflow :1285; Channel :54638 too many inputs/outputs :{'workflow': 1285, 'process': [54636, 54641], 'operation': [104390, 104392]}Channel with too many inputs/outputs :Channel with too many inputs/outputs :
